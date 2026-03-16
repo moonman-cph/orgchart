@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      background: #f2f2f7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 28px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #1c1c1e;
+    }
+
+    #status {
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: #8e8e93;
+      min-height: 1.5em;
+      text-align: center;
+      transition: color 0.3s;
+    }
+
+    #status.winner {
+      color: #1c1c1e;
+      font-weight: 600;
+    }
+
+    /* Score pill */
+    #scores {
+      display: flex;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .score-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 28px;
+      gap: 2px;
+    }
+
+    .score-box + .score-box {
+      border-left: 1px solid #f2f2f7;
+    }
+
+    .score-box .label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #aeaeb2;
+    }
+
+    .score-box .val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #1c1c1e;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-box.x-score .val { color: #0071e3; }
+    .score-box.o-score .val { color: #ff3b30; }
+
+    /* Board */
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 108px);
+      grid-template-rows: repeat(3, 108px);
+      gap: 10px;
+      padding: 16px;
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+    }
+
+    .cell {
+      background: #f2f2f7;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cell:hover:not(.taken) {
+      background: #e5e5ea;
+      transform: scale(1.04);
+    }
+
+    .cell:active:not(.taken) {
+      transform: scale(0.97);
+    }
+
+    /* SVG marks */
+    .cell svg {
+      width: 52px;
+      height: 52px;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.2s cubic-bezier(.34,1.56,.64,1), transform 0.25s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .cell.taken svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .cell.win {
+      background: #e8f0fb;
+      box-shadow: 0 0 0 2px #0071e3;
+    }
+
+    .cell.win.o-cell {
+      background: #fff0ef;
+      box-shadow: 0 0 0 2px #ff3b30;
+    }
+
+    /* Restart button */
+    #restart {
+      padding: 13px 36px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-radius: 980px;
+      background: #0071e3;
+      color: white;
+      cursor: pointer;
+      letter-spacing: -0.1px;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(0,113,227,0.35);
+    }
+
+    #restart:hover {
+      background: #0077ed;
+      box-shadow: 0 4px 14px rgba(0,113,227,0.45);
+    }
+
+    #restart:active {
+      transform: scale(0.97);
+      background: #006acc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe</h1>
+
+  <div id="scores">
+    <div class="score-box x-score">
+      <div class="label">X</div>
+      <div class="val" id="score-x">0</div>
+    </div>
+    <div class="score-box">
+      <div class="label">Draws</div>
+      <div class="val" id="score-d">0</div>
+    </div>
+    <div class="score-box o-score">
+      <div class="label">O</div>
+      <div class="val" id="score-o">0</div>
+    </div>
+  </div>
+
+  <div id="status">X's turn</div>
+
+  <div id="board"></div>
+
+  <button id="restart">New Game</button>
+
+  <script>
+    const WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const scoreX = document.getElementById('score-x');
+    const scoreO = document.getElementById('score-o');
+    const scoreD = document.getElementById('score-d');
+
+    // SVG marks
+    const xSVG = `<svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="10" y1="10" x2="42" y2="42" stroke="#0071e3" stroke-width="5.5" stroke-linecap="round"/>
+      <line x1="42" y1="10" x2="10" y2="42" stroke="#0071e3" stroke-width="5.5" stroke-linecap="round"/>
+    </svg>`;
+
+    const oSVG = `<svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="26" cy="26" r="16" stroke="#ff3b30" stroke-width="5.5" stroke-linecap="round"/>
+    </svg>`;
+
+    let board, current, over, scores = { X: 0, O: 0, D: 0 };
+    let cells = [];
+
+    function buildBoard() {
+      boardEl.innerHTML = '';
+      cells = [];
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.i = i;
+        cell.innerHTML = '';
+        cell.addEventListener('click', onCellClick);
+        boardEl.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+
+    function init() {
+      board = Array(9).fill('');
+      current = 'X';
+      over = false;
+      buildBoard();
+      statusEl.textContent = "X's turn";
+      statusEl.className = '';
+    }
+
+    function onCellClick() {
+      const i = +this.dataset.i;
+      if (over || board[i]) return;
+
+      board[i] = current;
+      this.innerHTML = current === 'X' ? xSVG : oSVG;
+      this.classList.add('taken');
+      if (current === 'O') this.classList.add('o-cell');
+
+      // Trigger animation next frame
+      requestAnimationFrame(() => {
+        const svg = this.querySelector('svg');
+        if (svg) { svg.style.opacity = '1'; svg.style.transform = 'scale(1)'; }
+      });
+
+      const win = checkWin();
+      if (win) {
+        win.forEach(j => cells[j].classList.add('win'));
+        statusEl.textContent = `${current} wins!`;
+        statusEl.className = 'winner';
+        scores[current]++;
+        scoreX.textContent = scores.X;
+        scoreO.textContent = scores.O;
+        over = true;
+      } else if (board.every(v => v)) {
+        statusEl.textContent = "It's a draw.";
+        statusEl.className = 'winner';
+        scores.D++;
+        scoreD.textContent = scores.D;
+        over = true;
+      } else {
+        current = current === 'X' ? 'O' : 'X';
+        statusEl.textContent = `${current}'s turn`;
+      }
+    }
+
+    function checkWin() {
+      for (const [a, b, c] of WINS) {
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) return [a, b, c];
+      }
+      return null;
+    }
+
+    document.getElementById('restart').addEventListener('click', init);
+    init();
+  </script>
+</body>
+</html>
