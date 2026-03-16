@@ -30,8 +30,138 @@
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── App Content Wrapper ─────────────────────────────────────── */
+  #app-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* ── Left Nav ────────────────────────────────────────────────── */
+  #left-nav {
+    width: 220px;
+    flex-shrink: 0;
+    background: #1e2239;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+  }
+  .nav-logo-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .nav-logo-name { font-size: 15px; font-weight: 700; color: white; letter-spacing: -0.2px; }
+
+  #nav-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .nav-section { padding: 4px 0; }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.28);
+    padding: 8px 20px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px 9px 18px;
+    margin: 1px 8px;
+    border-radius: 7px;
+    cursor: pointer;
+    user-select: none;
+    color: rgba(255,255,255,0.62);
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.12s, color 0.12s;
+    border-left: 2.5px solid transparent;
+    text-decoration: none;
+  }
+  .nav-item:hover {
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.9);
+  }
+  .nav-item.active {
+    background: rgba(90,103,216,0.22);
+    color: white;
+    border-left-color: #5a67d8;
+    font-weight: 600;
+  }
+  .nav-item svg { flex-shrink: 0; opacity: 0.8; }
+  .nav-item.active svg, .nav-item:hover svg { opacity: 1; }
+
+  .nav-spacer { flex: 1; }
+
+  #nav-footer {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  #nav-footer:hover { background: rgba(255,255,255,0.05); }
+  .nav-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #6366f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+  .nav-user-info { min-width: 0; }
+  .nav-user-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .nav-user-role {
+    font-size: 11px;
+    color: rgba(255,255,255,0.38);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* ── Header ─────────────────────────────────────────────────── */
@@ -45,17 +175,6 @@
     gap: 10px;
     flex-shrink: 0;
   }
-  .header-logo {
-    width: 28px;
-    height: 28px;
-    background: var(--accent);
-    border-radius: 7px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .header-logo svg { display: block; }
   #app-header h1 {
     font-size: 15px;
     font-weight: 700;
@@ -495,12 +614,13 @@
   }
   .modal-warning.visible { display: block; }
   .modal-footer {
-    display: flex;
+    display: none;
     justify-content: flex-end;
     gap: 8px;
     padding: 12px 20px 18px;
     border-top: 1px solid var(--border);
   }
+  #modal-panel.has-changes .modal-footer { display: flex; }
   .btn {
     padding: 8px 16px;
     border-radius: 8px;
@@ -524,24 +644,394 @@
     border-color: #4338ca;
   }
   .btn-primary:hover { background: #3730a3; border-color: #3730a3; box-shadow: 0 1px 4px rgba(67,56,202,0.3); }
+
+  /* ── Modal Avatar ────────────────────────────────────────────── */
+  .modal-avatar-area {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 4px;
+    position: relative;
+  }
+  #modal-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.5px;
+  }
+  .modal-avatar-badge {
+    position: absolute;
+    bottom: 0;
+    right: calc(50% - 36px - 2px);
+    width: 20px;
+    height: 20px;
+    background: #fef3c7;
+    border: 1.5px solid #f59e0b;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .modal-avatar-badge.visible { display: flex; }
+
+  /* ── Modal View / Edit Mode ─────────────────────────────────── */
+  .form-edit { display: none; }
+  .form-view {
+    font-size: 13px;
+    color: var(--text-primary);
+    padding: 8px 2px 6px;
+    min-height: 37px;
+    line-height: 1.5;
+  }
+  #modal-panel.editing .form-edit { display: block; }
+  #modal-panel.editing .form-view { display: none; }
+  #modal-panel.editing #modal-edit-btn { display: none; }
+  .modal-edit-btn {
+    padding: 4px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  /* ── Card Warning Icon ───────────────────────────────────────── */
+  .card-warn-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    opacity: 0.85;
+  }
+  .card-warn-icon:hover { opacity: 1; }
+
+  /* ── Salary card styles ───────────────────────────────────────── */
+  .emp-salary {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .salary-review-badge {
+    display: inline-block;
+    margin-top: 3px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    background: #fef3c7;
+    color: #b45309;
+    border: 1px solid #fcd34d;
+    border-radius: 4px;
+    padding: 1px 5px;
+    line-height: 1.5;
+  }
+
+  .card-salary-warn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    opacity: 0.85;
+  }
+  .card-salary-warn:hover { opacity: 1; }
+
+  /* ── Modal compensation section ──────────────────────────────── */
+  .modal-comp-section {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .modal-comp-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+  }
+  .modal-comp-label { color: var(--text-secondary); font-weight: 500; }
+  .modal-comp-value { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .modal-comp-value.out-of-band { color: #b45309; }
+  .modal-band-bar {
+    height: 5px;
+    border-radius: 3px;
+    background: var(--border);
+    position: relative;
+    margin-top: 2px;
+    overflow: visible;
+  }
+  .modal-band-fill {
+    position: absolute;
+    top: 0; bottom: 0;
+    border-radius: 3px;
+    background: var(--accent);
+  }
+  .modal-band-fill.out-of-band { background: #f59e0b; }
+
+  .modal-review-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .modal-review-toggle:hover { border-color: var(--border-hover); background: #f4f5f8; }
+  .modal-review-toggle.active {
+    background: #fffbeb;
+    border-color: #fcd34d;
+  }
+  .modal-review-toggle-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .modal-review-toggle.active .modal-review-toggle-label { color: #b45309; }
+  .modal-review-toggle-check {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    background: white;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .modal-review-toggle.active .modal-review-toggle-check {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+  }
+
+  /* ── Employee ID in modal ───────────────────────────────────── */
+  .modal-emp-id {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  /* ── Department header actions ──────────────────────────────── */
+  .dept-delete-btn {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.12s, color 0.12s;
+    padding: 0;
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+  .dept-column:hover .dept-delete-btn { opacity: 1; }
+  .dept-delete-btn:hover { background: #fee2e2; color: #ef4444; }
+  .dept-delete-btn.has-employees { opacity: 0.25 !important; cursor: not-allowed; pointer-events: none; }
+
+  /* ── Department creation modal ──────────────────────────────── */
+  #dept-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  #dept-modal-backdrop.visible { opacity: 1; pointer-events: all; }
+  #dept-modal-panel {
+    background: var(--surface);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 20px 60px rgba(16,24,40,0.18), 0 4px 16px rgba(16,24,40,0.08);
+    transform: translateY(10px) scale(0.98);
+    transition: transform 0.18s ease, opacity 0.18s ease;
+    opacity: 0;
+    margin: 0 16px;
+  }
+  #dept-modal-backdrop.visible #dept-modal-panel { transform: translateY(0) scale(1); opacity: 1; }
+  .dept-color-swatches { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 0; }
+  .dept-color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2.5px solid transparent;
+    transition: border-color 0.12s, transform 0.12s;
+    flex-shrink: 0;
+  }
+  .dept-color-swatch:hover { transform: scale(1.12); }
+  .dept-color-swatch.selected { border-color: var(--text-primary); transform: scale(1.08); }
+
+  /* ── Header action buttons ───────────────────────────────────── */
+  .header-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .header-btn:hover { background: var(--bg); border-color: var(--border-hover); }
+  .header-btn.primary { background: #4338ca; color: white; border-color: #4338ca; }
+  .header-btn.primary:hover { background: #3730a3; border-color: #3730a3; }
+
+  /* Department salary total badge */
+  .dept-salary {
+    font-size: 11px; font-weight: 500; color: var(--text-muted);
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 1px 8px; line-height: 1.6;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+
+  /* Add Employee modal backdrop/panel (reuses existing modal class styles) */
+  #add-emp-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.18s ease;
+  }
+  #add-emp-modal-backdrop.visible { opacity: 1; pointer-events: all; }
+  #add-emp-modal-panel {
+    background: var(--surface); border-radius: 14px; width: 100%; max-width: 440px;
+    box-shadow: 0 20px 60px rgba(16,24,40,0.18), 0 4px 16px rgba(16,24,40,0.08);
+    transform: translateY(10px) scale(0.98);
+    transition: transform 0.18s ease, opacity 0.18s ease;
+    opacity: 0; margin: 0 16px;
+  }
+  #add-emp-modal-backdrop.visible #add-emp-modal-panel { transform: translateY(0) scale(1); opacity: 1; }
 </style>
 </head>
 <body>
 
-<div id="app-header">
-  <div class="header-logo">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="3" r="2" fill="white"/>
-      <circle cx="3" cy="11" r="2" fill="white" opacity="0.7"/>
-      <circle cx="13" cy="11" r="2" fill="white" opacity="0.7"/>
-      <line x1="8" y1="5" x2="3" y2="9" stroke="white" stroke-width="1.2" opacity="0.6"/>
-      <line x1="8" y1="5" x2="13" y2="9" stroke="white" stroke-width="1.2" opacity="0.6"/>
-    </svg>
+<nav id="left-nav">
+  <div id="nav-logo">
+    <div class="nav-logo-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="3" r="2" fill="white"/>
+        <circle cx="3" cy="11" r="2" fill="white" opacity="0.7"/>
+        <circle cx="13" cy="11" r="2" fill="white" opacity="0.7"/>
+        <line x1="8" y1="5" x2="3" y2="9" stroke="white" stroke-width="1.2" opacity="0.6"/>
+        <line x1="8" y1="5" x2="13" y2="9" stroke="white" stroke-width="1.2" opacity="0.6"/>
+      </svg>
+    </div>
+    <span class="nav-logo-name">OrgChart</span>
   </div>
-  <h1>OrgChart</h1>
+  <div id="nav-body">
+    <div class="nav-section">
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 6.5L8 2l6 4.5V14a1 1 0 01-1 1H3a1 1 0 01-1-1V6.5z"/>
+          <path d="M6 15v-5h4v5"/>
+        </svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="3" r="1.8"/>
+          <circle cx="3" cy="12" r="1.8"/>
+          <circle cx="13" cy="12" r="1.8"/>
+          <line x1="8" y1="4.8" x2="3" y2="10.2"/>
+          <line x1="8" y1="4.8" x2="13" y2="10.2"/>
+        </svg>
+        Org Chart
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">People</div>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="5" r="2.5"/>
+          <path d="M1 14c0-3 2-5 5-5"/>
+          <line x1="10" y1="7" x2="15" y2="7"/>
+          <line x1="10" y1="10" x2="15" y2="10"/>
+          <line x1="10" y1="13" x2="13" y2="13"/>
+        </svg>
+        Directory
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="12" height="12" rx="1.5"/>
+          <line x1="5" y1="1" x2="5" y2="5"/>
+          <line x1="11" y1="1" x2="11" y2="5"/>
+          <line x1="2" y1="7" x2="14" y2="7"/>
+          <polyline points="5.5,11 7,12.5 10.5,9"/>
+        </svg>
+        Time Off
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="6" width="14" height="9" rx="1.5"/>
+          <path d="M5 6V4.5a3 3 0 016 0V6"/>
+        </svg>
+        Hiring
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Insights</div>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="14" x2="3" y2="9"/>
+          <line x1="8" y1="14" x2="8" y2="5"/>
+          <line x1="13" y1="14" x2="13" y2="1"/>
+          <line x1="1" y1="14" x2="15" y2="14"/>
+        </svg>
+        Reports
+      </a>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-section">
+      <div class="nav-section-label">Admin</div>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"/>
+        </svg>
+        Settings
+      </a>
+    </div>
+  </div>
+  <div id="nav-footer">
+    <div class="nav-user-avatar">DM</div>
+    <div class="nav-user-info">
+      <div class="nav-user-name">David Miller</div>
+      <div class="nav-user-role">HR Admin</div>
+    </div>
+  </div>
+</nav>
+
+<div id="app-content">
+
+<div id="app-header">
+  <h1>Org Chart</h1>
   <div class="header-divider"></div>
   <span class="header-meta">Employee Hierarchy</span>
   <div class="header-spacer"></div>
+  <button class="header-btn primary" id="add-emp-btn">+ Add Employee</button>
   <div class="header-badge" id="total-badge">25 employees</div>
 </div>
 
@@ -569,28 +1059,60 @@
   <div id="modal-panel">
     <div class="modal-header">
       <span class="modal-title">Edit Employee</span>
-      <button class="modal-close" id="modal-close-btn" title="Close">&#x2715;</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost modal-edit-btn" id="modal-edit-btn">Edit</button>
+        <button class="modal-close" id="modal-close-btn" title="Close">&#x2715;</button>
+      </div>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label" for="modal-name">Name</label>
-        <input type="text" id="modal-name" class="form-control" placeholder="Full name" />
+      <div class="modal-avatar-area">
+        <div id="modal-avatar"></div>
+        <div id="modal-avatar-badge" class="modal-avatar-badge">⚠</div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="modal-level">Level</label>
-        <select id="modal-level" class="form-control"></select>
+        <label class="form-label">Name</label>
+        <div class="form-view" id="modal-name-view"></div>
+        <input type="text" id="modal-name" class="form-control form-edit" placeholder="Full name" />
       </div>
       <div class="form-group">
-        <label class="form-label" for="modal-title">Title</label>
-        <select id="modal-title" class="form-control"></select>
+        <label class="form-label">Level</label>
+        <div class="form-view" id="modal-level-view"></div>
+        <select id="modal-level" class="form-control form-edit"></select>
       </div>
       <div class="form-group">
-        <label class="form-label" for="modal-dept">Department</label>
-        <select id="modal-dept" class="form-control"></select>
+        <label class="form-label">Title</label>
+        <div class="form-view" id="modal-title-view"></div>
+        <select id="modal-title" class="form-control form-edit"></select>
       </div>
       <div class="form-group">
-        <label class="form-label" for="modal-manager">Reports to</label>
-        <select id="modal-manager" class="form-control"></select>
+        <label class="form-label">Department</label>
+        <div class="form-view" id="modal-dept-view"></div>
+        <select id="modal-dept" class="form-control form-edit"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reports to</label>
+        <div class="form-view" id="modal-manager-view"></div>
+        <select id="modal-manager" class="form-control form-edit"></select>
+      </div>
+      <div class="form-group" id="modal-comp-group">
+        <label class="form-label">Compensation</label>
+        <div class="modal-comp-section">
+          <div class="modal-comp-row">
+            <span class="modal-comp-label">Monthly salary</span>
+            <span class="modal-comp-value" id="modal-salary-value"></span>
+          </div>
+          <div class="modal-comp-row">
+            <span class="modal-comp-label">Band for <span id="modal-band-level"></span></span>
+            <span class="modal-comp-value" id="modal-band-range"></span>
+          </div>
+          <div class="modal-band-bar">
+            <div class="modal-band-fill" id="modal-band-fill"></div>
+          </div>
+        </div>
+      </div>
+      <div id="modal-review-toggle" class="modal-review-toggle">
+        <span class="modal-review-toggle-label">Flag for salary review</span>
+        <div class="modal-review-toggle-check" id="modal-review-check">✓</div>
       </div>
       <div class="modal-warning" id="modal-warning"></div>
     </div>
@@ -601,44 +1123,114 @@
   </div>
 </div>
 
+</div><!-- #app-content -->
+
+<div id="dept-modal-backdrop">
+  <div id="dept-modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">New Department</span>
+      <button class="modal-close" id="dept-modal-close-btn" title="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Name <span style="color:#ef4444">*</span></label>
+        <input type="text" id="dept-name-input" class="form-control" placeholder="e.g. Marketing" maxlength="40" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input type="text" id="dept-desc-input" class="form-control" placeholder="Short description" maxlength="80" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Color</label>
+        <div class="dept-color-swatches" id="dept-color-swatches"></div>
+      </div>
+      <div class="modal-warning" id="dept-modal-warning"></div>
+    </div>
+    <div class="modal-footer" style="display:flex">
+      <button class="btn btn-ghost" id="dept-modal-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="dept-modal-save-btn">Create Department</button>
+    </div>
+  </div>
+</div>
+
+<div id="add-emp-modal-backdrop">
+  <div id="add-emp-modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">Add Employee</span>
+      <button class="modal-close" id="add-emp-modal-close-btn" title="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Name <span style="color:#ef4444">*</span></label>
+        <input type="text" id="add-emp-name" class="form-control" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Department</label>
+        <select id="add-emp-dept" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Level</label>
+        <select id="add-emp-level" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <select id="add-emp-title" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monthly Salary</label>
+        <input type="number" id="add-emp-salary" class="form-control" placeholder="e.g. 8000" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reports to</label>
+        <select id="add-emp-manager" class="form-control"></select>
+      </div>
+      <div class="modal-warning" id="add-emp-warning"></div>
+    </div>
+    <div class="modal-footer" style="display:flex">
+      <button class="btn btn-ghost" id="add-emp-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="add-emp-save-btn">Add Employee</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── Data ─────────────────────────────────────────────────────────────────────
 
 const departments = [
-  { id: 'engineering', name: 'Engineering', color: '#6366f1' },
-  { id: 'sales',       name: 'Sales',       color: '#10b981' },
-  { id: 'hr',          name: 'HR',          color: '#f59e0b' },
+  { id: 'engineering', name: 'Engineering', color: '#6366f1', description: '' },
+  { id: 'sales',       name: 'Sales',       color: '#10b981', description: '' },
+  { id: 'hr',          name: 'HR',          color: '#f59e0b', description: '' },
 ];
 
 let employees = [
   // Engineering (10)
-  { id: 1,  name: 'Diana Chen',      title: 'Director of Engineering', department: 'engineering', managerId: null, level: 'L7' },
-  { id: 2,  name: 'Marcus Webb',     title: 'Engineering Manager',     department: 'engineering', managerId: 1,    level: 'L5' },
-  { id: 3,  name: 'Priya Nair',      title: 'Engineering Manager',     department: 'engineering', managerId: 1,    level: 'L5' },
-  { id: 4,  name: 'Alex Turner',     title: 'Senior Developer',        department: 'engineering', managerId: 2,    level: 'L3' },
-  { id: 5,  name: 'Sofia Reyes',     title: 'Developer',               department: 'engineering', managerId: 2,    level: 'L2' },
-  { id: 6,  name: 'Jake Morrison',   title: 'Developer',               department: 'engineering', managerId: 2,    level: 'L2' },
-  { id: 7,  name: 'Lena Fischer',    title: 'Senior Developer',        department: 'engineering', managerId: 3,    level: 'L3' },
-  { id: 8,  name: 'Omar Khalid',     title: 'Developer',               department: 'engineering', managerId: 3,    level: 'L2' },
-  { id: 9,  name: 'Nadia Russo',     title: 'Developer',               department: 'engineering', managerId: 3,    level: 'L2' },
-  { id: 10, name: 'Ben Castillo',    title: 'Junior Developer',        department: 'engineering', managerId: 3,    level: 'L1' },
+  { id: 1,  name: 'Diana Chen',      title: 'Director of Engineering', department: 'engineering', managerId: null, level: 'L7', salary: 18500, salaryReviewNeeded: false },
+  { id: 2,  name: 'Marcus Webb',     title: 'Engineering Manager',     department: 'engineering', managerId: 1,    level: 'L5', salary: 11200, salaryReviewNeeded: false },
+  { id: 3,  name: 'Priya Nair',      title: 'Engineering Manager',     department: 'engineering', managerId: 1,    level: 'L5', salary: 14800, salaryReviewNeeded: true  },
+  { id: 4,  name: 'Alex Turner',     title: 'Senior Developer',        department: 'engineering', managerId: 2,    level: 'L3', salary: 5700,  salaryReviewNeeded: false },
+  { id: 5,  name: 'Sofia Reyes',     title: 'Developer',               department: 'engineering', managerId: 2,    level: 'L2', salary: 4900,  salaryReviewNeeded: false },
+  { id: 6,  name: 'Jake Morrison',   title: 'Developer',               department: 'engineering', managerId: 2,    level: 'L2', salary: 3800,  salaryReviewNeeded: true  },
+  { id: 7,  name: 'Lena Fischer',    title: 'Senior Developer',        department: 'engineering', managerId: 3,    level: 'L3', salary: 7200,  salaryReviewNeeded: false },
+  { id: 8,  name: 'Omar Khalid',     title: 'Developer',               department: 'engineering', managerId: 3,    level: 'L2', salary: 5100,  salaryReviewNeeded: false },
+  { id: 9,  name: 'Nadia Russo',     title: 'Developer',               department: 'engineering', managerId: 3,    level: 'L2', salary: 4700,  salaryReviewNeeded: false },
+  { id: 10, name: 'Ben Castillo',    title: 'Junior Developer',        department: 'engineering', managerId: 3,    level: 'L1', salary: 3300,  salaryReviewNeeded: false },
   // Sales (9)
-  { id: 11, name: 'Victor Huang',    title: 'Director of Sales',       department: 'sales', managerId: null, level: 'L7' },
-  { id: 12, name: 'Rachel Kim',      title: 'Sales Manager',           department: 'sales', managerId: 11,   level: 'L5' },
-  { id: 13, name: 'Chris Adeyemi',   title: 'Sales Manager',           department: 'sales', managerId: 11,   level: 'L5' },
-  { id: 14, name: 'Tanya Brooks',    title: 'Senior Sales Rep',        department: 'sales', managerId: 12,   level: 'L3' },
-  { id: 15, name: 'Paulo Mendes',    title: 'Sales Rep',               department: 'sales', managerId: 12,   level: 'L2' },
-  { id: 16, name: 'Emma Johansson',  title: 'Sales Rep',               department: 'sales', managerId: 12,   level: 'L2' },
-  { id: 17, name: 'Derek Stone',     title: 'Senior Sales Rep',        department: 'sales', managerId: 13,   level: 'L3' },
-  { id: 18, name: 'Iris Nakamura',   title: 'Sales Rep',               department: 'sales', managerId: 13,   level: 'L2' },
-  { id: 19, name: 'Leo Petrov',      title: 'Sales Rep',               department: 'sales', managerId: 13,   level: 'L2' },
+  { id: 11, name: 'Victor Huang',    title: 'Director of Sales',       department: 'sales', managerId: null, level: 'L7', salary: 19500, salaryReviewNeeded: false },
+  { id: 12, name: 'Rachel Kim',      title: 'Sales Manager',           department: 'sales', managerId: 11,   level: 'L5', salary: 23500, salaryReviewNeeded: true  },
+  { id: 13, name: 'Chris Adeyemi',   title: 'Sales Manager',           department: 'sales', managerId: 11,   level: 'L5', salary: 12400, salaryReviewNeeded: false },
+  { id: 14, name: 'Tanya Brooks',    title: 'Senior Sales Rep',        department: 'sales', managerId: 12,   level: 'L3', salary: 6800,  salaryReviewNeeded: false },
+  { id: 15, name: 'Paulo Mendes',    title: 'Sales Rep',               department: 'sales', managerId: 12,   level: 'L2', salary: 5000,  salaryReviewNeeded: false },
+  { id: 16, name: 'Emma Johansson',  title: 'Sales Rep',               department: 'sales', managerId: 12,   level: 'L2', salary: 4600,  salaryReviewNeeded: false },
+  { id: 17, name: 'Derek Stone',     title: 'Senior Sales Rep',        department: 'sales', managerId: 13,   level: 'L3', salary: 5500,  salaryReviewNeeded: false },
+  { id: 18, name: 'Iris Nakamura',   title: 'Sales Rep',               department: 'sales', managerId: 13,   level: 'L2', salary: 4800,  salaryReviewNeeded: false },
+  { id: 19, name: 'Leo Petrov',      title: 'Sales Rep',               department: 'sales', managerId: 13,   level: 'L2', salary: 4600,  salaryReviewNeeded: false },
   // HR (6)
-  { id: 20, name: 'Angela Foster',   title: 'Director of HR',          department: 'hr', managerId: null, level: 'L7' },
-  { id: 21, name: 'Samuel Okafor',   title: 'HR Manager',              department: 'hr', managerId: 20,   level: 'L5' },
-  { id: 22, name: 'Chloe Dupont',    title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1' },
-  { id: 23, name: 'Raj Patel',       title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1' },
-  { id: 24, name: 'Mia Larsson',     title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1' },
-  { id: 25, name: 'Tom Nguyen',      title: 'Recruiting Coordinator',  department: 'hr', managerId: 21,   level: 'L1' },
+  { id: 20, name: 'Angela Foster',   title: 'Director of HR',          department: 'hr', managerId: null, level: 'L7', salary: 17200, salaryReviewNeeded: false },
+  { id: 21, name: 'Samuel Okafor',   title: 'HR Manager',              department: 'hr', managerId: 20,   level: 'L5', salary: 11800, salaryReviewNeeded: false },
+  { id: 22, name: 'Chloe Dupont',    title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1', salary: 3400,  salaryReviewNeeded: false },
+  { id: 23, name: 'Raj Patel',       title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1', salary: 3200,  salaryReviewNeeded: false },
+  { id: 24, name: 'Mia Larsson',     title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1', salary: 3500,  salaryReviewNeeded: false },
+  { id: 25, name: 'Tom Nguyen',      title: 'Recruiting Coordinator',  department: 'hr', managerId: 21,   level: 'L1', salary: 3300,  salaryReviewNeeded: false },
 ];
 
 // ── Level & Title Config ──────────────────────────────────────────────────────
@@ -653,6 +1245,17 @@ const LEVELS = [
   { id: 'L7', label: 'L7 · Director' },
   { id: 'L8', label: 'L8 · VP / Head' },
 ];
+
+const SALARY_BANDS = {
+  L1: { min: 3000,  max: 4500  },
+  L2: { min: 4500,  max: 6000  },
+  L3: { min: 6000,  max: 8500  },
+  L4: { min: 8000,  max: 11000 },
+  L5: { min: 10500, max: 14000 },
+  L6: { min: 13000, max: 17500 },
+  L7: { min: 16000, max: 22000 },
+  L8: { min: 20000, max: 30000 },
+};
 
 const TITLES = {
   engineering: {
@@ -724,6 +1327,32 @@ function getLevelNum(levelId) {
   return parseInt(levelId.slice(1), 10);
 }
 
+function formatSalary(n) {
+  return '$' + n.toLocaleString('en-US') + '/mo';
+}
+
+function salaryBandStatus(emp) {
+  const band = SALARY_BANDS[emp.level];
+  if (!band) return 'ok';
+  if (emp.salary < band.min) return 'under';
+  if (emp.salary > band.max) return 'over';
+  return 'ok';
+}
+
+const DEPT_COLOR_PALETTE = [
+  '#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6',
+  '#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16',
+];
+
+function slugify(str) {
+  return str.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+function nextAvailableColor() {
+  const used = new Set(departments.map(d => d.color));
+  return DEPT_COLOR_PALETTE.find(c => !used.has(c)) || DEPT_COLOR_PALETTE[0];
+}
+
 // ── Orphan detection ──────────────────────────────────────────────────────────
 
 function getReachableIds(deptId) {
@@ -760,6 +1389,18 @@ function getDescendantIds(empId) {
   return ids;
 }
 
+// ── Hierarchy mismatch ────────────────────────────────────────────────────────
+
+function hasLevelMismatch(emp) {
+  const empLevelNum = getLevelNum(emp.level);
+  const descendants = getDescendantIds(emp.id);
+  for (const descId of descendants) {
+    const desc = employees.find(e => e.id === descId);
+    if (desc && getLevelNum(desc.level) >= empLevelNum) return true;
+  }
+  return false;
+}
+
 // ── Rendering ─────────────────────────────────────────────────────────────────
 
 function getChildren(managerId, deptId) {
@@ -787,7 +1428,8 @@ function renderCard(emp, isOrphaned = false) {
 
   const info = document.createElement('div');
   info.className = 'emp-info';
-  info.innerHTML = `<div class="emp-name">${emp.name}</div><div class="emp-title">${emp.title}</div>`;
+  const reviewBadge = emp.salaryReviewNeeded ? `<span class="salary-review-badge">Review</span>` : '';
+  info.innerHTML = `<div class="emp-name">${emp.name}</div><div class="emp-title">${emp.title}</div><div class="emp-salary">${formatSalary(emp.salary)}</div>${reviewBadge}`;
 
   const badge = document.createElement('div');
   badge.className = `level-badge ${levelTierClass(emp.level || 'L1')}`;
@@ -797,7 +1439,37 @@ function renderCard(emp, isOrphaned = false) {
   handle.className = 'drag-handle';
   handle.innerHTML = '&#8942;&#8942;';
 
-  card.append(avatar, info, badge, handle);
+  card.append(avatar, info, badge);
+
+  if (hasLevelMismatch(emp)) {
+    const manager = employees.find(e => e.id === emp.managerId);
+    const warn = document.createElement('div');
+    warn.className = 'card-warn-icon';
+    warn.title = `${emp.name}'s level (${emp.level}) ≥ manager's level (${manager.level})`;
+    warn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2L14.9 14H1.1L8 2z" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round"/>
+      <rect x="7.25" y="6.5" width="1.5" height="4" rx="0.5" fill="#d97706"/>
+      <circle cx="8" cy="12" r="0.75" fill="#d97706"/>
+    </svg>`;
+    card.appendChild(warn);
+  }
+
+  const salaryStatus = salaryBandStatus(emp);
+  if (salaryStatus !== 'ok') {
+    const band = SALARY_BANDS[emp.level];
+    const direction = salaryStatus === 'under' ? 'below' : 'above';
+    const salaryWarn = document.createElement('div');
+    salaryWarn.className = 'card-salary-warn';
+    salaryWarn.title = `${emp.name}'s salary (${formatSalary(emp.salary)}) is ${direction} the ${emp.level} band (${formatSalary(band.min)}–${formatSalary(band.max)})`;
+    salaryWarn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M8 2L14.9 14H1.1L8 2z" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4" stroke-linejoin="round"/>
+      <rect x="7.25" y="6.5" width="1.5" height="4" rx="0.5" fill="#d97706"/>
+      <circle cx="8" cy="12" r="0.75" fill="#d97706"/>
+    </svg>`;
+    card.appendChild(salaryWarn);
+  }
+
+  card.appendChild(handle);
 
   // Single-click = select
   card.addEventListener('click', e => {
@@ -864,7 +1536,10 @@ function renderCard(emp, isOrphaned = false) {
     state.draggedIds.forEach(id => {
       if (id === emp.id) return;
       const t = employees.find(x => x.id === id);
-      if (t) { t.department = emp.department; t.managerId = emp.id; }
+      if (!t) return;
+      if (getDescendantIds(t.id).has(emp.id)) return; // cycle guard
+      t.department = emp.department;
+      t.managerId = emp.id;
     });
     state.draggedIds = [];
     state.selectedIds.clear();
@@ -914,15 +1589,37 @@ function renderDeptColumn(dept) {
   col.dataset.dept = dept.id;
 
   const deptEmps = employees.filter(e => e.department === dept.id);
+  const totalSalary = deptEmps.reduce((sum, e) => sum + (e.salary || 0), 0);
 
   // Header
   const header = document.createElement('div');
   header.className = 'dept-header';
   header.innerHTML = `
     <div class="dept-dot" style="background:${dept.color}"></div>
-    <span class="dept-name">${dept.name}</span>
+    <div style="flex:1;min-width:0">
+      <span class="dept-name">${dept.name}</span>
+      ${dept.description ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dept.description}</div>` : ''}
+    </div>
     <span class="dept-count">${deptEmps.length}</span>
+    <span class="dept-salary">${formatSalary(totalSalary)}</span>
+    <button class="dept-delete-btn${deptEmps.length > 0 ? ' has-employees' : ''}" data-dept-id="${dept.id}" title="Delete department">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3,4 13,4"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/>
+        <path d="M6 7v5M10 7v5"/><rect x="4" y="4" width="8" height="10" rx="1"/>
+      </svg>
+    </button>
   `;
+
+  if (deptEmps.length === 0) {
+    header.querySelector('.dept-delete-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      if (confirm(`Delete the "${dept.name}" department?`)) {
+        const idx = departments.findIndex(d => d.id === dept.id);
+        if (idx !== -1) departments.splice(idx, 1);
+        render();
+      }
+    });
+  }
 
   // Drop on header
   header.addEventListener('dragover', e => {
@@ -987,6 +1684,25 @@ function render() {
   columns.innerHTML = '';
   departments.forEach(dept => columns.appendChild(renderDeptColumn(dept)));
 
+  // "Add Department" placeholder column
+  const addDeptCol = document.createElement('div');
+  addDeptCol.className = 'dept-column';
+  Object.assign(addDeptCol.style, {
+    minWidth: '200px', flex: '0 0 auto', display: 'flex',
+    alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+    borderStyle: 'dashed', borderColor: 'var(--border-hover)',
+    background: 'transparent', minHeight: '120px',
+  });
+  addDeptCol.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-muted)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+      <span style="font-size:12px;font-weight:600">Add Department</span>
+    </div>`;
+  addDeptCol.addEventListener('click', openDeptModal);
+  columns.appendChild(addDeptCol);
+
   document.getElementById('total-badge').textContent = `${employees.length} employees`;
 
   const count = state.selectedIds.size;
@@ -1003,9 +1719,52 @@ function render() {
 
 // ── Edit Modal ────────────────────────────────────────────────────────────────
 
+let modalOriginal = null;
+
+function updateViewSpans() {
+  const nameVal    = document.getElementById('modal-name').value;
+  const levelVal   = document.getElementById('modal-level').value;
+  const titleVal   = document.getElementById('modal-title').value;
+  const deptVal    = document.getElementById('modal-dept').value;
+  const managerVal = document.getElementById('modal-manager').value;
+
+  document.getElementById('modal-name-view').textContent    = nameVal || '—';
+  const levelObj = LEVELS.find(l => l.id === levelVal);
+  document.getElementById('modal-level-view').textContent   = levelObj ? levelObj.label : levelVal;
+  document.getElementById('modal-title-view').textContent   = titleVal || '—';
+  const deptObj = departments.find(d => d.id === deptVal);
+  document.getElementById('modal-dept-view').textContent    = deptObj ? deptObj.name : deptVal;
+  const mgrEmp = managerVal ? employees.find(e => e.id === parseInt(managerVal, 10)) : null;
+  document.getElementById('modal-manager-view').textContent = mgrEmp ? mgrEmp.name : '— No manager (Director) —';
+}
+
+function checkModalChanges() {
+  if (!modalOriginal) return;
+  const nameVal    = document.getElementById('modal-name').value;
+  const levelVal   = document.getElementById('modal-level').value;
+  const titleVal   = document.getElementById('modal-title').value;
+  const deptVal    = document.getElementById('modal-dept').value;
+  const managerVal = document.getElementById('modal-manager').value;
+  const currentManagerId = managerVal ? parseInt(managerVal, 10) : null;
+
+  const changed = nameVal  !== modalOriginal.name  ||
+                  levelVal !== modalOriginal.level  ||
+                  titleVal !== modalOriginal.title  ||
+                  deptVal  !== modalOriginal.dept   ||
+                  currentManagerId !== modalOriginal.managerId;
+
+  document.getElementById('modal-panel').classList.toggle('has-changes', changed);
+}
+
 function openModal(empId) {
   state.editingId = empId;
   const emp = employees.find(e => e.id === empId);
+
+  // Set modal avatar
+  const modalAvatar = document.getElementById('modal-avatar');
+  modalAvatar.style.background = nameToColor(emp.name);
+  modalAvatar.textContent = getInitials(emp.name);
+  document.getElementById('modal-avatar-badge').classList.remove('visible');
 
   // Populate name
   document.getElementById('modal-name').value = emp.name;
@@ -1038,14 +1797,44 @@ function openModal(empId) {
   // Populate manager dropdown
   rebuildManagerDropdown(empId, emp.department, emp.managerId);
 
+  // Store originals and set view spans
+  modalOriginal = {
+    name:      emp.name,
+    level:     emp.level,
+    title:     emp.title,
+    dept:      emp.department,
+    managerId: emp.managerId,
+  };
+  updateViewSpans();
+
   // Evaluate warning
   evaluateWarning();
 
+  // Salary section
+  const band = SALARY_BANDS[emp.level];
+  const status = salaryBandStatus(emp);
+  document.getElementById('modal-salary-value').textContent = formatSalary(emp.salary);
+  document.getElementById('modal-salary-value').className = 'modal-comp-value' + (status !== 'ok' ? ' out-of-band' : '');
+  document.getElementById('modal-band-level').textContent = emp.level;
+  document.getElementById('modal-band-range').textContent = band ? `${formatSalary(band.min)} – ${formatSalary(band.max)}` : '—';
+  const fill = document.getElementById('modal-band-fill');
+  if (band) {
+    const range = band.max - band.min;
+    const pct = Math.min(100, Math.max(0, (emp.salary - band.min) / range * 100));
+    fill.style.left = '0';
+    fill.style.width = pct + '%';
+    fill.className = 'modal-band-fill' + (status !== 'ok' ? ' out-of-band' : '');
+  }
+  // Review flag
+  const toggle = document.getElementById('modal-review-toggle');
+  toggle.classList.toggle('active', !!emp.salaryReviewNeeded);
+
+  // Reset to view mode
+  const panel = document.getElementById('modal-panel');
+  panel.classList.remove('editing', 'has-changes');
+
   // Show modal
   document.getElementById('modal-backdrop').classList.add('visible');
-
-  // Focus name input
-  setTimeout(() => document.getElementById('modal-name').focus(), 50);
 }
 
 function rebuildTitleDropdown(levelId, deptId, currentTitle) {
@@ -1089,27 +1878,24 @@ function rebuildManagerDropdown(empId, deptId, currentManagerId) {
 
 function evaluateWarning() {
   const warning = document.getElementById('modal-warning');
+  const badge = document.getElementById('modal-avatar-badge');
   const empLevel = document.getElementById('modal-level').value;
-  const managerVal = document.getElementById('modal-manager').value;
+  const empLevelNum = getLevelNum(empLevel);
 
-  if (!managerVal) {
-    warning.classList.remove('visible');
-    warning.textContent = '';
-    return;
+  const descendants = getDescendantIds(state.editingId);
+  let mismatchedSub = null;
+  for (const descId of descendants) {
+    const desc = employees.find(e => e.id === descId);
+    if (desc && getLevelNum(desc.level) >= empLevelNum) { mismatchedSub = desc; break; }
   }
 
-  const managerId = parseInt(managerVal, 10);
-  const manager = employees.find(e => e.id === managerId);
-  if (!manager) { warning.classList.remove('visible'); return; }
+  const showWarning = mismatchedSub !== null;
+  badge.classList.toggle('visible', showWarning);
 
-  const empLevelNum = getLevelNum(empLevel);
-  const mgrLevelNum = getLevelNum(manager.level || 'L1');
-
-  const empName = document.getElementById('modal-name').value.trim() ||
-    employees.find(e => e.id === state.editingId).name;
-
-  if (empLevelNum >= mgrLevelNum) {
-    warning.textContent = `⚠ ${empName}'s level (${empLevel}) is higher than or equal to their manager ${manager.name} (${manager.level}). Consider reviewing the hierarchy.`;
+  if (showWarning) {
+    const empName = document.getElementById('modal-name').value.trim() ||
+      employees.find(e => e.id === state.editingId).name;
+    warning.textContent = `⚠ ${empName} (${empLevel}) is managing ${mismatchedSub.name} (${mismatchedSub.level}) who has an equal or higher level. Consider reviewing the hierarchy.`;
     warning.classList.add('visible');
   } else {
     warning.classList.remove('visible');
@@ -1119,6 +1905,9 @@ function evaluateWarning() {
 
 function closeModal() {
   state.editingId = null;
+  modalOriginal = null;
+  const panel = document.getElementById('modal-panel');
+  panel.classList.remove('editing', 'has-changes');
   document.getElementById('modal-backdrop').classList.remove('visible');
 }
 
@@ -1145,25 +1934,57 @@ function saveModal() {
 
 // ── Modal event wiring ────────────────────────────────────────────────────────
 
+document.getElementById('modal-review-toggle').addEventListener('click', () => {
+  const emp = employees.find(e => e.id === state.editingId);
+  if (!emp) return;
+  emp.salaryReviewNeeded = !emp.salaryReviewNeeded;
+  const toggle = document.getElementById('modal-review-toggle');
+  toggle.classList.toggle('active', emp.salaryReviewNeeded);
+  render();
+});
+
 document.getElementById('modal-close-btn').addEventListener('click', closeModal);
-document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
 document.getElementById('modal-save-btn').addEventListener('click', saveModal);
+
+document.getElementById('modal-edit-btn').addEventListener('click', () => {
+  document.getElementById('modal-panel').classList.add('editing');
+  setTimeout(() => document.getElementById('modal-name').focus(), 50);
+});
+
+document.getElementById('modal-cancel-btn').addEventListener('click', () => {
+  if (!modalOriginal) { closeModal(); return; }
+  // Revert form to original values
+  document.getElementById('modal-name').value = modalOriginal.name;
+  // Rebuild level select with original selection
+  const levelSel = document.getElementById('modal-level');
+  Array.from(levelSel.options).forEach(o => { o.selected = o.value === modalOriginal.level; });
+  rebuildTitleDropdown(modalOriginal.level, modalOriginal.dept, modalOriginal.title);
+  // Rebuild dept select with original selection
+  const deptSel = document.getElementById('modal-dept');
+  Array.from(deptSel.options).forEach(o => { o.selected = o.value === modalOriginal.dept; });
+  rebuildManagerDropdown(state.editingId, modalOriginal.dept, modalOriginal.managerId);
+  updateViewSpans();
+  evaluateWarning();
+  const panel = document.getElementById('modal-panel');
+  panel.classList.remove('editing', 'has-changes');
+});
 
 // Backdrop click closes modal
 document.getElementById('modal-backdrop').addEventListener('click', e => {
   if (e.target === document.getElementById('modal-backdrop')) closeModal();
 });
 
-// Level change → rebuild title dropdown, re-evaluate warning
+// Level change → rebuild title dropdown, re-evaluate warning, check changes
 document.getElementById('modal-level').addEventListener('change', () => {
   const levelId = document.getElementById('modal-level').value;
   const deptId  = document.getElementById('modal-dept').value;
   const emp = employees.find(e => e.id === state.editingId);
   rebuildTitleDropdown(levelId, deptId, emp ? emp.title : null);
   evaluateWarning();
+  checkModalChanges();
 });
 
-// Department change → rebuild manager dropdown, rebuild title dropdown
+// Department change → rebuild manager/title dropdowns, check changes
 document.getElementById('modal-dept').addEventListener('change', () => {
   const deptId  = document.getElementById('modal-dept').value;
   const levelId = document.getElementById('modal-level').value;
@@ -1176,17 +1997,32 @@ document.getElementById('modal-dept').addEventListener('change', () => {
   rebuildTitleDropdown(levelId, deptId, emp ? emp.title : null);
   rebuildManagerDropdown(state.editingId, deptId, newManagerId);
   evaluateWarning();
+  checkModalChanges();
 });
 
-// Manager change → re-evaluate warning
-document.getElementById('modal-manager').addEventListener('change', evaluateWarning);
+// Title change → check changes
+document.getElementById('modal-title').addEventListener('change', checkModalChanges);
 
-// Name change → re-evaluate warning (updates name in message)
-document.getElementById('modal-name').addEventListener('input', evaluateWarning);
+// Manager change → check changes
+document.getElementById('modal-manager').addEventListener('change', checkModalChanges);
+
+// Name change → re-evaluate warning (updates message text), check changes
+document.getElementById('modal-name').addEventListener('input', () => {
+  evaluateWarning();
+  checkModalChanges();
+});
 
 // ESC closes modal
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && state.editingId !== null) closeModal();
+  if (e.key === 'Escape') {
+    if (document.getElementById('add-emp-modal-backdrop').classList.contains('visible')) {
+      closeAddEmpModal();
+    } else if (document.getElementById('dept-modal-backdrop').classList.contains('visible')) {
+      closeDeptModal();
+    } else if (state.editingId !== null) {
+      closeModal();
+    }
+  }
 });
 
 // ── Deselect on background click ──────────────────────────────────────────────
@@ -1197,6 +2033,177 @@ document.addEventListener('click', e => {
     render();
   }
 });
+
+// ── Department Modal ─────────────────────────────────────────────────────────
+
+let selectedDeptColor = null;
+
+function openDeptModal() {
+  selectedDeptColor = nextAvailableColor();
+  document.getElementById('dept-name-input').value = '';
+  document.getElementById('dept-desc-input').value = '';
+  const warn = document.getElementById('dept-modal-warning');
+  warn.textContent = ''; warn.classList.remove('visible');
+
+  const swatchContainer = document.getElementById('dept-color-swatches');
+  swatchContainer.innerHTML = '';
+  DEPT_COLOR_PALETTE.forEach(color => {
+    const s = document.createElement('div');
+    s.className = 'dept-color-swatch' + (color === selectedDeptColor ? ' selected' : '');
+    s.style.background = color;
+    s.dataset.color = color;
+    s.addEventListener('click', () => {
+      selectedDeptColor = color;
+      swatchContainer.querySelectorAll('.dept-color-swatch')
+        .forEach(sw => sw.classList.toggle('selected', sw.dataset.color === color));
+    });
+    swatchContainer.appendChild(s);
+  });
+
+  document.getElementById('dept-modal-backdrop').classList.add('visible');
+  setTimeout(() => document.getElementById('dept-name-input').focus(), 50);
+}
+
+function closeDeptModal() {
+  document.getElementById('dept-modal-backdrop').classList.remove('visible');
+}
+
+function saveDeptModal() {
+  const name = document.getElementById('dept-name-input').value.trim();
+  const warn = document.getElementById('dept-modal-warning');
+  if (!name) {
+    warn.textContent = 'Department name is required.';
+    warn.classList.add('visible');
+    document.getElementById('dept-name-input').focus();
+    return;
+  }
+  let id = slugify(name) || 'dept';
+  if (departments.find(d => d.id === id)) {
+    let n = 2;
+    while (departments.find(d => d.id === id + '-' + n)) n++;
+    id = id + '-' + n;
+  }
+  const description = document.getElementById('dept-desc-input').value.trim();
+  departments.push({ id, name, color: selectedDeptColor || DEPT_COLOR_PALETTE[0], description });
+  closeDeptModal();
+  render();
+}
+
+document.getElementById('dept-modal-close-btn').addEventListener('click', closeDeptModal);
+document.getElementById('dept-modal-cancel-btn').addEventListener('click', closeDeptModal);
+document.getElementById('dept-modal-save-btn').addEventListener('click', saveDeptModal);
+document.getElementById('dept-modal-backdrop').addEventListener('click', e => {
+  if (e.target === document.getElementById('dept-modal-backdrop')) closeDeptModal();
+});
+document.getElementById('dept-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveDeptModal();
+});
+
+// ── Add Employee Modal ────────────────────────────────────────────────────────
+
+function addEmpRebuildTitleDropdown() {
+  const levelId  = document.getElementById('add-emp-level').value;
+  const deptId   = document.getElementById('add-emp-dept').value;
+  const titleSel = document.getElementById('add-emp-title');
+  const titles   = (TITLES[deptId] && TITLES[deptId][levelId]) || [];
+  titleSel.innerHTML = '';
+  if (titles.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = '— No preset titles —';
+    titleSel.appendChild(opt);
+  } else {
+    titles.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      titleSel.appendChild(opt);
+    });
+  }
+}
+
+function addEmpRebuildManagerDropdown() {
+  const deptId    = document.getElementById('add-emp-dept').value;
+  const managerSel = document.getElementById('add-emp-manager');
+  managerSel.innerHTML = '';
+  const noMgr = document.createElement('option');
+  noMgr.value = ''; noMgr.textContent = '— No manager (Director) —';
+  managerSel.appendChild(noMgr);
+  employees.filter(e => e.department === deptId).forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e.id; opt.textContent = e.name;
+    managerSel.appendChild(opt);
+  });
+  const director = getDirector(deptId);
+  if (director) managerSel.value = director.id;
+}
+
+function openAddEmpModal() {
+  const deptSel = document.getElementById('add-emp-dept');
+  deptSel.innerHTML = '';
+  departments.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id; opt.textContent = d.name;
+    deptSel.appendChild(opt);
+  });
+
+  const levelSel = document.getElementById('add-emp-level');
+  levelSel.innerHTML = '';
+  LEVELS.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.id; opt.textContent = l.label;
+    levelSel.appendChild(opt);
+  });
+
+  document.getElementById('add-emp-name').value = '';
+  document.getElementById('add-emp-salary').value = '';
+  const warn = document.getElementById('add-emp-warning');
+  warn.textContent = ''; warn.classList.remove('visible');
+
+  addEmpRebuildTitleDropdown();
+  addEmpRebuildManagerDropdown();
+
+  document.getElementById('add-emp-modal-backdrop').classList.add('visible');
+  setTimeout(() => document.getElementById('add-emp-name').focus(), 50);
+}
+
+function closeAddEmpModal() {
+  document.getElementById('add-emp-modal-backdrop').classList.remove('visible');
+}
+
+function saveAddEmpModal() {
+  const name = document.getElementById('add-emp-name').value.trim();
+  const warn = document.getElementById('add-emp-warning');
+  if (!name) {
+    warn.textContent = 'Employee name is required.';
+    warn.classList.add('visible');
+    document.getElementById('add-emp-name').focus();
+    return;
+  }
+  const deptId    = document.getElementById('add-emp-dept').value;
+  const levelId   = document.getElementById('add-emp-level').value;
+  const title     = document.getElementById('add-emp-title').value || name;
+  const salaryRaw = document.getElementById('add-emp-salary').value;
+  const salary    = salaryRaw ? parseInt(salaryRaw, 10) : (SALARY_BANDS[levelId] ? SALARY_BANDS[levelId].min : 0);
+  const mgrVal    = document.getElementById('add-emp-manager').value;
+  const managerId = mgrVal ? parseInt(mgrVal, 10) : null;
+  const newId     = employees.length > 0 ? Math.max(...employees.map(e => e.id)) + 1 : 1;
+
+  employees.push({ id: newId, name, title, department: deptId, managerId, level: levelId, salary, salaryReviewNeeded: false });
+  closeAddEmpModal();
+  render();
+}
+
+document.getElementById('add-emp-btn').addEventListener('click', openAddEmpModal);
+document.getElementById('add-emp-modal-close-btn').addEventListener('click', closeAddEmpModal);
+document.getElementById('add-emp-cancel-btn').addEventListener('click', closeAddEmpModal);
+document.getElementById('add-emp-save-btn').addEventListener('click', saveAddEmpModal);
+document.getElementById('add-emp-modal-backdrop').addEventListener('click', e => {
+  if (e.target === document.getElementById('add-emp-modal-backdrop')) closeAddEmpModal();
+});
+document.getElementById('add-emp-dept').addEventListener('change', () => {
+  addEmpRebuildTitleDropdown();
+  addEmpRebuildManagerDropdown();
+});
+document.getElementById('add-emp-level').addEventListener('change', addEmpRebuildTitleDropdown);
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
