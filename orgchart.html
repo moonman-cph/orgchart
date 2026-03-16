@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrgChart</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --border: #e4e7ec;
+    --border-hover: #c8cdd8;
+    --text-primary: #101828;
+    --text-secondary: #475467;
+    --text-muted: #98a2b3;
+    --accent: #5a67d8;
+    --accent-light: #eef0fd;
+    --accent-border: #8b96e9;
+    --drop-bg: #f0f3fe;
+    --radius: 10px;
+    --shadow-sm: 0 1px 3px rgba(16,24,40,0.06), 0 1px 2px rgba(16,24,40,0.04);
+    --shadow-md: 0 4px 12px rgba(16,24,40,0.08), 0 2px 4px rgba(16,24,40,0.04);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  #app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .header-logo {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .header-logo svg { display: block; }
+  #app-header h1 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    color: var(--text-primary);
+  }
+  .header-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+  .header-meta {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .header-spacer { flex: 1; }
+  .header-badge {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+  }
+
+  /* ── Main ───────────────────────────────────────────────────── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 20px 16px;
+    gap: 14px;
+    overflow: auto;
+  }
+
+  #columns {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex: 1;
+  }
+
+  /* ── Department Column ──────────────────────────────────────── */
+  .dept-column {
+    flex: 1;
+    min-width: 268px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow 0.18s, border-color 0.18s;
+  }
+  .dept-column.drop-active {
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 3px rgba(90,103,216,0.12), var(--shadow-md);
+  }
+
+  .dept-header {
+    padding: 13px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+    cursor: default;
+    background: var(--surface);
+  }
+  .dept-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dept-name {
+    font-size: 13px;
+    font-weight: 650;
+    color: var(--text-primary);
+    letter-spacing: -0.1px;
+    flex: 1;
+  }
+  .dept-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1px 8px;
+    line-height: 1.6;
+  }
+  .dept-column.drop-active .dept-header {
+    background: var(--drop-bg);
+  }
+
+  /* ── Tree ───────────────────────────────────────────────────── */
+  .dept-tree {
+    padding: 12px 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .tree-node {
+    position: relative;
+  }
+
+  .tree-children {
+    margin-left: 18px;
+    padding-left: 14px;
+    border-left: 1.5px solid #e4e7ec;
+  }
+  .tree-children .tree-node {
+    margin-top: 5px;
+  }
+
+  /* ── Unassigned Section ─────────────────────────────────────── */
+  .unassigned-section {
+    margin-top: 10px;
+    border-top: 1px dashed var(--border);
+    padding-top: 10px;
+  }
+  .unassigned-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+    padding: 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .unassigned-label::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 4px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23d97706'%3E%3Cpath d='M8 1.5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 018 1.5zm0 9a1 1 0 100 2 1 1 0 000-2z'/%3E%3C/svg%3E");
+    background-size: 10px;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+  }
+  .unassigned-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  /* ── Employee Card ──────────────────────────────────────────── */
+  .emp-card {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    background: var(--surface);
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, opacity 0.12s;
+    position: relative;
+  }
+  .emp-card:hover {
+    background: #fafbfc;
+    border-color: var(--border-hover);
+  }
+  .emp-card.selected {
+    background: var(--accent-light);
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 3px rgba(90,103,216,0.1);
+  }
+  .emp-card.dragging {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .emp-card.drop-target {
+    border-color: var(--accent);
+    border-style: dashed;
+    background: var(--drop-bg);
+    box-shadow: 0 0 0 3px rgba(90,103,216,0.14);
+  }
+  .emp-card.orphaned {
+    border-color: #fcd34d;
+    background: #fffbeb;
+  }
+  .emp-card.orphaned:hover {
+    background: #fef9e7;
+    border-color: #f59e0b;
+  }
+
+  /* ── Avatar ─────────────────────────────────────────────────── */
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Card Info ──────────────────────────────────────────────── */
+  .emp-info { flex: 1; min-width: 0; }
+  .emp-name {
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+    letter-spacing: -0.1px;
+  }
+  .emp-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+    font-weight: 400;
+  }
+
+  /* ── Level Badge ─────────────────────────────────────────────── */
+  .level-badge {
+    font-size: 10px;
+    font-weight: 650;
+    padding: 2px 6px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    letter-spacing: 0.2px;
+  }
+  .level-badge.tier-gray   { background: #e4e7ec; color: #667085; }
+  .level-badge.tier-sky    { background: #e0f2fe; color: #0369a1; }
+  .level-badge.tier-violet { background: #ede9fe; color: #6d28d9; }
+  .level-badge.tier-indigo { background: #e0e7ff; color: #3730a3; }
+
+  /* ── Drag Handle ─────────────────────────────────────────────── */
+  .drag-handle {
+    color: #d0d5dd;
+    font-size: 13px;
+    flex-shrink: 0;
+    line-height: 1;
+    transition: color 0.12s;
+    cursor: grab;
+  }
+  .emp-card:hover .drag-handle { color: #98a2b3; }
+  .emp-card:active .drag-handle { cursor: grabbing; }
+
+  /* ── Status Bar ─────────────────────────────────────────────── */
+  #status-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
+  }
+  #status-bar.has-selection {
+    border-color: var(--accent-border);
+    background: var(--accent-light);
+  }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #d0d5dd;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  #status-bar.has-selection .status-dot { background: var(--accent); }
+  #status-text { font-weight: 550; }
+  .status-hint {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .status-sep { color: #d0d5dd; margin: 0 2px; }
+
+  /* ── Drag Ghost ─────────────────────────────────────────────── */
+  #drag-ghost {
+    position: fixed;
+    top: -200px;
+    left: -200px;
+    pointer-events: none;
+    z-index: 9999;
+    background: var(--text-primary);
+    color: white;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(16,24,40,0.25);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  #drag-ghost .ghost-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #a5b4fc;
+    flex-shrink: 0;
+  }
+
+  /* ── Edit Modal ──────────────────────────────────────────────── */
+  #modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  #modal-backdrop.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+  #modal-panel {
+    background: var(--surface);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(16,24,40,0.18), 0 4px 16px rgba(16,24,40,0.08);
+    transform: translateY(10px) scale(0.98);
+    transition: transform 0.18s ease, opacity 0.18s ease;
+    opacity: 0;
+    margin: 0 16px;
+  }
+  #modal-backdrop.visible #modal-panel {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
+  }
+  .modal-close {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    line-height: 1;
+    transition: background 0.12s, color 0.12s;
+  }
+  .modal-close:hover { background: var(--bg); color: var(--text-primary); }
+  .modal-body {
+    padding: 18px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .form-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.1px;
+  }
+  .form-control {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .form-control:focus {
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 3px rgba(90,103,216,0.1);
+  }
+  select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%2398a2b3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+    padding-right: 30px;
+    cursor: pointer;
+  }
+  .modal-warning {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.5;
+    display: none;
+  }
+  .modal-warning.visible { display: block; }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px 18px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+    outline: none;
+    border: 1.5px solid transparent;
+  }
+  .btn-ghost {
+    background: none;
+    border-color: var(--border);
+    color: var(--text-secondary);
+  }
+  .btn-ghost:hover { background: var(--bg); border-color: var(--border-hover); }
+  .btn-primary {
+    background: #4338ca;
+    color: white;
+    border-color: #4338ca;
+  }
+  .btn-primary:hover { background: #3730a3; border-color: #3730a3; box-shadow: 0 1px 4px rgba(67,56,202,0.3); }
+</style>
+</head>
+<body>
+
+<div id="app-header">
+  <div class="header-logo">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="3" r="2" fill="white"/>
+      <circle cx="3" cy="11" r="2" fill="white" opacity="0.7"/>
+      <circle cx="13" cy="11" r="2" fill="white" opacity="0.7"/>
+      <line x1="8" y1="5" x2="3" y2="9" stroke="white" stroke-width="1.2" opacity="0.6"/>
+      <line x1="8" y1="5" x2="13" y2="9" stroke="white" stroke-width="1.2" opacity="0.6"/>
+    </svg>
+  </div>
+  <h1>OrgChart</h1>
+  <div class="header-divider"></div>
+  <span class="header-meta">Employee Hierarchy</span>
+  <div class="header-spacer"></div>
+  <div class="header-badge" id="total-badge">25 employees</div>
+</div>
+
+<div id="main">
+  <div id="columns"></div>
+  <div id="status-bar">
+    <div class="status-dot"></div>
+    <span id="status-text">No selection</span>
+    <span class="status-hint">
+      Click to select
+      <span class="status-sep">·</span>
+      Ctrl+Click for multi-select
+      <span class="status-sep">·</span>
+      Drag to reorganize
+      <span class="status-sep">·</span>
+      Double-click to edit
+    </span>
+  </div>
+</div>
+
+<div id="drag-ghost"><div class="ghost-dot"></div><span id="ghost-label"></span></div>
+
+<!-- Edit Modal -->
+<div id="modal-backdrop">
+  <div id="modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">Edit Employee</span>
+      <button class="modal-close" id="modal-close-btn" title="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label" for="modal-name">Name</label>
+        <input type="text" id="modal-name" class="form-control" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="modal-level">Level</label>
+        <select id="modal-level" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="modal-title">Title</label>
+        <select id="modal-title" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="modal-dept">Department</label>
+        <select id="modal-dept" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="modal-manager">Reports to</label>
+        <select id="modal-manager" class="form-control"></select>
+      </div>
+      <div class="modal-warning" id="modal-warning"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+const departments = [
+  { id: 'engineering', name: 'Engineering', color: '#6366f1' },
+  { id: 'sales',       name: 'Sales',       color: '#10b981' },
+  { id: 'hr',          name: 'HR',          color: '#f59e0b' },
+];
+
+let employees = [
+  // Engineering (10)
+  { id: 1,  name: 'Diana Chen',      title: 'Director of Engineering', department: 'engineering', managerId: null, level: 'L7' },
+  { id: 2,  name: 'Marcus Webb',     title: 'Engineering Manager',     department: 'engineering', managerId: 1,    level: 'L5' },
+  { id: 3,  name: 'Priya Nair',      title: 'Engineering Manager',     department: 'engineering', managerId: 1,    level: 'L5' },
+  { id: 4,  name: 'Alex Turner',     title: 'Senior Developer',        department: 'engineering', managerId: 2,    level: 'L3' },
+  { id: 5,  name: 'Sofia Reyes',     title: 'Developer',               department: 'engineering', managerId: 2,    level: 'L2' },
+  { id: 6,  name: 'Jake Morrison',   title: 'Developer',               department: 'engineering', managerId: 2,    level: 'L2' },
+  { id: 7,  name: 'Lena Fischer',    title: 'Senior Developer',        department: 'engineering', managerId: 3,    level: 'L3' },
+  { id: 8,  name: 'Omar Khalid',     title: 'Developer',               department: 'engineering', managerId: 3,    level: 'L2' },
+  { id: 9,  name: 'Nadia Russo',     title: 'Developer',               department: 'engineering', managerId: 3,    level: 'L2' },
+  { id: 10, name: 'Ben Castillo',    title: 'Junior Developer',        department: 'engineering', managerId: 3,    level: 'L1' },
+  // Sales (9)
+  { id: 11, name: 'Victor Huang',    title: 'Director of Sales',       department: 'sales', managerId: null, level: 'L7' },
+  { id: 12, name: 'Rachel Kim',      title: 'Sales Manager',           department: 'sales', managerId: 11,   level: 'L5' },
+  { id: 13, name: 'Chris Adeyemi',   title: 'Sales Manager',           department: 'sales', managerId: 11,   level: 'L5' },
+  { id: 14, name: 'Tanya Brooks',    title: 'Senior Sales Rep',        department: 'sales', managerId: 12,   level: 'L3' },
+  { id: 15, name: 'Paulo Mendes',    title: 'Sales Rep',               department: 'sales', managerId: 12,   level: 'L2' },
+  { id: 16, name: 'Emma Johansson',  title: 'Sales Rep',               department: 'sales', managerId: 12,   level: 'L2' },
+  { id: 17, name: 'Derek Stone',     title: 'Senior Sales Rep',        department: 'sales', managerId: 13,   level: 'L3' },
+  { id: 18, name: 'Iris Nakamura',   title: 'Sales Rep',               department: 'sales', managerId: 13,   level: 'L2' },
+  { id: 19, name: 'Leo Petrov',      title: 'Sales Rep',               department: 'sales', managerId: 13,   level: 'L2' },
+  // HR (6)
+  { id: 20, name: 'Angela Foster',   title: 'Director of HR',          department: 'hr', managerId: null, level: 'L7' },
+  { id: 21, name: 'Samuel Okafor',   title: 'HR Manager',              department: 'hr', managerId: 20,   level: 'L5' },
+  { id: 22, name: 'Chloe Dupont',    title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1' },
+  { id: 23, name: 'Raj Patel',       title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1' },
+  { id: 24, name: 'Mia Larsson',     title: 'HR Coordinator',          department: 'hr', managerId: 21,   level: 'L1' },
+  { id: 25, name: 'Tom Nguyen',      title: 'Recruiting Coordinator',  department: 'hr', managerId: 21,   level: 'L1' },
+];
+
+// ── Level & Title Config ──────────────────────────────────────────────────────
+
+const LEVELS = [
+  { id: 'L1', label: 'L1 · Junior' },
+  { id: 'L2', label: 'L2 · Mid' },
+  { id: 'L3', label: 'L3 · Senior' },
+  { id: 'L4', label: 'L4 · Lead / Specialist' },
+  { id: 'L5', label: 'L5 · Manager' },
+  { id: 'L6', label: 'L6 · Senior Manager' },
+  { id: 'L7', label: 'L7 · Director' },
+  { id: 'L8', label: 'L8 · VP / Head' },
+];
+
+const TITLES = {
+  engineering: {
+    L1: ['Junior Developer', 'Junior QA Engineer'],
+    L2: ['Developer', 'QA Engineer', 'Data Analyst'],
+    L3: ['Senior Developer', 'Senior QA Engineer', 'Senior Data Analyst'],
+    L4: ['Tech Lead', 'Principal Engineer', 'Staff Engineer'],
+    L5: ['Engineering Manager', 'QA Manager'],
+    L6: ['Senior Engineering Manager'],
+    L7: ['Director of Engineering', 'Director of Technology'],
+    L8: ['VP of Engineering', 'CTO'],
+  },
+  sales: {
+    L1: ['Sales Development Rep', 'Junior Sales Rep'],
+    L2: ['Sales Rep', 'Account Rep'],
+    L3: ['Senior Sales Rep', 'Senior Account Rep'],
+    L4: ['Account Executive', 'Senior Account Executive'],
+    L5: ['Sales Manager', 'Regional Sales Manager'],
+    L6: ['Senior Sales Manager'],
+    L7: ['Director of Sales', 'Director of Revenue'],
+    L8: ['VP of Sales', 'Chief Revenue Officer'],
+  },
+  hr: {
+    L1: ['HR Coordinator', 'Recruiting Coordinator'],
+    L2: ['HR Specialist', 'Recruiter'],
+    L3: ['Senior HR Specialist', 'Senior Recruiter'],
+    L4: ['HR Business Partner', 'Lead Recruiter'],
+    L5: ['HR Manager', 'Talent Acquisition Manager'],
+    L6: ['Senior HR Manager'],
+    L7: ['Director of HR', 'Director of People'],
+    L8: ['VP of HR', 'Chief People Officer'],
+  },
+};
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+const state = {
+  selectedIds: new Set(),
+  draggedIds: [],
+  editingId: null,
+};
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+
+function getInitials(name) {
+  return name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+}
+
+function nameToColor(name) {
+  const palette = [
+    '#6366f1','#8b5cf6','#a855f7','#ec4899','#f43f5e',
+    '#ef4444','#f97316','#eab308','#84cc16','#22c55e',
+    '#10b981','#14b8a6','#06b6d4','#0ea5e9','#3b82f6',
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return palette[Math.abs(hash) % palette.length];
+}
+
+function levelTierClass(levelId) {
+  const n = parseInt(levelId.slice(1), 10);
+  if (n <= 2) return 'tier-gray';
+  if (n <= 4) return 'tier-sky';
+  if (n <= 6) return 'tier-violet';
+  return 'tier-indigo';
+}
+
+function getLevelNum(levelId) {
+  return parseInt(levelId.slice(1), 10);
+}
+
+// ── Orphan detection ──────────────────────────────────────────────────────────
+
+function getReachableIds(deptId) {
+  const director = getDirector(deptId);
+  if (!director) return new Set();
+  const reachable = new Set();
+  const queue = [director.id];
+  while (queue.length) {
+    const id = queue.shift();
+    reachable.add(id);
+    employees
+      .filter(e => e.managerId === id && e.department === deptId)
+      .forEach(e => queue.push(e.id));
+  }
+  return reachable;
+}
+
+function getOrphaned(deptId) {
+  const reachable = getReachableIds(deptId);
+  return employees.filter(e => e.department === deptId && !reachable.has(e.id));
+}
+
+// ── Cycle prevention ──────────────────────────────────────────────────────────
+
+function getDescendantIds(empId) {
+  const ids = new Set();
+  const queue = [empId];
+  while (queue.length) {
+    const id = queue.shift();
+    employees
+      .filter(e => e.managerId === id)
+      .forEach(e => { ids.add(e.id); queue.push(e.id); });
+  }
+  return ids;
+}
+
+// ── Rendering ─────────────────────────────────────────────────────────────────
+
+function getChildren(managerId, deptId) {
+  return employees.filter(e => e.managerId === managerId && e.department === deptId);
+}
+
+function getDirector(deptId) {
+  return employees.find(e => e.department === deptId && e.managerId === null);
+}
+
+function renderCard(emp, isOrphaned = false) {
+  const card = document.createElement('div');
+  card.className = 'emp-card';
+  if (isOrphaned) card.classList.add('orphaned');
+  card.dataset.id = emp.id;
+  card.draggable = true;
+
+  if (state.selectedIds.has(emp.id)) card.classList.add('selected');
+  if (state.draggedIds.includes(emp.id)) card.classList.add('dragging');
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.style.background = nameToColor(emp.name);
+  avatar.textContent = getInitials(emp.name);
+
+  const info = document.createElement('div');
+  info.className = 'emp-info';
+  info.innerHTML = `<div class="emp-name">${emp.name}</div><div class="emp-title">${emp.title}</div>`;
+
+  const badge = document.createElement('div');
+  badge.className = `level-badge ${levelTierClass(emp.level || 'L1')}`;
+  badge.textContent = emp.level || 'L1';
+
+  const handle = document.createElement('div');
+  handle.className = 'drag-handle';
+  handle.innerHTML = '&#8942;&#8942;';
+
+  card.append(avatar, info, badge, handle);
+
+  // Single-click = select
+  card.addEventListener('click', e => {
+    e.stopPropagation();
+    if (e.ctrlKey || e.metaKey) {
+      if (state.selectedIds.has(emp.id)) state.selectedIds.delete(emp.id);
+      else state.selectedIds.add(emp.id);
+    } else {
+      state.selectedIds.clear();
+      state.selectedIds.add(emp.id);
+    }
+    render();
+  });
+
+  // Double-click = edit
+  card.addEventListener('dblclick', e => {
+    e.stopPropagation();
+    openModal(emp.id);
+  });
+
+  // Drag start
+  card.addEventListener('dragstart', e => {
+    if (state.selectedIds.has(emp.id)) {
+      state.draggedIds = [...state.selectedIds];
+    } else {
+      state.selectedIds.clear();
+      state.selectedIds.add(emp.id);
+      state.draggedIds = [emp.id];
+    }
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify(state.draggedIds));
+
+    const count = state.draggedIds.length;
+    document.getElementById('ghost-label').textContent = count === 1
+      ? employees.find(x => x.id === state.draggedIds[0]).name
+      : `${count} employees`;
+
+    const ghost = document.getElementById('drag-ghost');
+    e.dataTransfer.setDragImage(ghost, -20, -10);
+
+    requestAnimationFrame(() => render());
+  });
+
+  card.addEventListener('dragend', () => {
+    state.draggedIds = [];
+    render();
+  });
+
+  // Drop onto a card (become its report)
+  card.addEventListener('dragover', e => {
+    if (state.draggedIds.length && !state.draggedIds.includes(emp.id)) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'move';
+      card.classList.add('drop-target');
+    }
+  });
+  card.addEventListener('dragleave', () => card.classList.remove('drop-target'));
+  card.addEventListener('drop', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    card.classList.remove('drop-target');
+    if (!state.draggedIds.length) return;
+    state.draggedIds.forEach(id => {
+      if (id === emp.id) return;
+      const t = employees.find(x => x.id === id);
+      if (t) { t.department = emp.department; t.managerId = emp.id; }
+    });
+    state.draggedIds = [];
+    state.selectedIds.clear();
+    render();
+  });
+
+  return card;
+}
+
+function renderTree(managerId, deptId) {
+  const children = getChildren(managerId, deptId);
+  if (!children.length) return null;
+
+  const container = document.createElement('div');
+  container.className = 'tree-children';
+
+  children.forEach(child => {
+    const node = document.createElement('div');
+    node.className = 'tree-node';
+    node.appendChild(renderCard(child));
+    const subtree = renderTree(child.id, deptId);
+    if (subtree) node.appendChild(subtree);
+    container.appendChild(node);
+  });
+
+  return container;
+}
+
+function dropOnDept(deptId) {
+  if (!state.draggedIds.length) return;
+  const director = getDirector(deptId);
+  state.draggedIds.forEach(id => {
+    const t = employees.find(x => x.id === id);
+    if (t && t.id !== (director && director.id)) {
+      t.department = deptId;
+      t.managerId = director ? director.id : null;
+    }
+  });
+  state.draggedIds = [];
+  state.selectedIds.clear();
+  render();
+}
+
+function renderDeptColumn(dept) {
+  const col = document.createElement('div');
+  col.className = 'dept-column';
+  col.dataset.dept = dept.id;
+
+  const deptEmps = employees.filter(e => e.department === dept.id);
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'dept-header';
+  header.innerHTML = `
+    <div class="dept-dot" style="background:${dept.color}"></div>
+    <span class="dept-name">${dept.name}</span>
+    <span class="dept-count">${deptEmps.length}</span>
+  `;
+
+  // Drop on header
+  header.addEventListener('dragover', e => {
+    if (state.draggedIds.length) { e.preventDefault(); col.classList.add('drop-active'); }
+  });
+  header.addEventListener('dragleave', e => {
+    if (!col.contains(e.relatedTarget)) col.classList.remove('drop-active');
+  });
+  header.addEventListener('drop', e => {
+    e.preventDefault(); col.classList.remove('drop-active'); dropOnDept(dept.id);
+  });
+
+  // Drop on column body
+  col.addEventListener('dragover', e => {
+    if (state.draggedIds.length) { e.preventDefault(); col.classList.add('drop-active'); }
+  });
+  col.addEventListener('dragleave', e => {
+    if (!col.contains(e.relatedTarget)) col.classList.remove('drop-active');
+  });
+  col.addEventListener('drop', e => {
+    e.preventDefault(); col.classList.remove('drop-active'); dropOnDept(dept.id);
+  });
+
+  // Tree
+  const tree = document.createElement('div');
+  tree.className = 'dept-tree';
+
+  const director = getDirector(dept.id);
+  if (director) {
+    const rootNode = document.createElement('div');
+    rootNode.className = 'tree-node';
+    rootNode.appendChild(renderCard(director));
+    const subtree = renderTree(director.id, dept.id);
+    if (subtree) rootNode.appendChild(subtree);
+    tree.appendChild(rootNode);
+  }
+
+  // Orphaned employees
+  const orphans = getOrphaned(dept.id);
+  if (orphans.length) {
+    const section = document.createElement('div');
+    section.className = 'unassigned-section';
+
+    const label = document.createElement('div');
+    label.className = 'unassigned-label';
+    label.textContent = 'Manager left department';
+
+    const cards = document.createElement('div');
+    cards.className = 'unassigned-cards';
+    orphans.forEach(emp => cards.appendChild(renderCard(emp, true)));
+
+    section.append(label, cards);
+    tree.appendChild(section);
+  }
+
+  col.append(header, tree);
+  return col;
+}
+
+function render() {
+  const columns = document.getElementById('columns');
+  columns.innerHTML = '';
+  departments.forEach(dept => columns.appendChild(renderDeptColumn(dept)));
+
+  document.getElementById('total-badge').textContent = `${employees.length} employees`;
+
+  const count = state.selectedIds.size;
+  const bar = document.getElementById('status-bar');
+  const txt = document.getElementById('status-text');
+  if (count === 0) {
+    txt.textContent = 'No selection';
+    bar.classList.remove('has-selection');
+  } else {
+    txt.textContent = count === 1 ? '1 employee selected' : `${count} employees selected`;
+    bar.classList.add('has-selection');
+  }
+}
+
+// ── Edit Modal ────────────────────────────────────────────────────────────────
+
+function openModal(empId) {
+  state.editingId = empId;
+  const emp = employees.find(e => e.id === empId);
+
+  // Populate name
+  document.getElementById('modal-name').value = emp.name;
+
+  // Populate level dropdown
+  const levelSel = document.getElementById('modal-level');
+  levelSel.innerHTML = '';
+  LEVELS.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.id;
+    opt.textContent = l.label;
+    if (l.id === emp.level) opt.selected = true;
+    levelSel.appendChild(opt);
+  });
+
+  // Populate dept dropdown
+  const deptSel = document.getElementById('modal-dept');
+  deptSel.innerHTML = '';
+  departments.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.id;
+    opt.textContent = d.name;
+    if (d.id === emp.department) opt.selected = true;
+    deptSel.appendChild(opt);
+  });
+
+  // Populate title dropdown (filtered by current level + dept)
+  rebuildTitleDropdown(emp.level, emp.department, emp.title);
+
+  // Populate manager dropdown
+  rebuildManagerDropdown(empId, emp.department, emp.managerId);
+
+  // Evaluate warning
+  evaluateWarning();
+
+  // Show modal
+  document.getElementById('modal-backdrop').classList.add('visible');
+
+  // Focus name input
+  setTimeout(() => document.getElementById('modal-name').focus(), 50);
+}
+
+function rebuildTitleDropdown(levelId, deptId, currentTitle) {
+  const titleSel = document.getElementById('modal-title');
+  const titles = (TITLES[deptId] && TITLES[deptId][levelId]) || [];
+  titleSel.innerHTML = '';
+  titles.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = t;
+    if (t === currentTitle) opt.selected = true;
+    titleSel.appendChild(opt);
+  });
+  // If no match, first option is auto-selected (browser default)
+}
+
+function rebuildManagerDropdown(empId, deptId, currentManagerId) {
+  const managerSel = document.getElementById('modal-manager');
+  const descendants = getDescendantIds(empId);
+
+  managerSel.innerHTML = '';
+
+  // No manager option
+  const noMgr = document.createElement('option');
+  noMgr.value = '';
+  noMgr.textContent = '— No manager (Director) —';
+  if (currentManagerId === null) noMgr.selected = true;
+  managerSel.appendChild(noMgr);
+
+  // Candidates: same dept, not self, not descendants
+  employees
+    .filter(e => e.department === deptId && e.id !== empId && !descendants.has(e.id))
+    .forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.id;
+      opt.textContent = e.name;
+      if (e.id === currentManagerId) opt.selected = true;
+      managerSel.appendChild(opt);
+    });
+}
+
+function evaluateWarning() {
+  const warning = document.getElementById('modal-warning');
+  const empLevel = document.getElementById('modal-level').value;
+  const managerVal = document.getElementById('modal-manager').value;
+
+  if (!managerVal) {
+    warning.classList.remove('visible');
+    warning.textContent = '';
+    return;
+  }
+
+  const managerId = parseInt(managerVal, 10);
+  const manager = employees.find(e => e.id === managerId);
+  if (!manager) { warning.classList.remove('visible'); return; }
+
+  const empLevelNum = getLevelNum(empLevel);
+  const mgrLevelNum = getLevelNum(manager.level || 'L1');
+
+  const empName = document.getElementById('modal-name').value.trim() ||
+    employees.find(e => e.id === state.editingId).name;
+
+  if (empLevelNum >= mgrLevelNum) {
+    warning.textContent = `⚠ ${empName}'s level (${empLevel}) is higher than or equal to their manager ${manager.name} (${manager.level}). Consider reviewing the hierarchy.`;
+    warning.classList.add('visible');
+  } else {
+    warning.classList.remove('visible');
+    warning.textContent = '';
+  }
+}
+
+function closeModal() {
+  state.editingId = null;
+  document.getElementById('modal-backdrop').classList.remove('visible');
+}
+
+function saveModal() {
+  const emp = employees.find(e => e.id === state.editingId);
+  if (!emp) { closeModal(); return; }
+
+  const name = document.getElementById('modal-name').value.trim();
+  if (!name) {
+    document.getElementById('modal-name').focus();
+    return;
+  }
+
+  emp.name      = name;
+  emp.level     = document.getElementById('modal-level').value;
+  emp.title     = document.getElementById('modal-title').value;
+  emp.department = document.getElementById('modal-dept').value;
+  const mgrVal  = document.getElementById('modal-manager').value;
+  emp.managerId = mgrVal ? parseInt(mgrVal, 10) : null;
+
+  closeModal();
+  render();
+}
+
+// ── Modal event wiring ────────────────────────────────────────────────────────
+
+document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+document.getElementById('modal-cancel-btn').addEventListener('click', closeModal);
+document.getElementById('modal-save-btn').addEventListener('click', saveModal);
+
+// Backdrop click closes modal
+document.getElementById('modal-backdrop').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal();
+});
+
+// Level change → rebuild title dropdown, re-evaluate warning
+document.getElementById('modal-level').addEventListener('change', () => {
+  const levelId = document.getElementById('modal-level').value;
+  const deptId  = document.getElementById('modal-dept').value;
+  const emp = employees.find(e => e.id === state.editingId);
+  rebuildTitleDropdown(levelId, deptId, emp ? emp.title : null);
+  evaluateWarning();
+});
+
+// Department change → rebuild manager dropdown, rebuild title dropdown
+document.getElementById('modal-dept').addEventListener('change', () => {
+  const deptId  = document.getElementById('modal-dept').value;
+  const levelId = document.getElementById('modal-level').value;
+  const emp = employees.find(e => e.id === state.editingId);
+
+  // Auto-select director of new dept as manager
+  const director = getDirector(deptId);
+  const newManagerId = director && director.id !== state.editingId ? director.id : null;
+
+  rebuildTitleDropdown(levelId, deptId, emp ? emp.title : null);
+  rebuildManagerDropdown(state.editingId, deptId, newManagerId);
+  evaluateWarning();
+});
+
+// Manager change → re-evaluate warning
+document.getElementById('modal-manager').addEventListener('change', evaluateWarning);
+
+// Name change → re-evaluate warning (updates name in message)
+document.getElementById('modal-name').addEventListener('input', evaluateWarning);
+
+// ESC closes modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && state.editingId !== null) closeModal();
+});
+
+// ── Deselect on background click ──────────────────────────────────────────────
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.emp-card') && state.selectedIds.size > 0) {
+    state.selectedIds.clear();
+    render();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+render();
+</script>
+</body>
+</html>
