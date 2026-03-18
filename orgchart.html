@@ -1636,8 +1636,8 @@
       <div class="modal-comp-section" style="font-size:12.5px;">
         Assigned to: <span id="modal-role-person-name" style="font-weight:600"></span>
       </div>
+      <button class="btn btn-ghost" id="modal-role-assign-btn" style="width:100%;margin-top:8px;display:none">Assign person…</button>
       <div class="role-edit">
-        <button class="btn btn-ghost" id="modal-role-assign-btn" style="width:100%;margin-top:8px;display:none">Assign person…</button>
         <button class="btn btn-ghost" id="modal-role-delete-btn" style="color:#ef4444;border-color:#fca5a5;width:100%;margin-top:8px;display:none">Delete role</button>
       </div>
       <div class="modal-warning" id="modal-role-warning"></div>
@@ -3392,7 +3392,7 @@ function openCombinedModal(roleId, defaultTab) {
     rebuildRoleTeamDropdown(role.department, role.teamId || null, 'modal-role-team');
     document.getElementById('modal-role-person-name').textContent = person ? person.name : 'Vacant';
     const assignBtn = document.getElementById('modal-role-assign-btn');
-    assignBtn.style.display = person ? 'none' : '';
+    assignBtn.style.display = (!person && !settings.viewOnly) ? '' : 'none';
     document.getElementById('modal-role-delete-btn').style.display = '';
     // Populate view-mode text spans
     const levelEntry = LEVELS.find(l => l.id === role.level);
