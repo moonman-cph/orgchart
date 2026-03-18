@@ -731,8 +731,9 @@
   /* ── Modal Avatar ────────────────────────────────────────────── */
   .modal-avatar-area {
     display: flex;
-    justify-content: center;
-    padding-bottom: 4px;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 8px;
     position: relative;
   }
   #modal-avatar {
@@ -950,6 +951,19 @@
   .flag-blue   { --flag-bg: #dbeafe; --flag-border: #93c5fd; --flag-text: #1d4ed8; --flag-check: #3b82f6; }
   .flag-purple { --flag-bg: #f5f3ff; --flag-border: #c4b5fd; --flag-text: #6d28d9; --flag-check: #7c3aed; }
 
+
+  /* ── Flag chips (compact person flags) ─────────────────────── */
+  .modal-flags-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .flag-chip {
+    font-size: 11px; font-weight: 600;
+    padding: 4px 9px; border-radius: 20px;
+    border: 1.5px solid var(--border);
+    cursor: pointer; color: var(--text-muted); background: none;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    user-select: none;
+  }
+  .flag-chip:hover { background: #f4f5f8; border-color: var(--border-hover); }
+  .flag-chip.active { background: var(--flag-bg); border-color: var(--flag-border); color: var(--flag-text); }
 
   /* ── Employee ID in modal ───────────────────────────────────── */
   .modal-emp-id {
@@ -1555,10 +1569,8 @@
       <div class="modal-avatar-area">
         <div id="modal-avatar"></div>
         <div id="modal-avatar-badge" class="modal-avatar-badge">⚠</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Name</label>
-        <div id="modal-person-name" style="font-size:14px;font-weight:600;color:var(--text-primary);padding:2px 0;"></div>
+        <div id="modal-person-name" style="font-size:14px;font-weight:600;color:var(--text-primary);margin-top:8px;text-align:center;"></div>
+        <div id="modal-person-emp-id" class="modal-emp-id"></div>
       </div>
       <div class="form-group" id="modal-gender-display" style="display:none;">
         <label class="form-label">Gender</label>
@@ -1580,24 +1592,14 @@
           </div>
         </div>
       </div>
-      <div id="modal-review-toggle" class="modal-review-toggle flag-amber">
-        <span class="modal-review-toggle-label">Flag for salary review</span>
-        <div class="modal-review-toggle-check">✓</div>
+      <div class="modal-flags-row">
+        <div id="modal-review-toggle" class="flag-chip flag-amber">Salary review</div>
+        <div id="modal-flag-performance" class="flag-chip flag-red">Perf review</div>
+        <div id="modal-flag-new" class="flag-chip flag-green">New</div>
+        <div id="modal-flag-onleave" class="flag-chip flag-blue">On leave</div>
       </div>
-      <div id="modal-flag-performance" class="modal-review-toggle flag-red">
-        <span class="modal-review-toggle-label">Flag for performance review</span>
-        <div class="modal-review-toggle-check">✓</div>
-      </div>
-      <div id="modal-flag-new" class="modal-review-toggle flag-green">
-        <span class="modal-review-toggle-label">New employee</span>
-        <div class="modal-review-toggle-check">✓</div>
-      </div>
-      <div id="modal-flag-onleave" class="modal-review-toggle flag-blue">
-        <span class="modal-review-toggle-label">On leave</span>
-        <div class="modal-review-toggle-check">✓</div>
-      </div>
-      <div id="modal-person-role-info" class="modal-comp-section" style="display:none">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Roles</div>
+      <div id="modal-person-role-info" style="display:none">
+        <div class="form-label" style="margin-bottom:6px">Role assignment</div>
         <div id="modal-person-roles-list"></div>
         <div id="modal-person-overalloc-warn" style="display:none;font-size:11px;color:#ef4444;margin-top:4px;font-weight:600;">&#9888; Over 100% allocated</div>
       </div>
@@ -3301,6 +3303,7 @@ function openCombinedModal(roleId, defaultTab) {
     document.getElementById('modal-avatar').textContent = getInitials(person.name);
     document.getElementById('modal-avatar-badge').classList.remove('visible');
     document.getElementById('modal-person-name').textContent = person.name;
+    document.getElementById('modal-person-emp-id').textContent = '#' + person.id;
     const genderDisplay = document.getElementById('modal-gender-display');
     const resolvedGender = person.gender || (DEFAULT_PERSONS.find(d => d.id === person.id) || {}).gender;
     if (resolvedGender) {
@@ -3447,6 +3450,7 @@ function openPersonModal(personId) {
   document.getElementById('modal-avatar').textContent = getInitials(person.name);
   document.getElementById('modal-avatar-badge').classList.remove('visible');
   document.getElementById('modal-person-name').textContent = person.name;
+  document.getElementById('modal-person-emp-id').textContent = '#' + person.id;
   const genderDisplay = document.getElementById('modal-gender-display');
   const resolvedGender = person.gender || (DEFAULT_PERSONS.find(d => d.id === person.id) || {}).gender;
   if (resolvedGender) {
