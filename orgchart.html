@@ -398,6 +398,14 @@
     margin: 4px 0 2px 10px;
     font-style: italic;
   }
+  .dept-head-ref {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    padding: 3px 10px;
+    border-left: 2px dashed var(--border);
+    margin: 4px 4px 8px;
+    font-style: italic;
+  }
 
   /* ── Team Settings Items ────────────────────────────────────── */
   .team-item {
@@ -815,6 +823,7 @@
   body.hide-salaries .emp-salary,
   body.hide-salaries .dept-salary,
   body.hide-salaries #modal-comp-group { display: none; }
+  body.hide-levels .level-badge { display: none; }
 
   /* ── View-only mode ────────────────────────────────────────────── */
   body.view-only #snapshots-nav-btn,
@@ -1732,6 +1741,10 @@
         <label class="form-label">Description <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
         <input type="text" id="dept-settings-desc" class="form-control" maxlength="80" />
       </div>
+      <div class="form-group" id="dept-settings-head-group">
+        <label class="form-label">Responsible person <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <select id="dept-settings-head-role" class="form-control"></select>
+      </div>
       <div class="form-group">
         <label class="form-label">Color</label>
         <div class="dept-color-swatches" id="dept-settings-color-swatches"></div>
@@ -1925,6 +1938,19 @@
             <input type="checkbox" id="settings-hide-salaries-cb" style="opacity:0;width:0;height:0;position:absolute;" />
             <span id="settings-hide-salaries-track" style="position:absolute;inset:0;border-radius:20px;background:var(--border);transition:background 0.15s;"></span>
             <span id="settings-hide-salaries-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.15s;"></span>
+          </div>
+        </label>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+        <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;">
+          <div>
+            <span style="font-size:13px;font-weight:500;color:var(--text-secondary);">Hide level badges</span>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Removes L1–L8 badges from org chart cards</div>
+          </div>
+          <div id="settings-hide-levels-toggle" style="position:relative;width:36px;height:20px;flex-shrink:0;">
+            <input type="checkbox" id="settings-hide-levels-cb" style="opacity:0;width:0;height:0;position:absolute;" />
+            <span id="settings-hide-levels-track" style="position:absolute;inset:0;border-radius:20px;background:var(--border);transition:background 0.15s;"></span>
+            <span id="settings-hide-levels-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.15s;"></span>
           </div>
         </label>
       </div>
@@ -2438,7 +2464,7 @@ const state = {
   editingPersonId: null,
 };
 
-let settings = { currency: 'DKK', hideSalaries: false, viewOnly: false };
+let settings = { currency: 'DKK', hideSalaries: false, hideLevels: false, viewOnly: false };
 
 let snapshots = [];
 
@@ -2934,18 +2960,11 @@ function renderDeptColumn(dept) {
   if (dept.headRoleId) {
     const headRole = roles.find(r => r.id === dept.headRoleId);
     if (headRole) {
-      const banner = document.createElement('div');
-      banner.className = 'dept-head-banner';
-      const label = document.createElement('div');
-      label.className = 'dept-head-banner-label';
-      label.textContent = 'Department Head';
-      const card = renderCard(headRole);
-      card.addEventListener('click', e => { e.stopPropagation(); openCombinedModal(headRole.id, 'role'); });
-      const from = document.createElement('div');
-      from.className = 'dept-head-banner-from';
-      from.textContent = 'From Executive';
-      banner.append(label, card, from);
-      tree.appendChild(banner);
+      const person = getPersonForRole(headRole.id);
+      const ref = document.createElement('div');
+      ref.className = 'dept-head-ref';
+      ref.textContent = `↑ ${person ? person.name : headRole.title} · ${headRole.title}`;
+      tree.appendChild(ref);
     }
   }
 
@@ -4174,7 +4193,19 @@ function openDeptSettingsModal(deptId) {
   });
   document.getElementById('dept-settings-warning').textContent = '';
   document.getElementById('dept-settings-warning').classList.remove('visible');
-  // Populate Department Head dropdown (only for non-executive depts)
+  // Populate Responsible Person dropdown
+  const headSelect = document.getElementById('dept-settings-head-role');
+  headSelect.innerHTML = '<option value="">— None —</option>';
+  roles.forEach(r => {
+    const p = getPersonForRole(r.id);
+    if (!p) return;
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    const deptName = departments.find(d => d.id === r.department)?.name || '';
+    opt.textContent = `${p.name} · ${r.title} (${deptName})`;
+    if (r.id === dept.headRoleId) opt.selected = true;
+    headSelect.appendChild(opt);
+  });
   buildTeamSection(deptId);
   buildTitleSection(deptId);
   document.getElementById('dept-settings-modal-backdrop').classList.add('visible');
@@ -4215,6 +4246,8 @@ function saveDeptSettingsModal() {
   if (!name) { warn.textContent = 'Name is required.'; warn.classList.add('visible'); document.getElementById('dept-settings-name').focus(); return; }
   dept.name = name;
   dept.description = document.getElementById('dept-settings-desc').value.trim();
+  const headVal = document.getElementById('dept-settings-head-role').value;
+  dept.headRoleId = headVal ? (isNaN(Number(headVal)) ? headVal : Number(headVal)) : null;
   dept.color = selectedSettingsColor || dept.color;
   // Persist teams
   const existingTeamIds = new Set(getTeamsForDept(editingDeptId).map(t => t.id));
@@ -4377,6 +4410,16 @@ function applySalaryVisibility() {
   thumb.style.transform = settings.hideSalaries ? 'translateX(16px)' : 'translateX(0)';
 }
 
+function applyLevelVisibility() {
+  document.body.classList.toggle('hide-levels', !!settings.hideLevels);
+  const cb = document.getElementById('settings-hide-levels-cb');
+  const track = document.getElementById('settings-hide-levels-track');
+  const thumb = document.getElementById('settings-hide-levels-thumb');
+  cb.checked = !!settings.hideLevels;
+  track.style.background = settings.hideLevels ? 'var(--accent)' : 'var(--border)';
+  thumb.style.transform = settings.hideLevels ? 'translateX(16px)' : 'translateX(0)';
+}
+
 function applyViewOnly() {
   document.body.classList.toggle('view-only', !!settings.viewOnly);
   const cb = document.getElementById('settings-view-only-cb');
@@ -4393,6 +4436,12 @@ document.getElementById('settings-hide-salaries-cb').addEventListener('change', 
   saveToStorage();
 });
 
+document.getElementById('settings-hide-levels-cb').addEventListener('change', e => {
+  settings.hideLevels = e.target.checked;
+  applyLevelVisibility();
+  saveToStorage();
+});
+
 document.getElementById('settings-view-only-cb').addEventListener('change', e => {
   settings.viewOnly = e.target.checked;
   applyViewOnly();
@@ -4404,6 +4453,7 @@ document.getElementById('settings-nav-btn').addEventListener('click', e => {
   document.getElementById('settings-currency-dkk').classList.toggle('active', settings.currency === 'DKK');
   document.getElementById('settings-currency-eur').classList.toggle('active', settings.currency === 'EUR');
   applySalaryVisibility();
+  applyLevelVisibility();
   applyViewOnly();
   document.getElementById('settings-modal-backdrop').style.display = 'flex';
 });
@@ -4480,6 +4530,7 @@ persons.forEach(p => {
   }
 });
 applySalaryVisibility();
+applyLevelVisibility();
 applyViewOnly();
 render();
 
