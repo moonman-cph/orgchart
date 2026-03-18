@@ -406,6 +406,33 @@
     margin: 4px 4px 8px;
     font-style: italic;
   }
+  .matrix-icon {
+    font-size: 13px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    cursor: default;
+    opacity: 0.6;
+    transition: opacity 0.12s;
+  }
+  .emp-card:hover .matrix-icon { opacity: 1; }
+  #modal-role-secondary-suggestions {
+    display: none;
+    position: absolute;
+    left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0,0,0,.12);
+  }
+  .secondary-suggestion {
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .secondary-suggestion:hover { background: var(--hover-bg, #f3f4f6); }
 
   /* ── Team Settings Items ────────────────────────────────────── */
   .team-item {
@@ -1486,6 +1513,15 @@
         </svg>
         Settings
       </a>
+      <a class="nav-item" href="#" id="clear-employees-btn" style="color:var(--danger,#e05252);">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="5" r="2.5"/>
+          <path d="M1 14c0-3 2-5 5-5h2"/>
+          <line x1="10" y1="10" x2="15" y2="15"/>
+          <line x1="15" y1="10" x2="10" y2="15"/>
+        </svg>
+        Clear Employees
+      </a>
       <a class="nav-item" href="#" id="clear-structure-btn" style="color:var(--danger,#e05252);">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
@@ -1638,6 +1674,19 @@
         <label class="form-label">Reports to</label>
         <div class="role-view" id="modal-role-manager-view"></div>
         <select id="modal-role-manager" class="form-control role-edit"></select>
+      </div>
+      <div class="form-group" id="modal-role-secondary-group">
+        <label class="form-label">Also reports to <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <div class="role-view" id="modal-role-secondary-view" style="color:var(--text-muted);font-size:12px"></div>
+        <div class="role-edit">
+          <div id="modal-role-secondary-list" style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px"></div>
+          <div style="position:relative">
+            <input type="text" id="modal-role-secondary-search" class="form-control"
+                   placeholder="Search by name or role…" autocomplete="off"
+                   style="font-size:12px" />
+            <div id="modal-role-secondary-suggestions"></div>
+          </div>
+        </div>
       </div>
       <div class="form-group" id="modal-role-team-group" style="display:none">
         <label class="form-label">Team</label>
@@ -1958,6 +2007,19 @@
         <button id="settings-open-paybands" style="width:100%;padding:8px 12px;border-radius:6px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-secondary);text-align:left;display:flex;align-items:center;justify-content:space-between;">
           Manage pay bands <span style="color:var(--text-muted);font-size:16px;">›</span>
         </button>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+        <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;">
+          <div>
+            <span style="font-size:13px;font-weight:500;color:var(--text-secondary);">Matrix / dotted-line reporting</span>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Enables "also reports to" on roles</div>
+          </div>
+          <div id="settings-matrix-toggle" style="position:relative;width:36px;height:20px;flex-shrink:0;">
+            <input type="checkbox" id="settings-matrix-cb" style="opacity:0;width:0;height:0;position:absolute;" />
+            <span id="settings-matrix-track" style="position:absolute;inset:0;border-radius:20px;background:var(--border);transition:background 0.15s;"></span>
+            <span id="settings-matrix-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.15s;"></span>
+          </div>
+        </label>
       </div>
       <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
         <label style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;">
@@ -2464,7 +2526,7 @@ const state = {
   editingPersonId: null,
 };
 
-let settings = { currency: 'DKK', hideSalaries: false, hideLevels: false, viewOnly: false };
+let settings = { currency: 'DKK', hideSalaries: false, hideLevels: false, viewOnly: false, matrixMode: false };
 
 let snapshots = [];
 
@@ -2838,6 +2900,21 @@ function renderCard(role, isOrphaned = false) {
       openDropCreateRoleModal(draggedPerson, state.pendingDrop);
       render();
     });
+  }
+
+  const secIds = role.secondaryManagerRoleIds || [];
+  if (settings.matrixMode && secIds.length > 0) {
+    const tooltipLines = secIds.map(smId => {
+      const smRole = roles.find(r => r.id === smId);
+      if (!smRole) return null;
+      const smPerson = getPersonForRole(smId);
+      return `⤷ ${smPerson ? smPerson.name : smRole.title} · ${smRole.title}`;
+    }).filter(Boolean).join('\n');
+    const icon = document.createElement('div');
+    icon.className = 'matrix-icon';
+    icon.title = tooltipLines;
+    icon.textContent = '⤷';
+    card.appendChild(icon);
   }
 
   return card;
@@ -3264,6 +3341,87 @@ function rebuildRoleTitleDropdown(levelId, deptId, currentTitle) {
   }
 }
 
+function rebuildSecondaryManagersUI(roleId) {
+  document.getElementById('modal-role-secondary-group').style.display = settings.matrixMode ? '' : 'none';
+  if (!settings.matrixMode) return;
+  const role = roles.find(r => r.id === roleId);
+  const secIds = (role?.secondaryManagerRoleIds) || [];
+
+  const viewEl = document.getElementById('modal-role-secondary-view');
+  viewEl.textContent = secIds.length === 0 ? '—' : secIds.map(id => {
+    const r = roles.find(x => x.id === id);
+    if (!r) return '';
+    const p = getPersonForRole(id);
+    return `${p ? p.name : r.title} · ${r.title}`;
+  }).filter(Boolean).join(', ');
+
+  const listEl = document.getElementById('modal-role-secondary-list');
+  listEl.innerHTML = '';
+  secIds.forEach(id => appendSecondaryManagerItem(listEl, id, roleId));
+
+  const searchInput = document.getElementById('modal-role-secondary-search');
+  const suggestionsEl = document.getElementById('modal-role-secondary-suggestions');
+  searchInput.value = '';
+  suggestionsEl.style.display = 'none';
+
+  searchInput.oninput = () => {
+    const q = searchInput.value.trim().toLowerCase();
+    suggestionsEl.innerHTML = '';
+    if (!q) { suggestionsEl.style.display = 'none'; return; }
+    const current = new Set(getCurrentSecondaryIds());
+    const matches = roles.filter(r => {
+      if (r.id === roleId || current.has(r.id)) return false;
+      const p = getPersonForRole(r.id);
+      if (!p) return false;
+      return p.name.toLowerCase().includes(q) || r.title.toLowerCase().includes(q);
+    }).slice(0, 10);
+    if (matches.length === 0) { suggestionsEl.style.display = 'none'; return; }
+    matches.forEach(r => {
+      const p = getPersonForRole(r.id);
+      const deptName = departments.find(d => d.id === r.department)?.name || '';
+      const item = document.createElement('div');
+      item.className = 'secondary-suggestion';
+      item.textContent = `${p.name} · ${r.title} (${deptName})`;
+      item.onmousedown = e => {
+        e.preventDefault();
+        appendSecondaryManagerItem(listEl, r.id, roleId);
+        searchInput.value = '';
+        suggestionsEl.style.display = 'none';
+      };
+      suggestionsEl.appendChild(item);
+    });
+    suggestionsEl.style.display = 'block';
+  };
+
+  searchInput.onblur = () => { setTimeout(() => { suggestionsEl.style.display = 'none'; }, 150); };
+}
+
+function getCurrentSecondaryIds() {
+  return [...document.querySelectorAll('#modal-role-secondary-list .secondary-mgr-item')]
+    .map(el => Number(el.dataset.roleId));
+}
+
+function appendSecondaryManagerItem(listEl, roleId, editingRoleId) {
+  const r = roles.find(x => x.id === roleId);
+  if (!r) return;
+  const p = getPersonForRole(roleId);
+  const deptName = departments.find(d => d.id === r.department)?.name || '';
+  const item = document.createElement('div');
+  item.className = 'secondary-mgr-item';
+  item.dataset.roleId = roleId;
+  item.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;padding:2px 0';
+  const label = document.createElement('span');
+  label.style.flex = '1';
+  label.textContent = `${p ? p.name : r.title} · ${r.title} (${deptName})`;
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = '×';
+  removeBtn.style.cssText = 'border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0 2px';
+  removeBtn.onclick = () => item.remove();
+  item.append(label, removeBtn);
+  listEl.appendChild(item);
+}
+
 function rebuildRoleManagerDropdown(roleId, deptId, currentManagerRoleId) {
   const managerSel = document.getElementById('modal-role-manager');
   const descendants = getDescendantRoleIds(roleId);
@@ -3411,6 +3569,7 @@ function openCombinedModal(roleId, defaultTab) {
     });
     rebuildRoleTitleDropdown(role.level, role.department, role.title);
     rebuildRoleManagerDropdown(roleId, role.department, role.managerRoleId);
+    rebuildSecondaryManagersUI(roleId);
     rebuildRoleTeamDropdown(role.department, role.teamId || null, 'modal-role-team');
     document.getElementById('modal-role-person-name').textContent = person ? person.name : 'Vacant';
     const assignBtn = document.getElementById('modal-role-assign-btn');
@@ -3515,6 +3674,7 @@ function saveModal() {
       role.managerRoleId = mgrVal ? parseInt(mgrVal, 10) : null;
       const teamVal = document.getElementById('modal-role-team').value;
       role.teamId = teamVal ? parseInt(teamVal, 10) : null;
+      role.secondaryManagerRoleIds = getCurrentSecondaryIds();
 
     }
   }
@@ -4288,6 +4448,16 @@ document.getElementById('dept-settings-name').addEventListener('keydown', e => {
 
 // ── Misc Event Wiring ─────────────────────────────────────────────────────────
 
+document.getElementById('clear-employees-btn').addEventListener('click', e => {
+  e.preventDefault();
+  if (confirm('Clear all employees? This will remove all people and unassign all roles, but keep the org structure. This cannot be undone.')) {
+    persons.splice(0, persons.length);
+    roleAssignments.splice(0, roleAssignments.length);
+    saveToStorage();
+    render();
+  }
+});
+
 document.getElementById('clear-structure-btn').addEventListener('click', e => {
   e.preventDefault();
   if (confirm('Clear all structure? This will remove all departments, roles and teams, but keep all employees. This cannot be undone.')) {
@@ -4381,7 +4551,7 @@ function loadFromStorage() {
     }
     const saved = JSON.parse(raw);
     if (saved.departments) departments.splice(0, departments.length, ...saved.departments.map(d => ({ ...d, headRoleId: d.headRoleId ?? null })));
-    if (saved.roles) roles.splice(0, roles.length, ...saved.roles.map(r => ({ ...r, teamId: r.teamId || null })));
+    if (saved.roles) roles.splice(0, roles.length, ...saved.roles.map(r => ({ ...r, teamId: r.teamId || null, secondaryManagerRoleIds: r.secondaryManagerRoleIds || [] })));
     if (saved.persons) persons.splice(0, persons.length, ...saved.persons.map(p => ({ ...p })));
     if (saved.roleAssignments) {
       roleAssignments.splice(0, roleAssignments.length, ...saved.roleAssignments);
@@ -4430,6 +4600,15 @@ function applyViewOnly() {
   thumb.style.transform = settings.viewOnly ? 'translateX(16px)' : 'translateX(0)';
 }
 
+function applyMatrixMode() {
+  const cb = document.getElementById('settings-matrix-cb');
+  const track = document.getElementById('settings-matrix-track');
+  const thumb = document.getElementById('settings-matrix-thumb');
+  cb.checked = !!settings.matrixMode;
+  track.style.background = settings.matrixMode ? 'var(--accent)' : 'var(--border)';
+  thumb.style.transform = settings.matrixMode ? 'translateX(16px)' : 'translateX(0)';
+}
+
 document.getElementById('settings-hide-salaries-cb').addEventListener('change', e => {
   settings.hideSalaries = e.target.checked;
   applySalaryVisibility();
@@ -4448,6 +4627,13 @@ document.getElementById('settings-view-only-cb').addEventListener('change', e =>
   saveToStorage();
 });
 
+document.getElementById('settings-matrix-cb').addEventListener('change', e => {
+  settings.matrixMode = e.target.checked;
+  applyMatrixMode();
+  saveToStorage();
+  render();
+});
+
 document.getElementById('settings-nav-btn').addEventListener('click', e => {
   e.preventDefault();
   document.getElementById('settings-currency-dkk').classList.toggle('active', settings.currency === 'DKK');
@@ -4455,6 +4641,7 @@ document.getElementById('settings-nav-btn').addEventListener('click', e => {
   applySalaryVisibility();
   applyLevelVisibility();
   applyViewOnly();
+  applyMatrixMode();
   document.getElementById('settings-modal-backdrop').style.display = 'flex';
 });
 document.getElementById('settings-modal-close').addEventListener('click', () => {
@@ -4532,6 +4719,7 @@ persons.forEach(p => {
 applySalaryVisibility();
 applyLevelVisibility();
 applyViewOnly();
+applyMatrixMode();
 render();
 
 // ── Drop Create Role Modal ────────────────────────────────────────────────────
