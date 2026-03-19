@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — OrgChart</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: #e6e4df;
+    --border-hover: #c9c6be;
+    --text-primary: #111110;
+    --text-secondary: #57534e;
+    --text-muted: #a8a29e;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --accent-border: #93c5fd;
+    --radius: 10px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.03);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    --c-male: #2563eb;
+    --c-female: #f43f5e;
+    --c-other: #a8a29e;
+    --c-unknown: #d6d3ce;
+  }
+
+  body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── App Content ─────────────────────────────────────────────── */
+  #app-content { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+
+  /* ── Left Nav ────────────────────────────────────────────────── */
+  #left-nav {
+    width: 220px; flex-shrink: 0;
+    background: linear-gradient(180deg, #0f3d4a 0%, #0a2e3a 100%);
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  #nav-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 16px 14px; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0;
+  }
+  .nav-logo-icon {
+    width: 28px; height: 28px; background: #e8622a;
+    box-shadow: 0 2px 8px rgba(232,98,42,0.4);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .nav-logo-name { font-size: 15px; font-weight: 700; color: white; letter-spacing: -0.2px; }
+  #nav-body { flex: 1; overflow-y: auto; padding: 12px 0 8px; display: flex; flex-direction: column; }
+  .nav-section { padding: 4px 0; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
+    color: rgba(255,255,255,0.28); padding: 8px 20px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px 9px 18px; margin: 1px 8px; border-radius: 7px;
+    cursor: pointer; user-select: none; color: rgba(255,255,255,0.62);
+    font-size: 13px; font-weight: 500; transition: background 0.12s, color 0.12s;
+    border-left: 2.5px solid transparent; text-decoration: none;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+  .nav-item.active { background: rgba(255,255,255,0.13); color: white; border-left-color: #e8622a; font-weight: 600; }
+  .nav-item svg { flex-shrink: 0; opacity: 0.8; }
+  .nav-item.active svg, .nav-item:hover svg { opacity: 1; }
+  .nav-spacer { flex: 1; }
+  #nav-footer {
+    flex-shrink: 0; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+  }
+  #nav-footer:hover { background: rgba(255,255,255,0.05); }
+  .nav-user-avatar {
+    width: 32px; height: 32px; border-radius: 50%; background: #e8622a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white; flex-shrink: 0;
+  }
+  .nav-user-info { min-width: 0; }
+  .nav-user-name { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nav-user-role { font-size: 11px; color: rgba(255,255,255,0.38); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ── Header ──────────────────────────────────────────────────── */
+  #app-header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 56px;
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  #app-header h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; color: var(--text-primary); }
+  .header-spacer { flex: 1; }
+  .header-badge {
+    font-size: 11.5px; font-weight: 500; color: var(--text-secondary);
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 10px;
+  }
+  .header-divider { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+
+  /* ── Main / Grid ─────────────────────────────────────────────── */
+  #main { flex: 1; overflow-y: auto; padding: 24px; }
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1400px;
+  }
+  .span-1 { grid-column: span 1; }
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+  .span-4 { grid-column: span 4; }
+
+  /* ── Section labels ──────────────────────────────────────────── */
+  .section-label {
+    grid-column: span 4;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
+    color: var(--text-muted); padding: 6px 2px 0; display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Cards ───────────────────────────────────────────────────── */
+  .dash-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    letter-spacing: 0.6px; text-transform: uppercase;
+  }
+  .card-badge {
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 20px; background: var(--bg); color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  /* ── KPI Cards ───────────────────────────────────────────────── */
+  .kpi-card {
+    padding: 20px;
+    border-top: 3px solid var(--kpi-accent, var(--border));
+    gap: 2px;
+  }
+  .kpi-value {
+    font-size: 38px; font-weight: 800; letter-spacing: -2px;
+    color: var(--text-primary); line-height: 1; margin-top: 10px;
+  }
+  .kpi-label { font-size: 12.5px; font-weight: 500; color: var(--text-secondary); margin-top: 4px; }
+  .kpi-sub { font-size: 11.5px; font-weight: 500; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); color: var(--text-muted); }
+  .kpi-sub.warn { color: #d97706; }
+  .kpi-sub.ok { color: #16a34a; }
+  .kpi-sub.danger { color: #ef4444; }
+  .kpi-sub.neutral { color: var(--text-muted); }
+
+  /* ── Stat rows ───────────────────────────────────────────────── */
+  .stat-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .stat-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .stat-row-label { color: var(--text-secondary); font-weight: 400; display: flex; align-items: center; gap: 7px; }
+  .stat-row-value { color: var(--text-primary); font-weight: 600; }
+  .stat-row-value.warn { color: #d97706; }
+  .stat-row-value.ok { color: #16a34a; }
+  .stat-row-value.danger { color: #ef4444; }
+  .stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+  .stat-dot.ok { background: #22c55e; }
+  .stat-dot.warn { background: #f59e0b; }
+  .stat-dot.danger { background: #ef4444; }
+  .stat-dot.neutral { background: var(--border-hover); }
+
+  /* ── Donut chart ─────────────────────────────────────────────── */
+  .donut-svg { width: 130px; height: 130px; flex-shrink: 0; }
+  .donut-segment { fill: none; stroke-width: 4; transition: stroke-width 0.15s; cursor: default; }
+  .donut-segment:hover { stroke-width: 5.5; }
+  .donut-center-text { font-size: 6.5px; font-weight: 800; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; font-family: 'Outfit', sans-serif; }
+  .donut-center-sub { font-size: 3px; fill: var(--text-muted); text-anchor: middle; dominant-baseline: central; font-family: 'Outfit', sans-serif; letter-spacing: 0.2px; }
+  .donut-wrap { display: flex; align-items: center; gap: 20px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 9px; flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+  .legend-label { color: var(--text-secondary); flex: 1; }
+  .legend-value { font-weight: 700; color: var(--text-primary); }
+  .legend-pct { font-size: 11px; color: var(--text-muted); margin-left: 2px; }
+  .gender-secondary { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .gender-stat { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .gender-stat-label { color: var(--text-secondary); }
+  .gender-stat-value { font-weight: 600; color: var(--text-primary); }
+
+  /* ── Bar chart ───────────────────────────────────────────────── */
+  .bar-chart { display: flex; flex-direction: column; gap: 0; }
+  .bar-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+  .bar-dept-name { font-size: 12px; font-weight: 500; color: var(--text-secondary); white-space: nowrap; min-width: 90px; overflow: hidden; text-overflow: ellipsis; }
+  .bar-track { flex: 1; height: 10px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); position: relative; }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .bar-value { font-size: 12px; font-weight: 700; color: var(--text-primary); white-space: nowrap; min-width: 36px; text-align: right; }
+  .bar-row-group { display: flex; flex-direction: column; }
+  .bar-row-border { border-bottom: 1px solid var(--border); }
+  .bar-row-border:last-child { border-bottom: none; }
+
+  /* Stacked bar */
+  .stacked-bar { display: flex; height: 4px; border-radius: 99px; overflow: hidden; }
+  .stacked-seg { height: 100%; transition: width 0.5s ease; }
+
+  /* ── Pay gap ─────────────────────────────────────────────────── */
+  .gap-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .gap-table th {
+    text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 0 8px 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .gap-table td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-secondary); }
+  .gap-table td:first-child { font-weight: 600; color: var(--text-primary); }
+  .gap-table tr:last-child td { border-bottom: none; }
+  .gap-bar { display: inline-block; height: 5px; border-radius: 3px; background: #ef4444; vertical-align: middle; margin-left: 6px; }
+  .gap-pct { font-weight: 700; color: #ef4444; }
+  .gap-pct.ok { color: #16a34a; }
+  .gap-na { color: var(--text-muted); font-style: italic; font-size: 11px; }
+  .gap-headline { display: flex; align-items: flex-end; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .gap-headline-val { font-size: 40px; font-weight: 800; letter-spacing: -2px; color: #ef4444; line-height: 1; }
+  .gap-headline-label { font-size: 12px; color: var(--text-muted); padding-bottom: 4px; }
+
+  /* ── Flag rows ───────────────────────────────────────────────── */
+  .flag-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none;
+  }
+  .flag-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .flag-row:hover .flag-label { color: var(--text-primary); }
+  .flag-pill { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .flag-pill.amber { background: #fef3c7; color: #92400e; }
+  .flag-pill.red { background: #fee2e2; color: #991b1b; }
+  .flag-pill.green { background: #dcfce7; color: #166534; }
+  .flag-pill.blue { background: #dbeafe; color: #1e40af; }
+  .flag-label { flex: 1; font-size: 13px; color: var(--text-secondary); }
+  .flag-count {
+    font-size: 13px; font-weight: 700; padding: 2px 10px;
+    border-radius: 20px; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text-secondary); min-width: 32px; text-align: center;
+  }
+  .flag-count.nonzero { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+  .flag-chevron { color: var(--text-muted); font-size: 14px; transition: transform 0.15s; }
+  .flag-row.open .flag-chevron { transform: rotate(90deg); }
+  .flag-names { display: none; flex-wrap: wrap; gap: 5px; padding: 6px 0 10px 18px; }
+  .flag-names.visible { display: flex; }
+  .flag-name-chip {
+    font-size: 11.5px; padding: 2px 9px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 20px;
+    color: var(--text-secondary);
+  }
+
+  /* ── Payroll hidden ──────────────────────────────────────────── */
+  .payroll-hidden {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 32px 0; color: var(--text-muted); text-align: center;
+  }
+  .payroll-hidden svg { opacity: 0.3; }
+  .payroll-hidden p { font-size: 13px; }
+
+  /* ── No data ─────────────────────────────────────────────────── */
+  .no-data { text-align: center; color: var(--text-muted); font-size: 13px; padding: 32px 0; }
+
+  /* ── Band health ─────────────────────────────────────────────── */
+  .band-offenders { display: flex; flex-direction: column; }
+  .band-offender-row {
+    display: grid; grid-template-columns: 1fr 60px auto; align-items: center;
+    gap: 8px; font-size: 12px; padding: 6px 0; border-bottom: 1px solid var(--border);
+  }
+  .band-offender-row:last-child { border-bottom: none; }
+  .band-offender-name { font-weight: 500; color: var(--text-primary); }
+  .band-offender-tag { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 10px; text-align: center; }
+  .band-offender-tag.below { background: #fef3c7; color: #92400e; }
+  .band-offender-tag.above { background: #fee2e2; color: #991b1b; }
+
+  /* ── Insight strip ───────────────────────────────────────────── */
+  .insight-strip {
+    grid-column: span 4;
+    display: flex; gap: 10px;
+  }
+  .insight-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px; font-size: 12.5px;
+    color: var(--text-secondary); box-shadow: var(--shadow-sm);
+  }
+  .insight-chip b { color: var(--text-primary); font-weight: 700; }
+  .insight-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<nav id="left-nav">
+  <div id="nav-logo">
+    <div class="nav-logo-icon">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="3" r="2" fill="white"/>
+        <circle cx="3" cy="11" r="2" fill="white" opacity="0.7"/>
+        <circle cx="13" cy="11" r="2" fill="white" opacity="0.7"/>
+        <line x1="8" y1="5" x2="3" y2="9" stroke="white" stroke-width="1.2" opacity="0.6"/>
+        <line x1="8" y1="5" x2="13" y2="9" stroke="white" stroke-width="1.2" opacity="0.6"/>
+      </svg>
+    </div>
+    <span class="nav-logo-name">OrgChart</span>
+  </div>
+  <div id="nav-body">
+    <div class="nav-section">
+      <a class="nav-item active" href="dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/>
+          <rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
+        </svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="orgchart.html">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="3" r="1.8"/><circle cx="3" cy="12" r="1.8"/><circle cx="13" cy="12" r="1.8"/>
+          <line x1="8" y1="4.8" x2="3" y2="10.2"/><line x1="8" y1="4.8" x2="13" y2="10.2"/>
+        </svg>
+        Org Chart
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">People</div>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="6" cy="5" r="2.5"/><path d="M1 14c0-3 2-5 5-5"/>
+          <line x1="10" y1="7" x2="15" y2="7"/><line x1="10" y1="10" x2="15" y2="10"/><line x1="10" y1="13" x2="13" y2="13"/>
+        </svg>
+        Directory
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="12" height="12" rx="1.5"/>
+          <line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/><line x1="2" y1="7" x2="14" y2="7"/>
+          <polyline points="5.5,11 7,12.5 10.5,9"/>
+        </svg>
+        Time Off
+      </a>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="6" width="14" height="9" rx="1.5"/><path d="M5 6V4.5a3 3 0 016 0V6"/>
+        </svg>
+        Hiring
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Insights</div>
+      <a class="nav-item" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="14" x2="3" y2="9"/><line x1="8" y1="14" x2="8" y2="5"/><line x1="13" y1="14" x2="13" y2="1"/>
+          <line x1="1" y1="14" x2="15" y2="14"/>
+        </svg>
+        Reports
+      </a>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-section">
+      <div class="nav-section-label">Admin</div>
+      <a class="nav-item" href="orgchart.html#snapshots">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/>
+        </svg>
+        Snapshots
+      </a>
+      <a class="nav-item" href="orgchart.html#settings">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="2.5"/>
+          <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"/>
+        </svg>
+        Settings
+      </a>
+    </div>
+  </div>
+  <div id="nav-footer">
+    <div class="nav-user-avatar">DM</div>
+    <div class="nav-user-info">
+      <div class="nav-user-name">David Miller</div>
+      <div class="nav-user-role">HR Admin</div>
+    </div>
+  </div>
+</nav>
+
+<div id="app-content">
+  <div id="app-header">
+    <h1>Dashboard</h1>
+    <div class="header-divider"></div>
+    <span class="header-badge" id="last-updated"></span>
+    <div class="header-spacer"></div>
+  </div>
+  <div id="main">
+    <div class="dash-grid" id="dash-grid"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'orgchart_data_v4';
+
+// ── Load data ─────────────────────────────────────────────────────
+let departments = [], roles = [], persons = [], roleAssignments = [],
+    settings = { currency: 'DKK', hideSalaries: false, viewOnly: false },
+    salaryBands = {};
+
+const raw = localStorage.getItem(STORAGE_KEY);
+if (raw) {
+  try {
+    const saved = JSON.parse(raw);
+    if (saved.departments) departments = saved.departments;
+    if (saved.roles)       roles = saved.roles;
+    if (saved.persons)     persons = saved.persons;
+    if (saved.roleAssignments) roleAssignments = saved.roleAssignments;
+    if (saved.settings)    Object.assign(settings, saved.settings);
+    if (saved.salaryBands) salaryBands = saved.salaryBands;
+  } catch (e) {}
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function fmt(n) {
+  if (!n) return settings.currency === 'EUR' ? '€0' : '0 kr';
+  const rounded = Math.round(n);
+  if (rounded >= 1_000_000) return settings.currency === 'EUR' ? '€' + (rounded/1_000_000).toFixed(1)+'M' : (rounded/1_000_000).toFixed(1)+'M kr';
+  if (rounded >= 1000)      return settings.currency === 'EUR' ? '€' + Math.round(rounded/1000)+'k' : Math.round(rounded/1000)+'k kr';
+  return settings.currency === 'EUR' ? '€'+rounded.toLocaleString('en-US') : rounded.toLocaleString('da-DK')+' kr';
+}
+function fmtFull(n) {
+  if (!n) return settings.currency === 'EUR' ? '€0/mo' : '0 kr/mo';
+  return settings.currency === 'EUR' ? '€'+Math.round(n).toLocaleString('en-US')+'/mo' : Math.round(n).toLocaleString('da-DK')+' kr/mo';
+}
+function getPersonForRole(roleId) {
+  const a = roleAssignments.find(a => a.roleId === roleId);
+  return a ? persons.find(p => p.id === a.personId) || null : null;
+}
+function maxDepth(roleId, memo) {
+  if (memo[roleId] !== undefined) return memo[roleId];
+  const children = roles.filter(r => r.managerRoleId === roleId);
+  memo[roleId] = children.length ? 1 + Math.max(...children.map(c => maxDepth(c.id, memo))) : 1;
+  return memo[roleId];
+}
+function genderKey(person) {
+  const g = (person.gender || '').toLowerCase().trim();
+  if (g === 'male' || g === 'm') return 'male';
+  if (g === 'female' || g === 'f') return 'female';
+  if (g === 'other') return 'other';
+  return 'unknown';
+}
+function levelSortKey(lvl) {
+  if (!lvl) return 999;
+  const m = lvl.toUpperCase().match(/[CL](\d+)/);
+  if (m) return 100 - parseInt(m[1], 10);
+  if (/VP|VICE/i.test(lvl)) return 3;
+  if (/DIR/i.test(lvl)) return 10;
+  if (/CHIEF|C[EFO]O/i.test(lvl)) return 1;
+  return 50;
+}
+function avg(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; }
+
+// ── Core metrics ──────────────────────────────────────────────────
+const activePersons = persons.filter(p => !p.noLongerHired);
+const totalRoles    = roles.length;
+const vacantRoles   = roles.filter(r => !getPersonForRole(r.id)).length;
+const vacantPct     = totalRoles ? Math.round(vacantRoles / totalRoles * 100) : 0;
+
+const genderCounts = { male: 0, female: 0, other: 0, unknown: 0 };
+activePersons.forEach(p => { genderCounts[genderKey(p)]++; });
+
+const personPrimaryRole = {};
+activePersons.forEach(p => {
+  const asgn = roleAssignments.find(a => a.personId === p.id);
+  if (asgn) { const r = roles.find(x => x.id === asgn.roleId); if (r) personPrimaryRole[p.id] = r; }
+});
+
+const multiRoleCount = activePersons.filter(p => roleAssignments.filter(a => a.personId === p.id).length > 1).length;
+
+const managerRoleIds = new Set(
+  roles.filter(r => r.managerRoleId && roles.some(x => x.id === r.managerRoleId)).map(r => r.managerRoleId)
+);
+const managerCount = [...managerRoleIds].filter(mId => getPersonForRole(mId)).length;
+
+const levelCounts = {};
+activePersons.forEach(p => {
+  const r = personPrimaryRole[p.id];
+  const lvl = r ? (r.level || 'Unleveled') : 'Unassigned';
+  levelCounts[lvl] = (levelCounts[lvl] || 0) + 1;
+});
+const sortedLevels = Object.keys(levelCounts).sort((a, b) => levelSortKey(a) - levelSortKey(b));
+
+const levelGenderData = {};
+activePersons.forEach(p => {
+  const r = personPrimaryRole[p.id];
+  if (!r) return;
+  const lvl = r.level || 'Unleveled';
+  if (!levelGenderData[lvl]) levelGenderData[lvl] = { male: [], female: [], other: [], unknown: [] };
+  levelGenderData[lvl][genderKey(p)].push(p.salary || 0);
+});
+
+const allMaleSalaries   = activePersons.filter(p => genderKey(p) === 'male'   && p.salary).map(p => p.salary);
+const allFemaleSalaries = activePersons.filter(p => genderKey(p) === 'female' && p.salary).map(p => p.salary);
+const overallAvgMale    = avg(allMaleSalaries);
+const overallAvgFemale  = avg(allFemaleSalaries);
+const overallGap = overallAvgMale > 0 ? Math.round((overallAvgMale - overallAvgFemale) / overallAvgMale * 100) : 0;
+
+const isSeniorRole = r => {
+  if (!r || !r.level) return false;
+  const m = r.level.toUpperCase().match(/[CL](\d+)/);
+  if (m && parseInt(m[1]) >= 5) return true;
+  if (/VP|VICE|DIR|CHIEF|CEO|CFO|COO|CTO|CPO/i.test(r.level)) return true;
+  return false;
+};
+const seniorPersons = activePersons.filter(p => { const r = personPrimaryRole[p.id]; return r && isSeniorRole(r); });
+const seniorFemaleCount = seniorPersons.filter(p => genderKey(p) === 'female').length;
+const seniorFemalePct   = seniorPersons.length ? Math.round(seniorFemaleCount / seniorPersons.length * 100) : 0;
+
+const deptStats = departments.map(d => {
+  const deptRoles   = roles.filter(r => r.department === d.id);
+  const deptRoleIds = new Set(deptRoles.map(r => r.id));
+  const deptPersonIds = new Set();
+  roleAssignments.forEach(a => {
+    if (deptRoleIds.has(a.roleId) && activePersons.some(p => p.id === a.personId)) deptPersonIds.add(a.personId);
+  });
+  const deptPersons = activePersons.filter(p => deptPersonIds.has(p.id));
+  const vacant  = deptRoles.filter(r => !getPersonForRole(r.id)).length;
+  const payroll = roleAssignments.filter(a => deptRoleIds.has(a.roleId)).reduce((s, a) => {
+    const p = activePersons.find(x => x.id === a.personId);
+    return s + (p ? (p.salary || 0) * a.percentage / 100 : 0);
+  }, 0);
+  const gender = { male: 0, female: 0, other: 0, unknown: 0 };
+  deptPersons.forEach(p => { gender[genderKey(p)]++; });
+  return { name: d.name, color: d.color, count: deptPersons.length, vacant, payroll, capacity: deptRoles.length, gender };
+}).sort((a, b) => b.count - a.count);
+
+const totalPayroll = roleAssignments.reduce((s, a) => {
+  const p = activePersons.find(x => x.id === a.personId);
+  return s + (p ? (p.salary || 0) * a.percentage / 100 : 0);
+}, 0);
+const avgSalary = activePersons.length ? totalPayroll / activePersons.length : 0;
+
+const bandHealth = { inBand: [], below: [], above: [] };
+const seenPersonBand = new Set();
+roleAssignments.forEach(a => {
+  const p = activePersons.find(x => x.id === a.personId);
+  const r = roles.find(x => x.id === a.roleId);
+  if (!p || !r || !p.salary || seenPersonBand.has(p.id)) return;
+  seenPersonBand.add(p.id);
+  const band = salaryBands[r.level];
+  if (!band) return;
+  if (p.salary < band.min)      bandHealth.below.push({ name: p.name, salary: p.salary, min: band.min, level: r.level });
+  else if (p.salary > band.max) bandHealth.above.push({ name: p.name, salary: p.salary, max: band.max, level: r.level });
+  else                           bandHealth.inBand.push({ name: p.name });
+});
+const bandTotal = bandHealth.inBand.length + bandHealth.below.length + bandHealth.above.length;
+
+const flagGroups = [
+  { key: 'salaryReviewNeeded',      label: 'Salary review needed',     color: 'amber' },
+  { key: 'performanceReviewNeeded', label: 'Performance review needed', color: 'red'   },
+  { key: 'isNew',                   label: 'New employees',             color: 'green' },
+  { key: 'onLeave',                 label: 'On leave',                  color: 'blue'  },
+];
+const totalFlags = flagGroups.slice(0, 2).reduce((n, f) => n + activePersons.filter(p => p[f.key]).length, 0);
+
+const spans = [...managerRoleIds].map(mId => roles.filter(r => r.managerRoleId === mId).length);
+const avgSpan = spans.length ? (spans.reduce((a, b) => a + b, 0) / spans.length).toFixed(1) : '—';
+const memo = {};
+const rootRoles  = roles.filter(r => !r.managerRoleId);
+const depth      = rootRoles.length ? Math.max(...rootRoles.map(r => maxDepth(r.id, memo))) : 0;
+const orphanedRoles = roles.filter(r => r.managerRoleId && !roles.some(x => x.id === r.managerRoleId)).length;
+
+// ── Insight generation ────────────────────────────────────────────
+function buildInsights() {
+  const chips = [];
+  // Highest vacancy dept
+  const highVacDept = [...deptStats].sort((a, b) => (b.vacant / Math.max(b.capacity,1)) - (a.vacant / Math.max(a.capacity,1)))[0];
+  if (highVacDept && highVacDept.vacant > 0) {
+    const pct = Math.round(highVacDept.vacant / highVacDept.capacity * 100);
+    chips.push({ color: '#f59e0b', text: `<b>${highVacDept.name}</b> has the highest vacancy rate at <b>${pct}%</b> (${highVacDept.vacant} open roles)` });
+  }
+  // Gender balance
+  const total = activePersons.length;
+  if (total > 0) {
+    const femalePct = Math.round(genderCounts.female / total * 100);
+    const malePct   = Math.round(genderCounts.male / total * 100);
+    if (femalePct < 35) chips.push({ color: '#f43f5e', text: `<b>${femalePct}%</b> female representation — below the 40% target` });
+    else if (Math.abs(femalePct - malePct) < 10) chips.push({ color: '#22c55e', text: `Strong gender balance: <b>${malePct}% M</b> / <b>${femalePct}% F</b>` });
+  }
+  // Pay gap
+  if (allMaleSalaries.length > 0 && allFemaleSalaries.length > 0 && overallGap !== 0) {
+    const cls = overallGap > 10 ? '#ef4444' : overallGap > 5 ? '#f59e0b' : '#22c55e';
+    chips.push({ color: cls, text: `Overall gender pay gap: men earn <b>${Math.abs(overallGap)}% ${overallGap > 0 ? 'more' : 'less'}</b> on average` });
+  }
+  // Multi-role
+  if (multiRoleCount > 0) chips.push({ color: '#a8a29e', text: `<b>${multiRoleCount}</b> employee${multiRoleCount !== 1 ? 's hold' : ' holds'} multiple roles` });
+  return chips.slice(0, 3);
+}
+
+// ── Build UI ──────────────────────────────────────────────────────
+const grid = document.getElementById('dash-grid');
+
+function makeCard(spanClass, title, badgeText) {
+  const el = document.createElement('div');
+  el.className = `dash-card ${spanClass}`;
+  const hdr = document.createElement('div');
+  hdr.className = 'card-header';
+  const ttl = document.createElement('span');
+  ttl.className = 'card-title';
+  ttl.textContent = title;
+  hdr.appendChild(ttl);
+  if (badgeText != null) {
+    const badge = document.createElement('span');
+    badge.className = 'card-badge';
+    badge.textContent = badgeText;
+    hdr.appendChild(badge);
+  }
+  el.appendChild(hdr);
+  return el;
+}
+
+function buildDonut(segments, centerText, centerSub) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 36 36');
+  svg.setAttribute('class', 'donut-svg');
+
+  const bg = document.createElementNS(ns, 'circle');
+  bg.setAttribute('cx', '18'); bg.setAttribute('cy', '18'); bg.setAttribute('r', '15.915');
+  bg.setAttribute('fill', 'none'); bg.setAttribute('stroke', '#e6e4df'); bg.setAttribute('stroke-width', '4');
+  svg.appendChild(bg);
+
+  const total = segments.reduce((s, seg) => s + seg.value, 0);
+  if (total === 0) {
+    const empty = document.createElementNS(ns, 'circle');
+    empty.setAttribute('cx', '18'); empty.setAttribute('cy', '18'); empty.setAttribute('r', '15.915');
+    empty.setAttribute('fill', 'none'); empty.setAttribute('stroke', '#e6e4df'); empty.setAttribute('stroke-width', '4');
+    svg.appendChild(empty);
+  } else {
+    let offset = 25;
+    segments.forEach(seg => {
+      if (seg.value === 0) return;
+      const pct = (seg.value / total) * 100;
+      const circle = document.createElementNS(ns, 'circle');
+      circle.setAttribute('cx', '18'); circle.setAttribute('cy', '18'); circle.setAttribute('r', '15.915');
+      circle.setAttribute('class', 'donut-segment');
+      circle.setAttribute('stroke', seg.color);
+      circle.setAttribute('stroke-dasharray', `${pct} ${100 - pct}`);
+      circle.setAttribute('stroke-dashoffset', offset);
+      circle.setAttribute('transform', 'rotate(-90 18 18)');
+      svg.appendChild(circle);
+      offset -= pct;
+    });
+  }
+
+  const txt = document.createElementNS(ns, 'text');
+  txt.setAttribute('x', '18'); txt.setAttribute('y', '17');
+  txt.setAttribute('class', 'donut-center-text');
+  txt.textContent = centerText;
+  svg.appendChild(txt);
+
+  if (centerSub) {
+    const sub = document.createElementNS(ns, 'text');
+    sub.setAttribute('x', '18'); sub.setAttribute('y', '21.5');
+    sub.setAttribute('class', 'donut-center-sub');
+    sub.textContent = centerSub;
+    svg.appendChild(sub);
+  }
+  return svg;
+}
+
+function addSectionLabel(text) {
+  const el = document.createElement('div');
+  el.className = 'section-label';
+  el.textContent = text;
+  grid.appendChild(el);
+}
+
+// ── KPI Strip ─────────────────────────────────────────────────────
+const kpiDefs = [
+  { accent: '#0d9488', value: activePersons.length,
+    label: 'Total Employees',
+    sub: `${totalRoles} roles · ${vacantRoles} vacant`, subCls: vacantPct > 15 ? 'warn' : 'neutral' },
+  { accent: '#2563eb', value: settings.viewOnly ? '—' : fmt(totalPayroll),
+    label: 'Monthly Payroll',
+    sub: settings.viewOnly ? 'Hidden in view-only' : `Avg ${fmt(avgSalary)}/mo per person`, subCls: 'neutral' },
+  { accent: vacantPct > 15 ? '#d97706' : '#16a34a', value: `${vacantPct}%`,
+    label: 'Vacancy Rate',
+    sub: `${vacantRoles} open role${vacantRoles !== 1 ? 's' : ''}`, subCls: vacantPct > 15 ? 'warn' : 'ok' },
+  { accent: totalFlags > 0 ? '#ef4444' : '#16a34a', value: totalFlags,
+    label: 'Open Review Flags',
+    sub: totalFlags > 0 ? `${totalFlags} action${totalFlags !== 1 ? 's' : ''} needed` : 'All clear',
+    subCls: totalFlags > 0 ? 'danger' : 'ok' },
+];
+
+kpiDefs.forEach(k => {
+  const el = document.createElement('div');
+  el.className = 'dash-card span-1 kpi-card';
+  el.style.setProperty('--kpi-accent', k.accent);
+  el.innerHTML = `
+    <div class="kpi-value">${k.value}</div>
+    <div class="kpi-label">${k.label}</div>
+    <div class="kpi-sub ${k.subCls}">${k.sub}</div>`;
+  grid.appendChild(el);
+});
+
+// ── Insights strip ────────────────────────────────────────────────
+const insights = buildInsights();
+if (insights.length > 0) {
+  const strip = document.createElement('div');
+  strip.className = 'insight-strip';
+  insights.forEach(ins => {
+    const chip = document.createElement('div');
+    chip.className = 'insight-chip';
+    chip.innerHTML = `<span class="insight-dot" style="background:${ins.color}"></span><span>${ins.text}</span>`;
+    strip.appendChild(chip);
+  });
+  grid.appendChild(strip);
+}
+
+// ── People & Gender ───────────────────────────────────────────────
+addSectionLabel('People & Gender');
+
+// Gender Overview
+{
+  const card = makeCard('span-2', 'Gender Overview', `${activePersons.length} employees`);
+  const total = activePersons.length;
+  if (total === 0) {
+    const nd = document.createElement('div'); nd.className = 'no-data'; nd.textContent = 'No employees yet.';
+    card.appendChild(nd);
+  } else {
+    const femalePct = total ? Math.round(genderCounts.female / total * 100) : 0;
+    const segments = [
+      { label: 'Male',    value: genderCounts.male,    color: '#2563eb' },
+      { label: 'Female',  value: genderCounts.female,  color: '#f43f5e' },
+      { label: 'Other',   value: genderCounts.other,   color: '#a8a29e' },
+      { label: 'Unknown', value: genderCounts.unknown, color: '#d6d3ce' },
+    ].filter(s => s.value > 0);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'donut-wrap';
+    wrap.appendChild(buildDonut(segments, total, 'people'));
+
+    const legend = document.createElement('div');
+    legend.className = 'donut-legend';
+    [
+      { label: 'Male',    value: genderCounts.male,    color: '#2563eb' },
+      { label: 'Female',  value: genderCounts.female,  color: '#f43f5e' },
+      { label: 'Other',   value: genderCounts.other,   color: '#a8a29e' },
+      { label: 'Unknown', value: genderCounts.unknown, color: '#d6d3ce' },
+    ].forEach(s => {
+      const pct = total ? Math.round(s.value / total * 100) : 0;
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `
+        <span class="legend-dot" style="background:${s.color}"></span>
+        <span class="legend-label">${s.label}</span>
+        <span class="legend-value">${s.value}</span>
+        <span class="legend-pct">${pct}%</span>`;
+      legend.appendChild(item);
+    });
+    wrap.appendChild(legend);
+    card.appendChild(wrap);
+
+    const secondary = document.createElement('div');
+    secondary.className = 'gender-secondary';
+    [
+      { label: 'Female share overall',            value: `${femalePct}%` },
+      { label: 'Female in senior roles (C5+/Dir+)', value: `${seniorFemalePct}% (${seniorFemaleCount} of ${seniorPersons.length})` },
+      { label: 'Gender unrecorded',               value: `${genderCounts.unknown} employee${genderCounts.unknown !== 1 ? 's' : ''}` },
+    ].forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'gender-stat';
+      row.innerHTML = `<span class="gender-stat-label">${s.label}</span><span class="gender-stat-value">${s.value}</span>`;
+      secondary.appendChild(row);
+    });
+    card.appendChild(secondary);
+  }
+  grid.appendChild(card);
+}
+
+// Gender Pay Gap
+{
+  const card = makeCard('span-2', 'Gender Pay Gap', settings.viewOnly ? 'Hidden' : null);
+  if (settings.viewOnly) {
+    const div = document.createElement('div'); div.className = 'payroll-hidden';
+    div.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><p>Salary data is hidden in view-only mode.</p>`;
+    card.appendChild(div);
+  } else {
+    const headline = document.createElement('div');
+    headline.className = 'gap-headline';
+    if (allMaleSalaries.length > 0 && allFemaleSalaries.length > 0) {
+      const otherNote = genderCounts.other > 0
+        ? `<span style="font-size:11px;color:var(--text-muted)">· ${genderCounts.other} with gender 'Other' shown per level below</span>`
+        : '';
+      headline.innerHTML = `
+        <span class="gap-headline-val">${overallGap > 0 ? overallGap + '%' : '0%'}</span>
+        <span class="gap-headline-label">overall pay gap — men earn ${overallGap}% more on average ${otherNote}</span>`;
+    } else {
+      headline.innerHTML = `<span class="gap-headline-label" style="color:var(--text-muted)">Insufficient data for overall pay gap calculation</span>`;
+    }
+    card.appendChild(headline);
+
+    const tbl = document.createElement('table');
+    tbl.className = 'gap-table';
+    tbl.innerHTML = `<thead><tr><th>Level</th><th>Avg Male</th><th>Avg Female</th><th>Avg Other</th><th>Gap</th></tr></thead>`;
+    const tbody = document.createElement('tbody');
+    const levels = Object.keys(levelGenderData).sort((a, b) => levelSortKey(a) - levelSortKey(b));
+    if (levels.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="gap-na">No level data available</td></tr>`;
+    }
+    levels.forEach(lvl => {
+      const d = levelGenderData[lvl];
+      const tr = document.createElement('tr');
+      const mS = d.male.filter(v => v > 0), fS = d.female.filter(v => v > 0), oS = d.other.filter(v => v > 0);
+      const avgOCell = oS.length >= 2 ? fmt(avg(oS)) : `<span class="gap-na">—</span>`;
+      if (mS.length < 2 || fS.length < 2) {
+        tr.innerHTML = `<td>${lvl}</td><td colspan="4" class="gap-na">Insufficient data (need ≥2 per gender)</td>`;
+      } else {
+        const avgM = avg(mS), avgF = avg(fS);
+        const gap  = avgM > 0 ? Math.round((avgM - avgF) / avgM * 100) : 0;
+        const barW = Math.min(Math.abs(gap) * 2, 60);
+        tr.innerHTML = `
+          <td>${lvl}</td><td>${fmt(avgM)}</td><td>${fmt(avgF)}</td><td>${avgOCell}</td>
+          <td><span class="gap-pct ${gap <= 0 ? 'ok' : ''}">${gap > 0 ? '+' : ''}${gap}%</span>${gap > 0 ? `<span class="gap-bar" style="width:${barW}px"></span>` : ''}</td>`;
+      }
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    card.appendChild(tbl);
+  }
+  grid.appendChild(card);
+}
+
+// ── Structure ─────────────────────────────────────────────────────
+addSectionLabel('Structure');
+
+// Headcount by Department
+{
+  const card = makeCard('span-2', 'Headcount by Department', `${departments.length} depts`);
+  if (deptStats.length === 0) {
+    card.appendChild(Object.assign(document.createElement('div'), { className: 'no-data', textContent: 'No departments yet.' }));
+  } else {
+    const maxCapacity = Math.max(...deptStats.map(d => d.capacity), 1);
+    const chart = document.createElement('div');
+    chart.className = 'bar-chart';
+
+    deptStats.forEach((d, i) => {
+      const group = document.createElement('div');
+      group.className = 'bar-row-group ' + (i < deptStats.length - 1 ? 'bar-row-border' : '');
+
+      // Capacity bar: track = total capacity, fill = headcount (using dept color), vacant shown as faint extension
+      const capacityPct = maxCapacity > 0 ? (d.capacity / maxCapacity * 100) : 0;
+      const headcountPct = d.capacity > 0 ? (d.count / d.capacity * 100) : 0;
+
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      row.style.paddingBottom = '2px';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'bar-dept-name';
+      nameEl.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:3px;background:${d.color};margin-right:6px;vertical-align:middle;flex-shrink:0"></span>${d.name}`;
+
+      // Outer track = capacity width, inner fill = headcount
+      const trackWrap = document.createElement('div');
+      trackWrap.style.cssText = 'flex:1; display:flex; align-items:center; gap:0;';
+      const outerTrack = document.createElement('div');
+      outerTrack.style.cssText = `flex:1; height:10px; background:var(--bg); border-radius:99px; border:1px solid var(--border); overflow:hidden; position:relative;`;
+      // Faint capacity hint (full width in dept color at 15%)
+      const capacityHint = document.createElement('div');
+      capacityHint.style.cssText = `position:absolute; left:0; top:0; height:100%; width:100%; background:${d.color}; opacity:0.12;`;
+      // Actual headcount fill
+      const fill = document.createElement('div');
+      fill.style.cssText = `position:absolute; left:0; top:0; height:100%; border-radius:99px; transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1); background:${d.color}; width:${headcountPct}%;`;
+      outerTrack.appendChild(capacityHint);
+      outerTrack.appendChild(fill);
+      trackWrap.appendChild(outerTrack);
+
+      const val = document.createElement('div');
+      val.className = 'bar-value';
+      val.style.minWidth = '52px';
+      val.innerHTML = `${d.count}<span style="font-weight:400;color:var(--text-muted);font-size:11px"> / ${d.capacity}</span>`;
+
+      row.appendChild(nameEl);
+      row.appendChild(trackWrap);
+      row.appendChild(val);
+      group.appendChild(row);
+
+      // Gender micro-bar
+      const total = d.gender.male + d.gender.female + d.gender.other + d.gender.unknown;
+      if (total > 0) {
+        const subRow = document.createElement('div');
+        subRow.style.cssText = 'display:flex; align-items:center; gap:10px; padding-bottom:6px;';
+        const spacer = document.createElement('div');
+        spacer.className = 'bar-dept-name';
+        spacer.style.visibility = 'hidden';
+        spacer.textContent = '\u00a0';
+        const stackWrap = document.createElement('div');
+        stackWrap.style.cssText = 'flex:1; display:flex; height:4px; border-radius:99px; overflow:hidden; background:var(--bg);';
+        [
+          { key: 'male',    color: '#2563eb' },
+          { key: 'female',  color: '#f43f5e' },
+          { key: 'other',   color: '#a8a29e' },
+          { key: 'unknown', color: '#d6d3ce' },
+        ].forEach(s => {
+          if (d.gender[s.key] === 0) return;
+          const seg = document.createElement('div');
+          seg.className = 'stacked-seg';
+          seg.style.width = (d.gender[s.key] / total * 100) + '%';
+          seg.style.background = s.color;
+          stackWrap.appendChild(seg);
+        });
+        const mPct = Math.round(d.gender.male / total * 100);
+        const fPct = Math.round(d.gender.female / total * 100);
+        const oPct = Math.round(d.gender.other / total * 100);
+        const label = document.createElement('span');
+        label.style.cssText = 'font-size:10.5px; color:var(--text-muted); white-space:nowrap; min-width:52px; text-align:right;';
+        label.textContent = `${mPct}% M · ${fPct}% F` + (d.gender.other > 0 ? ` · ${oPct}% O` : '');
+        subRow.appendChild(spacer);
+        subRow.appendChild(stackWrap);
+        subRow.appendChild(label);
+        group.appendChild(subRow);
+      }
+      chart.appendChild(group);
+    });
+    card.appendChild(chart);
+  }
+  grid.appendChild(card);
+}
+
+// Level Distribution
+{
+  const card = makeCard('span-2', 'Level Distribution', `${sortedLevels.length} level${sortedLevels.length !== 1 ? 's' : ''}`);
+  if (sortedLevels.length === 0) {
+    card.appendChild(Object.assign(document.createElement('div'), { className: 'no-data', textContent: 'No level data yet.' }));
+  } else {
+    const maxC = Math.max(...Object.values(levelCounts), 1);
+    const totalPeople = activePersons.length;
+    const chart = document.createElement('div');
+    chart.className = 'bar-chart';
+
+    // Gradient from accent (top levels) to warm orange (lower levels)
+    const levelColors = ['#2563eb','#3b82f6','#60a5fa','#0d9488','#14b8a6','#e8622a','#f97316','#fb923c','#a8a29e'];
+
+    sortedLevels.forEach((lvl, i) => {
+      const cnt = levelCounts[lvl];
+      const pct = cnt / maxC * 100;
+      const sharePct = totalPeople > 0 ? Math.round(cnt / totalPeople * 100) : 0;
+      const color = levelColors[Math.min(i, levelColors.length - 1)];
+
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'bar-dept-name';
+      nameEl.style.minWidth = '70px';
+      nameEl.textContent = lvl;
+
+      const track = document.createElement('div');
+      track.className = 'bar-track';
+      const fill = document.createElement('div');
+      fill.className = 'bar-fill';
+      fill.style.width = pct + '%';
+      fill.style.background = color;
+      track.appendChild(fill);
+
+      const val = document.createElement('div');
+      val.className = 'bar-value';
+      val.style.minWidth = '52px';
+      val.innerHTML = `${cnt}<span style="font-weight:400;color:var(--text-muted);font-size:11px"> (${sharePct}%)</span>`;
+
+      row.appendChild(nameEl);
+      row.appendChild(track);
+      row.appendChild(val);
+      chart.appendChild(row);
+    });
+    card.appendChild(chart);
+  }
+  grid.appendChild(card);
+}
+
+// ── Finance ───────────────────────────────────────────────────────
+addSectionLabel('Finance');
+
+// Payroll by Department
+{
+  const card = makeCard('span-2', 'Payroll by Department', settings.viewOnly ? null : fmtFull(totalPayroll) + ' total');
+  if (settings.viewOnly) {
+    const div = document.createElement('div'); div.className = 'payroll-hidden';
+    div.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><p>Salary data is hidden in view-only mode.</p>`;
+    card.appendChild(div);
+  } else if (deptStats.length === 0) {
+    card.appendChild(Object.assign(document.createElement('div'), { className: 'no-data', textContent: 'No department data yet.' }));
+  } else {
+    const sorted = [...deptStats].sort((a, b) => b.payroll - a.payroll);
+    const maxPay = Math.max(...sorted.map(d => d.payroll), 1);
+    const chart = document.createElement('div');
+    chart.className = 'bar-chart';
+    sorted.forEach(d => {
+      const pct = d.payroll / maxPay * 100;
+      const share = totalPayroll > 0 ? Math.round(d.payroll / totalPayroll * 100) : 0;
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'bar-dept-name';
+      nameEl.innerHTML = `<span style="display:inline-block;width:8px;height:8px;border-radius:3px;background:${d.color};margin-right:6px;vertical-align:middle"></span>${d.name}`;
+      const track = document.createElement('div');
+      track.className = 'bar-track';
+      const fill = document.createElement('div');
+      fill.className = 'bar-fill';
+      fill.style.width = pct + '%';
+      fill.style.background = d.color;
+      fill.style.opacity = '0.8';
+      track.appendChild(fill);
+      const val = document.createElement('div');
+      val.className = 'bar-value';
+      val.style.minWidth = '100px';
+      val.textContent = `${fmt(d.payroll)} (${share}%)`;
+      row.appendChild(nameEl); row.appendChild(track); row.appendChild(val);
+      chart.appendChild(row);
+    });
+    card.appendChild(chart);
+
+    const summary = document.createElement('div');
+    summary.style.cssText = 'display:flex; gap:16px; padding-top:12px; border-top:1px solid var(--border);';
+    summary.innerHTML = `
+      <div style="flex:1"><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Total monthly</div><div style="font-size:16px;font-weight:800;letter-spacing:-0.5px;color:var(--text-primary)">${fmtFull(totalPayroll)}</div></div>
+      <div style="flex:1"><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Avg per person</div><div style="font-size:16px;font-weight:800;letter-spacing:-0.5px;color:var(--text-primary)">${fmt(avgSalary)}/mo</div></div>
+      <div style="flex:1"><div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">Annual estimate</div><div style="font-size:16px;font-weight:800;letter-spacing:-0.5px;color:var(--text-primary)">${fmt(totalPayroll * 12)}</div></div>`;
+    card.appendChild(summary);
+  }
+  grid.appendChild(card);
+}
+
+// Status Flags
+{
+  const card = makeCard('span-2', 'Status Flags', totalFlags > 0 ? `${totalFlags} action${totalFlags !== 1 ? 's' : ''} needed` : 'All clear');
+  if (activePersons.length === 0) {
+    card.appendChild(Object.assign(document.createElement('div'), { className: 'no-data', textContent: 'No employees yet.' }));
+  } else {
+    flagGroups.forEach(f => {
+      const flagged = activePersons.filter(p => p[f.key]);
+      const row = document.createElement('div');
+      row.className = 'flag-row';
+      row.innerHTML = `
+        <span class="flag-pill ${f.color}">${f.label}</span>
+        <span class="flag-count${flagged.length > 0 ? ' nonzero' : ''}">${flagged.length}</span>
+        ${flagged.length > 0 ? '<span class="flag-chevron">›</span>' : '<span class="flag-chevron"></span>'}`;
+
+      const namesDiv = document.createElement('div');
+      namesDiv.className = 'flag-names';
+      flagged.forEach(p => {
+        const chip = document.createElement('span');
+        chip.className = 'flag-name-chip';
+        chip.textContent = p.name;
+        namesDiv.appendChild(chip);
+      });
+      if (flagged.length > 0) {
+        row.addEventListener('click', () => { row.classList.toggle('open'); namesDiv.classList.toggle('visible'); });
+      }
+      card.appendChild(row);
+      if (flagged.length > 0) card.appendChild(namesDiv);
+    });
+  }
+  grid.appendChild(card);
+}
+
+// ── Health ────────────────────────────────────────────────────────
+addSectionLabel('Health');
+
+// Salary Band Health
+{
+  const inCount = bandHealth.inBand.length, belowCount = bandHealth.below.length, aboveCount = bandHealth.above.length;
+  const card = makeCard('span-2', 'Salary Band Health',
+    bandTotal > 0 ? `${Math.round(inCount / bandTotal * 100)}% in band` : null);
+
+  if (bandTotal === 0) {
+    const nd = document.createElement('div'); nd.className = 'no-data';
+    nd.textContent = Object.keys(salaryBands).length === 0 ? 'No salary bands configured yet.' : 'No employees with salary band data.';
+    card.appendChild(nd);
+  } else {
+    const segments = [
+      { label: 'In band',    value: inCount,    color: '#22c55e' },
+      { label: 'Below band', value: belowCount, color: '#f59e0b' },
+      { label: 'Above band', value: aboveCount, color: '#ef4444' },
+    ];
+    const wrap = document.createElement('div');
+    wrap.className = 'donut-wrap';
+    wrap.appendChild(buildDonut(segments, inCount, 'in band'));
+    const legend = document.createElement('div');
+    legend.className = 'donut-legend';
+    segments.forEach(s => {
+      const pct = bandTotal ? Math.round(s.value / bandTotal * 100) : 0;
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `
+        <span class="legend-dot" style="background:${s.color}"></span>
+        <span class="legend-label">${s.label}</span>
+        <span class="legend-value">${s.value}</span>
+        <span class="legend-pct">${pct}%</span>`;
+      legend.appendChild(item);
+    });
+    wrap.appendChild(legend);
+    card.appendChild(wrap);
+
+    const offenders = [...bandHealth.below, ...bandHealth.above];
+    if (offenders.length > 0 && !settings.viewOnly) {
+      const title = document.createElement('div');
+      title.style.cssText = 'font-size:10px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; padding-top:2px;';
+      title.textContent = 'Out-of-band employees';
+      card.appendChild(title);
+      const list = document.createElement('div');
+      list.className = 'band-offenders';
+      offenders.slice(0, 5).forEach(o => {
+        const row = document.createElement('div');
+        row.className = 'band-offender-row';
+        const isBelow = bandHealth.below.includes(o);
+        row.innerHTML = `
+          <span class="band-offender-name">${o.name}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${o.level || ''}</span>
+          <span class="band-offender-tag ${isBelow ? 'below' : 'above'}">${isBelow ? 'Below' : 'Above'}</span>`;
+        list.appendChild(row);
+      });
+      if (offenders.length > 5) {
+        const more = document.createElement('div');
+        more.style.cssText = 'font-size:11.5px; color:var(--text-muted); padding:4px 0;';
+        more.textContent = `+${offenders.length - 5} more out-of-band`;
+        list.appendChild(more);
+      }
+      card.appendChild(list);
+    }
+  }
+  grid.appendChild(card);
+}
+
+// Org Health
+{
+  const card = makeCard('span-2', 'Org Health', null);
+
+  function dotCls(cls) {
+    if (!cls) return 'neutral';
+    return cls;
+  }
+
+  const healthRows = [
+    { label: 'Total active employees',   value: activePersons.length,  cls: '' },
+    { label: 'Avg. span of control',     value: avgSpan !== '—' ? avgSpan + ' direct reports' : '—', cls: '' },
+    { label: 'Hierarchy depth',          value: depth ? depth + (depth === 1 ? ' level' : ' levels') : '—', cls: '' },
+    { label: 'Vacant roles',             value: `${vacantRoles} of ${totalRoles} (${vacantPct}%)`, cls: vacantPct > 20 ? 'warn' : vacantPct > 0 ? '' : 'ok' },
+    { label: 'Orphaned roles',           value: orphanedRoles, cls: orphanedRoles > 0 ? 'warn' : 'ok' },
+    { label: 'Managers (with reports)',  value: managerCount, cls: '' },
+    { label: 'Multi-role employees',     value: multiRoleCount, cls: multiRoleCount > 0 ? 'warn' : '' },
+    { label: 'Departments',              value: departments.length, cls: '' },
+    { label: 'Salary bands configured',  value: Object.keys(salaryBands).length, cls: Object.keys(salaryBands).length === 0 ? 'warn' : 'ok' },
+  ];
+
+  const statsDiv = document.createElement('div');
+  healthRows.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    const dotClass = r.cls || 'neutral';
+    row.innerHTML = `
+      <span class="stat-row-label"><span class="stat-dot ${dotClass}"></span>${r.label}</span>
+      <span class="stat-row-value ${r.cls}">${r.value}</span>`;
+    statsDiv.appendChild(row);
+  });
+  card.appendChild(statsDiv);
+  grid.appendChild(card);
+}
+
+// ── Footer ────────────────────────────────────────────────────────
+document.getElementById('last-updated').textContent =
+  `Data as of ${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+</script>
+</body>
+</html>
