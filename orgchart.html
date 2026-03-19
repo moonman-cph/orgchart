@@ -510,7 +510,6 @@
     width: 130px; flex-shrink: 0; font-size: 12.5px; color: var(--text-secondary);
   }
   .import-map-label span { font-size: 10px; color: #ef4444; margin-left: 2px; }
-  .import-map-row select { flex: 1; }
   .import-mode-option {
     display: flex; align-items: flex-start; gap: 10px;
     border: 1.5px solid var(--border); border-radius: 8px;
@@ -553,17 +552,19 @@
   .import-show-more:hover { text-decoration: underline; }
   .imap-sample {
     font-size: 11px; color: var(--text-muted);
-    margin-left: 6px; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis; max-width: 200px;
-    flex-shrink: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding-left: 2px;
   }
   .imap-vmap-btn {
-    font-size: 11px; padding: 2px 7px; margin-left: 6px;
+    font-size: 11px; padding: 2px 7px;
     border: 1px solid var(--border); border-radius: 4px;
     background: var(--bg); color: var(--accent); cursor: pointer;
     white-space: nowrap; flex-shrink: 0;
   }
   .imap-vmap-btn:hover { background: var(--accent-light); }
+  .imap-field-wrap { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .imap-field-top { display: flex; align-items: center; gap: 8px; }
+  .imap-field-top select { flex: 1; }
   .imap-vmap-panel {
     margin: 2px 0 8px 130px;
     padding: 8px 10px;
@@ -695,6 +696,14 @@
   }
   .emp-card:hover .drag-handle { color: #98a2b3; }
   .emp-card:active .drag-handle { cursor: grabbing; }
+  .drag-handle-role {
+    font-size: 13px; color: var(--text-muted); cursor: grab;
+    position: absolute; bottom: 4px; right: 4px;
+    opacity: 0; transition: opacity 0.15s;
+    line-height: 1; user-select: none;
+  }
+  .emp-card:hover .drag-handle-role { opacity: 1; }
+  .drag-handle-role:active { cursor: grabbing; }
   #settings-currency-dkk.active, #settings-currency-eur.active,
   .add-gender-btn.active {
     background: var(--accent-light) !important;
@@ -1014,6 +1023,7 @@
   body.view-only #modal-flag-onleave,
   body.view-only #modal-role-edit-btn,
   body.view-only .drag-handle,
+  body.view-only .drag-handle-role,
   body.view-only .add-person-btn,
   body.view-only .add-dept-col,
   body.view-only .emp-salary,
@@ -1287,6 +1297,26 @@
     opacity: 0.4;
     background: var(--bg);
   }
+  #dnd-toggle-wrap {
+    margin-left: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+  #dnd-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    user-select: none;
+  }
+  #dnd-toggle-text {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  body.view-only #dnd-toggle-wrap { display: none; }
 
   /* Department salary total — subtitle inside name-wrap */
   .dept-salary {
@@ -1723,6 +1753,16 @@
 
 <div id="filter-bar">
   <span id="filter-bar-label">Departments:</span>
+  <div id="dnd-toggle-wrap">
+    <label id="dnd-toggle-label">
+      <span id="dnd-toggle-text">Drag &amp; drop</span>
+      <div style="position:relative;width:36px;height:20px;flex-shrink:0;">
+        <input type="checkbox" id="dnd-toggle-cb" style="opacity:0;width:0;height:0;position:absolute;" />
+        <span id="dnd-toggle-track" style="position:absolute;inset:0;border-radius:20px;background:var(--border);transition:background 0.15s;"></span>
+        <span id="dnd-toggle-thumb" style="position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform 0.15s;"></span>
+      </div>
+    </label>
+  </div>
 </div>
 
 <div id="main">
@@ -1897,22 +1937,22 @@
     <div class="import-panel" id="import-panel-2">
       <div class="import-map-group">
         <div class="import-map-group-label">Person</div>
-        <div class="import-map-row"><div class="import-map-label">Full name <span>*</span></div><select class="form-control" id="imap-name"></select><span class="imap-sample" id="imap-sample-name"></span></div>
-        <div class="import-map-row"><div class="import-map-label">Employee ID</div><select class="form-control" id="imap-employeeId"></select><span class="imap-sample" id="imap-sample-employeeId"></span></div>
-        <div class="import-map-row"><div class="import-map-label">Salary (monthly)</div><select class="form-control" id="imap-salary"></select><span class="imap-sample" id="imap-sample-salary"></span></div>
-        <div class="import-map-row"><div class="import-map-label">Gender</div><select class="form-control" id="imap-gender"></select><span class="imap-sample" id="imap-sample-gender"></span><button class="imap-vmap-btn" id="imap-vmap-btn-gender" style="display:none">↔ Map values</button></div>
+        <div class="import-map-row"><div class="import-map-label">Full name <span>*</span></div><div class="imap-field-wrap"><select class="form-control" id="imap-name"></select><span class="imap-sample" id="imap-sample-name"></span></div></div>
+        <div class="import-map-row"><div class="import-map-label">Employee ID</div><div class="imap-field-wrap"><select class="form-control" id="imap-employeeId"></select><span class="imap-sample" id="imap-sample-employeeId"></span></div></div>
+        <div class="import-map-row"><div class="import-map-label">Salary (monthly)</div><div class="imap-field-wrap"><select class="form-control" id="imap-salary"></select><span class="imap-sample" id="imap-sample-salary"></span></div></div>
+        <div class="import-map-row"><div class="import-map-label">Gender</div><div class="imap-field-wrap"><div class="imap-field-top"><select class="form-control" id="imap-gender"></select><button class="imap-vmap-btn" id="imap-vmap-btn-gender" style="display:none">↔ Map values</button></div><span class="imap-sample" id="imap-sample-gender"></span></div></div>
         <div class="imap-vmap-panel" id="imap-vmap-gender" style="display:none"></div>
       </div>
       <div class="import-map-group">
         <div class="import-map-group-label">Role</div>
-        <div class="import-map-row"><div class="import-map-label">Job title <span>*</span></div><select class="form-control" id="imap-roleTitle"></select><span class="imap-sample" id="imap-sample-roleTitle"></span></div>
-        <div class="import-map-row"><div class="import-map-label">Level (L1–L8)</div><select class="form-control" id="imap-roleLevel"></select><span class="imap-sample" id="imap-sample-roleLevel"></span><button class="imap-vmap-btn" id="imap-vmap-btn-roleLevel" style="display:none">↔ Map values</button></div>
+        <div class="import-map-row"><div class="import-map-label">Job title <span>*</span></div><div class="imap-field-wrap"><select class="form-control" id="imap-roleTitle"></select><span class="imap-sample" id="imap-sample-roleTitle"></span></div></div>
+        <div class="import-map-row"><div class="import-map-label">Level (L1–L8)</div><div class="imap-field-wrap"><div class="imap-field-top"><select class="form-control" id="imap-roleLevel"></select><button class="imap-vmap-btn" id="imap-vmap-btn-roleLevel" style="display:none">↔ Map values</button></div><span class="imap-sample" id="imap-sample-roleLevel"></span></div></div>
         <div class="imap-vmap-panel" id="imap-vmap-roleLevel" style="display:none"></div>
-        <div class="import-map-row"><div class="import-map-label">Department</div><select class="form-control" id="imap-roleDept"></select><span class="imap-sample" id="imap-sample-roleDept"></span></div>
-        <div class="import-map-row"><div class="import-map-label">Team</div><select class="form-control" id="imap-roleTeam"></select><span class="imap-sample" id="imap-sample-roleTeam"></span></div>
-        <div class="import-map-row"><div class="import-map-label">Manager name</div><select class="form-control" id="imap-managerName"></select><span class="imap-sample" id="imap-sample-managerName"></span></div>
-        <div class="import-map-row"><div class="import-map-label">Manager ID</div><select class="form-control" id="imap-managerEmployeeId"></select><span class="imap-sample" id="imap-sample-managerEmployeeId"></span></div>
-        <div class="import-map-row"><div class="import-map-label">Dotted-line mgr ID</div><select class="form-control" id="imap-dottedLineManagerId"></select><span class="imap-sample" id="imap-sample-dottedLineManagerId"></span></div>
+        <div class="import-map-row"><div class="import-map-label">Department</div><div class="imap-field-wrap"><select class="form-control" id="imap-roleDept"></select><span class="imap-sample" id="imap-sample-roleDept"></span></div></div>
+        <div class="import-map-row"><div class="import-map-label">Team</div><div class="imap-field-wrap"><select class="form-control" id="imap-roleTeam"></select><span class="imap-sample" id="imap-sample-roleTeam"></span></div></div>
+        <div class="import-map-row"><div class="import-map-label">Manager name</div><div class="imap-field-wrap"><select class="form-control" id="imap-managerName"></select><span class="imap-sample" id="imap-sample-managerName"></span></div></div>
+        <div class="import-map-row"><div class="import-map-label">Manager ID</div><div class="imap-field-wrap"><select class="form-control" id="imap-managerEmployeeId"></select><span class="imap-sample" id="imap-sample-managerEmployeeId"></span></div></div>
+        <div class="import-map-row"><div class="import-map-label">Dotted-line mgr ID</div><div class="imap-field-wrap"><select class="form-control" id="imap-dottedLineManagerId"></select><span class="imap-sample" id="imap-sample-dottedLineManagerId"></span></div></div>
       </div>
     </div>
     <!-- Step 3: Options -->
@@ -2763,7 +2803,7 @@ const state = {
   editingPersonId: null,
 };
 
-let settings = { currency: 'DKK', hideSalaries: false, hideLevels: false, viewOnly: false, matrixMode: false };
+let settings = { currency: 'DKK', hideSalaries: false, hideLevels: false, viewOnly: false, matrixMode: false, dragDropEnabled: true };
 
 let snapshots = [];
 
@@ -2936,14 +2976,16 @@ function renderCard(role, isOrphaned = false) {
   const isPartial = !isVacant && assignment && assignment.percentage < 100;
   const isOver = !isVacant && totalAlloc > 100;
 
+  let cardDragMode = 'person';
+
   const card = document.createElement('div');
   card.className = 'emp-card' + (isVacant ? ' vacant' : '') + (isOrphaned ? ' orphaned' : '');
   card.dataset.roleId = role.id;
 
   if (!isVacant) {
-    if (!person.noLongerHired && !settings.viewOnly) {
+    if (!person.noLongerHired && !settings.viewOnly && settings.dragDropEnabled !== false) {
       card.draggable = true;
-      if (state.draggedPersonId === person.id) card.classList.add('dragging');
+      if (state.draggedPersonId === person.id || state.draggedRoleId === role.id) card.classList.add('dragging');
     }
     if (state.selectedRoleIds.has(role.id)) card.classList.add('selected');
   }
@@ -3010,11 +3052,21 @@ function renderCard(role, isOrphaned = false) {
     const handle = document.createElement('div');
     handle.className = 'drag-handle';
     handle.innerHTML = '&#8942;&#8942;';
+    handle.addEventListener('mousedown', () => { cardDragMode = 'person'; });
     card.appendChild(handle);
+
+    if (!settings.viewOnly && settings.dragDropEnabled !== false) {
+      const roleHandle = document.createElement('div');
+      roleHandle.className = 'drag-handle drag-handle-role';
+      roleHandle.innerHTML = '&#8597;';
+      roleHandle.title = 'Drag to rearrange in hierarchy';
+      roleHandle.addEventListener('mousedown', () => { cardDragMode = 'role'; });
+      card.appendChild(roleHandle);
+    }
   }
 
   if (isVacant) {
-    if (!settings.viewOnly) {
+    if (!settings.viewOnly && settings.dragDropEnabled !== false) {
       const handle = document.createElement('div');
       handle.className = 'drag-handle';
       handle.innerHTML = '&#8942;&#8942;';
@@ -3081,20 +3133,31 @@ function renderCard(role, isOrphaned = false) {
     });
     card.addEventListener('dblclick', e => { e.stopPropagation(); if (person.noLongerHired) openPersonModal(person.id); else openCombinedModal(role.id, 'person'); });
     card.addEventListener('dragstart', e => {
-      state.draggedPersonId = person.id;
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', String(person.id));
-      document.getElementById('ghost-label').textContent = person.name;
-      e.dataTransfer.setDragImage(document.getElementById('drag-ghost'), -20, -10);
+      if (cardDragMode === 'role') {
+        state.draggedRoleId = role.id;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', 'role:' + role.id);
+        document.getElementById('ghost-label').textContent = role.title;
+        e.dataTransfer.setDragImage(document.getElementById('drag-ghost'), -20, -10);
+      } else {
+        state.draggedPersonId = person.id;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(person.id));
+        document.getElementById('ghost-label').textContent = person.name;
+        e.dataTransfer.setDragImage(document.getElementById('drag-ghost'), -20, -10);
+      }
       requestAnimationFrame(() => render());
     });
-    card.addEventListener('dragend', () => { state.draggedPersonId = null; render(); });
+    card.addEventListener('dragend', () => { state.draggedPersonId = null; state.draggedRoleId = null; render(); });
     card.addEventListener('dragover', e => {
       if (state.draggedPersonId !== null && state.draggedPersonId !== person.id) {
-        e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; card.classList.add('drop-target');
+        const isUnassigned = getAssignmentsForPerson(state.draggedPersonId).length === 0;
+        if (isUnassigned) {
+          e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; card.classList.add('drop-target');
+        }
       } else if (state.draggedRoleId !== null) {
         const descendants = getDescendantRoleIds(state.draggedRoleId);
-        if (!descendants.has(role.id)) { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; card.classList.add('drop-target'); }
+        if (!descendants.has(role.id) && state.draggedRoleId !== role.id) { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; card.classList.add('drop-target'); }
       }
     });
     card.addEventListener('dragleave', () => card.classList.remove('drop-target'));
@@ -3120,6 +3183,8 @@ function renderCard(role, isOrphaned = false) {
       const draggedPerson = persons.find(x => x.id === state.draggedPersonId);
       if (!draggedPerson) return;
       const draggedAssignments = getAssignmentsForPerson(draggedPerson.id);
+      const isUnassigned = draggedAssignments.length === 0;
+      if (!isUnassigned) { state.draggedPersonId = null; render(); return; }
       const descendants = getDescendantRoleIds(role.id);
       if (draggedAssignments.some(a => descendants.has(a.roleId))) {
         state.draggedPersonId = null; render(); return;
@@ -3216,6 +3281,13 @@ function dropOnDept(deptId) {
   if (state.draggedPersonId === null) return;
   const draggedPerson = persons.find(x => x.id === state.draggedPersonId);
   if (!draggedPerson) return;
+  const assignments = getAssignmentsForPerson(state.draggedPersonId);
+  if (assignments.length > 0) {
+    const roleId = assignments[0].roleId;
+    state.draggedPersonId = null;
+    dropRoleOnDept(deptId, roleId);
+    return;
+  }
   const dept = departments.find(d => d.id === deptId);
   const director = getDirectorRole(deptId);
   state.pendingDrop = {
@@ -3228,6 +3300,15 @@ function dropOnDept(deptId) {
   state.draggedPersonId = null;
   state.selectedRoleIds.clear();
   openDropCreateRoleModal(draggedPerson, state.pendingDrop);
+  render();
+}
+
+function dropRoleOnDept(deptId, overrideRoleId) {
+  const roleId = overrideRoleId ?? state.draggedRoleId;
+  state.draggedRoleId = null;
+  const dragged = roles.find(r => r.id === roleId);
+  if (!dragged || dragged.department === deptId) { render(); return; }
+  openReparentRoleModal(roleId, null, deptId);
   render();
 }
 
@@ -3262,12 +3343,18 @@ function renderDeptColumn(dept) {
 
   header.querySelector('.dept-settings-btn').addEventListener('click', e => { e.stopPropagation(); openDeptSettingsModal(dept.id); });
 
-  header.addEventListener('dragover', e => { if (state.draggedPersonId !== null) { e.preventDefault(); col.classList.add('drop-active'); } });
+  header.addEventListener('dragover', e => {
+    if (state.draggedPersonId !== null) { e.preventDefault(); col.classList.add('drop-active'); }
+    else if (state.draggedRoleId !== null) { const dragged = roles.find(r => r.id === state.draggedRoleId); if (dragged && dragged.department !== dept.id) { e.preventDefault(); col.classList.add('drop-active'); } }
+  });
   header.addEventListener('dragleave', e => { if (!col.contains(e.relatedTarget)) col.classList.remove('drop-active'); });
-  header.addEventListener('drop', e => { e.preventDefault(); col.classList.remove('drop-active'); dropOnDept(dept.id); });
-  col.addEventListener('dragover', e => { if (state.draggedPersonId !== null) { e.preventDefault(); col.classList.add('drop-active'); } });
+  header.addEventListener('drop', e => { e.preventDefault(); col.classList.remove('drop-active'); if (state.draggedRoleId !== null) dropRoleOnDept(dept.id); else dropOnDept(dept.id); });
+  col.addEventListener('dragover', e => {
+    if (state.draggedPersonId !== null) { e.preventDefault(); col.classList.add('drop-active'); }
+    else if (state.draggedRoleId !== null) { const dragged = roles.find(r => r.id === state.draggedRoleId); if (dragged && dragged.department !== dept.id) { e.preventDefault(); col.classList.add('drop-active'); } }
+  });
   col.addEventListener('dragleave', e => { if (!col.contains(e.relatedTarget)) col.classList.remove('drop-active'); });
-  col.addEventListener('drop', e => { e.preventDefault(); col.classList.remove('drop-active'); dropOnDept(dept.id); });
+  col.addEventListener('drop', e => { e.preventDefault(); col.classList.remove('drop-active'); if (state.draggedRoleId !== null) dropRoleOnDept(dept.id); else dropOnDept(dept.id); });
 
   const tree = document.createElement('div');
   tree.className = 'dept-tree';
@@ -3431,7 +3518,7 @@ function renderUnassignedColumn() {
     const card = document.createElement('div');
     card.className = 'emp-card';
     card.dataset.personId = person.id;
-    card.draggable = !settings.viewOnly;
+    card.draggable = !settings.viewOnly && settings.dragDropEnabled !== false;
     if (state.draggedPersonId === person.id) card.classList.add('dragging');
     const avatar = document.createElement('div');
     avatar.className = 'avatar';
@@ -3483,7 +3570,7 @@ function renderFilterBar() {
     const vacantLabel = vacantCount > 0 ? ` (${vacantCount} vacant)` : '';
     pill.innerHTML = `<span class="pill-dot" style="background:${dept.color}"></span>${dept.name}${vacantLabel}`;
     pill.addEventListener('click', () => { hiddenDepts.has(dept.id) ? hiddenDepts.delete(dept.id) : hiddenDepts.add(dept.id); render(); });
-    bar.appendChild(pill);
+    bar.insertBefore(pill, document.getElementById('dnd-toggle-wrap'));
   });
 }
 
@@ -4849,6 +4936,17 @@ function applyMatrixMode() {
   thumb.style.transform = settings.matrixMode ? 'translateX(16px)' : 'translateX(0)';
 }
 
+function applyDragDrop() {
+  const track = document.getElementById('dnd-toggle-track');
+  const thumb = document.getElementById('dnd-toggle-thumb');
+  const cb = document.getElementById('dnd-toggle-cb');
+  if (!track) return;
+  const enabled = settings.dragDropEnabled !== false;
+  cb.checked = enabled;
+  track.style.background = enabled ? 'var(--accent)' : 'var(--border)';
+  thumb.style.transform = enabled ? 'translateX(16px)' : 'translateX(0)';
+}
+
 document.getElementById('settings-hide-salaries-cb').addEventListener('change', e => {
   settings.hideSalaries = e.target.checked;
   applySalaryVisibility();
@@ -4871,6 +4969,13 @@ document.getElementById('settings-matrix-cb').addEventListener('change', e => {
   settings.matrixMode = e.target.checked;
   applyMatrixMode();
   saveToStorage();
+  render();
+});
+
+document.getElementById('dnd-toggle-cb').addEventListener('change', e => {
+  settings.dragDropEnabled = e.target.checked;
+  saveToStorage();
+  applyDragDrop();
   render();
 });
 
@@ -4960,6 +5065,7 @@ applySalaryVisibility();
 applyLevelVisibility();
 applyViewOnly();
 applyMatrixMode();
+applyDragDrop();
 render();
 
 // ── Drop Create Role Modal ────────────────────────────────────────────────────
@@ -5044,22 +5150,24 @@ document.getElementById('drop-create-role-title').addEventListener('keydown', e 
 
 // ── Reparent Role Modal ───────────────────────────────────────────────────────
 
-function openReparentRoleModal(draggedRoleId, targetRoleId) {
+function openReparentRoleModal(draggedRoleId, targetRoleId, targetDeptId) {
   const draggedRole = roles.find(r => r.id === draggedRoleId);
-  const targetRole = roles.find(r => r.id === targetRoleId);
-  if (!draggedRole || !targetRole) { render(); return; }
+  if (!draggedRole) { render(); return; }
+  const targetRole = targetRoleId ? roles.find(r => r.id === targetRoleId) : null;
+  if (targetRoleId && !targetRole) { render(); return; }
 
-  state.pendingReparent = { roleId: draggedRoleId, newManagerRoleId: targetRoleId };
+  state.pendingReparent = { roleId: draggedRoleId, newManagerRoleId: targetRoleId ?? null };
 
-  const targetDept = departments.find(d => d.id === targetRole.department);
-  document.getElementById('reparent-role-modal-title').textContent = `Moving role to ${targetDept ? targetDept.name : targetRole.department}`;
+  const resolvedDeptId = targetDeptId ?? targetRole?.department;
+  const targetDept = departments.find(d => d.id === resolvedDeptId);
+  document.getElementById('reparent-role-modal-title').textContent = `Moving role to ${targetDept ? targetDept.name : resolvedDeptId}`;
   document.getElementById('reparent-role-title').value = draggedRole.title;
 
   const deptSel = document.getElementById('reparent-role-dept');
   deptSel.innerHTML = '';
   departments.forEach(d => {
     const opt = document.createElement('option'); opt.value = d.id; opt.textContent = d.name;
-    if (d.id === targetRole.department) opt.selected = true;
+    if (d.id === resolvedDeptId) opt.selected = true;
     deptSel.appendChild(opt);
   });
 
