@@ -3069,14 +3069,6 @@ function renderCard(role, isOrphaned = false) {
     handle.addEventListener('mousedown', () => { cardDragMode = 'person'; });
     card.appendChild(handle);
 
-    if (!settings.viewOnly && settings.dragDropEnabled !== false) {
-      const roleHandle = document.createElement('div');
-      roleHandle.className = 'drag-handle drag-handle-role';
-      roleHandle.innerHTML = '&#8597;';
-      roleHandle.title = 'Drag to rearrange in hierarchy';
-      roleHandle.addEventListener('mousedown', () => { cardDragMode = 'role'; });
-      card.appendChild(roleHandle);
-    }
   }
 
   if (isVacant) {
@@ -3168,6 +3160,8 @@ function renderCard(role, isOrphaned = false) {
         const isUnassigned = getAssignmentsForPerson(state.draggedPersonId).length === 0;
         if (isUnassigned) {
           e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; card.classList.add('drop-target');
+        } else {
+          e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; card.classList.add('drop-target');
         }
       } else if (state.draggedRoleId !== null) {
         const descendants = getDescendantRoleIds(state.draggedRoleId);
@@ -3198,18 +3192,35 @@ function renderCard(role, isOrphaned = false) {
       if (!draggedPerson) return;
       const draggedAssignments = getAssignmentsForPerson(draggedPerson.id);
       const isUnassigned = draggedAssignments.length === 0;
-      if (!isUnassigned) { state.draggedPersonId = null; render(); return; }
+      if (!isUnassigned) {
+        // Treat as reparenting the dragged person's role under the target role
+        const draggedRoleId = draggedAssignments[0].roleId;
+        const draggedRole = roles.find(r => r.id === draggedRoleId);
+        state.draggedPersonId = null;
+        if (!draggedRole || draggedRole.id === role.id) { render(); return; }
+        // Guard against cycles: target must not be a descendant of dragged role
+        const descendants = getDescendantRoleIds(draggedRoleId);
+        if (descendants.has(role.id)) { render(); return; }
+        if (draggedRole.department === role.department) {
+          draggedRole.managerRoleId = role.id;
+          render();
+        } else {
+          openReparentRoleModal(draggedRoleId, role.id);
+          render();
+        }
+        return;
+      }
       const descendants = getDescendantRoleIds(role.id);
       if (draggedAssignments.some(a => descendants.has(a.roleId))) {
         state.draggedPersonId = null; render(); return;
       }
-      const person = getPersonForRole(role.id);
+      const targetPerson = getPersonForRole(role.id);
       state.pendingDrop = {
         draggedPersonId: state.draggedPersonId,
         department: role.department,
         managerRoleId: role.id,
         teamId: role.teamId ?? null,
-        modalTitle: `Create role under ${person && !person.noLongerHired ? person.name : 'Employee #' + (person ? person.id : '?')}`,
+        modalTitle: `Create role under ${targetPerson && !targetPerson.noLongerHired ? targetPerson.name : 'Employee #' + (targetPerson ? targetPerson.id : '?')}`,
       };
       state.draggedPersonId = null;
       state.selectedRoleIds.clear();
