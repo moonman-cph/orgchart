@@ -3131,13 +3131,15 @@ function renderCard(role, isOrphaned = false) {
       if (e.ctrlKey || e.metaKey) {
         if (state.selectedRoleIds.has(role.id)) state.selectedRoleIds.delete(role.id);
         else state.selectedRoleIds.add(role.id);
+        render();
       } else {
         state.selectedRoleIds.clear();
         state.selectedRoleIds.add(role.id);
+        clearTimeout(card._clickTimer);
+        card._clickTimer = setTimeout(() => render(), 250);
       }
-      render();
     });
-    card.addEventListener('dblclick', e => { e.stopPropagation(); if (person.noLongerHired) openPersonModal(person.id); else openCombinedModal(role.id, 'person'); });
+    card.addEventListener('dblclick', e => { e.stopPropagation(); clearTimeout(card._clickTimer); if (person.noLongerHired) openPersonModal(person.id); else openCombinedModal(role.id, 'person'); });
     card.addEventListener('dragstart', e => {
       if (cardDragMode === 'role') {
         state.draggedRoleId = role.id;
@@ -5081,6 +5083,8 @@ document.getElementById('paybands-save-btn').addEventListener('click', () => {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 loadFromStorage();
+// Persist default data on first load so dashboard/directory can read it
+if (!localStorage.getItem(STORAGE_KEY)) saveToStorage();
 persons.forEach(p => {
   if (!p.gender) {
     const def = DEFAULT_PERSONS.find(d => d.id === p.id);

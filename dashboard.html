@@ -137,7 +137,7 @@ body {
 
 /* ── Main / Grid ──────────────────────────────────────────────── */
 #main {
-  flex: 1; overflow-y: auto; padding: 24px;
+  flex: 1; overflow-y: auto; min-height: 0; padding: 24px;
   background-image: radial-gradient(circle, rgba(99,102,241,0.018) 1px, transparent 1px);
   background-size: 22px 22px;
 }
@@ -466,9 +466,9 @@ let departments = [], roles = [], persons = [], roleAssignments = [],
     settings = { currency: 'DKK', hideSalaries: false, viewOnly: false },
     salaryBands = {};
 
-const raw = localStorage.getItem(STORAGE_KEY);
-if (raw) {
-  try {
+try {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
     const saved = JSON.parse(raw);
     if (saved.departments) departments = saved.departments;
     if (saved.roles)       roles = saved.roles;
@@ -476,8 +476,8 @@ if (raw) {
     if (saved.roleAssignments) roleAssignments = saved.roleAssignments;
     if (saved.settings)    Object.assign(settings, saved.settings);
     if (saved.salaryBands) salaryBands = saved.salaryBands;
-  } catch (e) {}
-}
+  }
+} catch (e) {}
 
 // ── Helpers ───────────────────────────────────────────────────────
 function fmt(n) {
