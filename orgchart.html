@@ -1123,6 +1123,9 @@ const _seedAssignmentPairs = [
 ];
 let roleAssignments = _seedAssignmentPairs.map(([personId, roleId], i) => ({ id: i + 1, personId, roleId, percentage: 100 }));
 
+// ── Stamp orgId on all seed data (M1: always 'default'; required for M2 DB migration) ──
+[departments, teams, roles, persons, roleAssignments].forEach(arr => arr.forEach(e => { e.orgId = 'default'; }));
+
 // ── Level & Title Config ──────────────────────────────────────────────────────
 
 const LEVELS = [
@@ -1569,7 +1572,7 @@ function renderCard(role, isOrphaned = false) {
         const p = persons.find(x => x.id === state.draggedPersonId);
         if (p && !getAssignmentForRole(role.id)) {
           roleAssignments = roleAssignments.filter(a => a.personId !== p.id);
-          roleAssignments.push({ id: nextRoleAssignmentId(), personId: p.id, roleId: role.id, percentage: 100 });
+          roleAssignments.push({ id: nextRoleAssignmentId(), personId: p.id, roleId: role.id, percentage: 100, orgId: 'default' });
         }
         state.draggedPersonId = null;
         render();
@@ -1581,7 +1584,7 @@ function renderCard(role, isOrphaned = false) {
         if (sourceAssignment && !getAssignmentForRole(role.id)) {
           // Fill the vacancy: move the person from the source role into this vacant role
           roleAssignments = roleAssignments.filter(a => !(a.personId === sourceAssignment.personId && a.roleId === dragged.id));
-          roleAssignments.push({ id: nextRoleAssignmentId(), personId: sourceAssignment.personId, roleId: role.id, percentage: 100 });
+          roleAssignments.push({ id: nextRoleAssignmentId(), personId: sourceAssignment.personId, roleId: role.id, percentage: 100, orgId: 'default' });
           debounceSave();
           render();
         } else {
@@ -1696,10 +1699,11 @@ function renderCard(role, isOrphaned = false) {
             departmentId: role.departmentId,
             managerRoleId: role.id,
             teamId: role.teamId ?? null,
+            orgId: 'default',
           };
           roles.push(newRole);
           roleAssignments = roleAssignments.filter(a => a.personId !== draggedPerson.id);
-          roleAssignments.push({ id: nextRoleAssignmentId(), personId: draggedPerson.id, roleId: newRole.id, percentage: 100 });
+          roleAssignments.push({ id: nextRoleAssignmentId(), personId: draggedPerson.id, roleId: newRole.id, percentage: 100, orgId: 'default' });
           saveToStorage();
           render();
         }
@@ -2729,7 +2733,7 @@ function openAssignPersonPicker(roleId) {
       const pct = Math.min(100, Math.max(1, parseInt(pctInput.value, 10) || 100));
       const newTotal = totalAlloc + pct;
       if (newTotal > 100 && !confirm(`${person.name} will be ${newTotal}% allocated (over 100%). Continue?`)) return;
-      roleAssignments.push({ id: nextRoleAssignmentId(), personId: person.id, roleId: assigningRoleId, percentage: pct });
+      roleAssignments.push({ id: nextRoleAssignmentId(), personId: person.id, roleId: assigningRoleId, percentage: pct, orgId: 'default' });
       closeAssignPersonModal(); render();
     });
     return row;
@@ -2865,7 +2869,7 @@ function saveAddToRoleModal() {
     const person = persons.find(p => p.id === addToRolePersonId);
     if (!confirm(`${person ? person.name : 'This person'} will be ${newTotal}% allocated (over 100%). Continue?`)) return;
   }
-  roleAssignments.push({ id: nextRoleAssignmentId(), personId: addToRolePersonId, roleId: addToRoleSelectedRoleId, percentage: pct });
+  roleAssignments.push({ id: nextRoleAssignmentId(), personId: addToRolePersonId, roleId: addToRoleSelectedRoleId, percentage: pct, orgId: 'default' });
   closeAddToRoleModal();
   render();
 }
@@ -3053,7 +3057,7 @@ function saveDeptModal() {
   const warn = document.getElementById('dept-modal-warning');
   if (!name) { warn.textContent = 'Name is required.'; warn.classList.add('visible'); document.getElementById('dept-name-input').focus(); return; }
   const id = nextDepartmentId();
-  departments.push({ id, name, color: selectedDeptColor || DEPT_COLOR_PALETTE[0], description: document.getElementById('dept-desc-input').value.trim(), headRoleId: null });
+  departments.push({ id, name, color: selectedDeptColor || DEPT_COLOR_PALETTE[0], description: document.getElementById('dept-desc-input').value.trim(), headRoleId: null, orgId: 'default' });
   closeDeptModal(); render();
 }
 
@@ -3134,7 +3138,7 @@ function saveAddRoleModal() {
   const teamVal = document.getElementById('add-role-team').value;
   const deptRawVal = document.getElementById('add-role-dept').value;
   const deptNumVal = isNaN(Number(deptRawVal)) ? deptRawVal : Number(deptRawVal);
-  roles.push({ id: nextRoleId(), title: titleVal, level: document.getElementById('add-role-level').value, departmentId: deptNumVal, managerRoleId: mgrVal ? parseInt(mgrVal, 10) : null, teamId: teamVal ? parseInt(teamVal, 10) : null });
+  roles.push({ id: nextRoleId(), title: titleVal, level: document.getElementById('add-role-level').value, departmentId: deptNumVal, managerRoleId: mgrVal ? parseInt(mgrVal, 10) : null, teamId: teamVal ? parseInt(teamVal, 10) : null, orgId: 'default' });
   closeAddRoleModal(); render();
 }
 
@@ -3185,8 +3189,8 @@ function saveAddPersonModal() {
   if (!genderBtn) { warn.textContent = 'Please select a gender.'; warn.classList.add('visible'); return; }
   const gender = genderBtn.dataset.gender;
   const newId = nextPersonId();
-  persons.push({ id: newId, name, salary, gender, salaryReviewNeeded: false, performanceReviewNeeded: false, isNew: false, onLeave: false });
-  if (roleId) roleAssignments.push({ id: nextRoleAssignmentId(), personId: newId, roleId, percentage: 100 });
+  persons.push({ id: newId, name, salary, gender, salaryReviewNeeded: false, performanceReviewNeeded: false, isNew: false, onLeave: false, orgId: 'default' });
+  if (roleId) roleAssignments.push({ id: nextRoleAssignmentId(), personId: newId, roleId, percentage: 100, orgId: 'default' });
   closeAddPersonModal(); render();
 }
 
@@ -3370,7 +3374,7 @@ function saveDeptSettingsModal() {
       if (t) { t.name = name; keptTeamIds.add(id); }
     } else {
       const newId = nextTeamId();
-      teams.push({ id: newId, name, departmentId: editingDeptId });
+      teams.push({ id: newId, name, departmentId: editingDeptId, orgId: 'default' });
       keptTeamIds.add(newId);
     }
   });
@@ -3564,6 +3568,9 @@ async function loadFromStorage() {
 
     // ── Migration 3: strip deprecated roleId from persons ─────────────────────
     persons.forEach(p => { delete p.roleId; });
+
+    // ── Migration 4: ensure orgId on all entities (required for M2 DB migration) ─
+    [departments, teams, roles, persons, roleAssignments].forEach(arr => arr.forEach(e => { e.orgId = e.orgId ?? 'default'; }));
 
   } catch (e) {
     throw e; // re-throw so init() can show error overlay
@@ -3873,10 +3880,10 @@ function saveDropCreateRoleModal() {
   const teamVal = document.getElementById('drop-create-role-team').value;
   const resolvedTeamId = teamVal ? parseInt(teamVal, 10) : (pendingTeamId ?? null);
 
-  const newRole = { id: nextRoleId(), title, level, departmentId: department, managerRoleId, teamId: resolvedTeamId };
+  const newRole = { id: nextRoleId(), title, level, departmentId: department, managerRoleId, teamId: resolvedTeamId, orgId: 'default' };
   roles.push(newRole);
   roleAssignments = roleAssignments.filter(a => a.personId !== draggedPersonId);
-  roleAssignments.push({ id: nextRoleAssignmentId(), personId: draggedPersonId, roleId: newRole.id, percentage: 100 });
+  roleAssignments.push({ id: nextRoleAssignmentId(), personId: draggedPersonId, roleId: newRole.id, percentage: 100, orgId: 'default' });
 
   const deptTitles = getTitlesForDept(department);
   if (deptTitles) {
