@@ -1596,6 +1596,7 @@ function renderCard(role, isOrphaned = false) {
     card.addEventListener('click', e => { e.stopPropagation(); state.selectedRoleIds.clear(); state.selectedRoleIds.add(role.id); clearTimeout(card._clickTimer); card._clickTimer = setTimeout(() => render(), 250); });
     card.addEventListener('dblclick', e => { e.stopPropagation(); clearTimeout(card._clickTimer); openCombinedModal(role.id, 'role'); });
     card.addEventListener('dragover', e => {
+      if (state.draggingDeptId !== null) return; // let event bubble to col for dept reorder
       if (state.draggedPersonId !== null) {
         e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'move'; card.classList.add('drop-target');
       } else if (state.draggedRoleId !== null && state.draggedRoleId !== role.id) {
@@ -1605,6 +1606,7 @@ function renderCard(role, isOrphaned = false) {
     });
     card.addEventListener('dragleave', () => card.classList.remove('drop-target'));
     card.addEventListener('drop', e => {
+      if (state.draggingDeptId !== null) return; // let event bubble to col for dept reorder
       e.preventDefault(); e.stopPropagation(); card.classList.remove('drop-target');
       if (state.draggedPersonId !== null) {
         const p = persons.find(x => x.id === state.draggedPersonId);
@@ -1672,6 +1674,7 @@ function renderCard(role, isOrphaned = false) {
     });
     card.addEventListener('dragend', () => { state.draggedPersonId = null; state.draggedRoleId = null; render(); });
     card.addEventListener('dragover', e => {
+      if (state.draggingDeptId !== null) return; // let event bubble to col for dept reorder
       if (state.draggedPersonId !== null && state.draggedPersonId !== person.id) {
         const isUnassigned = getAssignmentsForPerson(state.draggedPersonId).length === 0;
         if (isUnassigned) {
@@ -1686,6 +1689,7 @@ function renderCard(role, isOrphaned = false) {
     });
     card.addEventListener('dragleave', () => card.classList.remove('drop-target'));
     card.addEventListener('drop', e => {
+      if (state.draggingDeptId !== null) return; // let event bubble to col for dept reorder
       e.preventDefault(); e.stopPropagation(); card.classList.remove('drop-target');
       if (state.draggedRoleId !== null) {
         const dragged = roles.find(r => r.id === state.draggedRoleId);
@@ -1942,10 +1946,15 @@ function renderDeptColumn(dept) {
       setTimeout(() => col.classList.add('dept-dragging'), 0);
     });
     handle.addEventListener('dragend', () => {
+      const target = state.deptDropTarget;
       state.draggingDeptId = null;
       state.deptDropTarget = null;
-      col.classList.remove('dept-dragging');
-      render();
+      if (target) {
+        reorderDepartment(dept.id, target.deptId, target.position);
+      } else {
+        col.classList.remove('dept-dragging');
+        render();
+      }
     });
   }
 
@@ -1970,12 +1979,7 @@ function renderDeptColumn(dept) {
   });
   header.addEventListener('drop', e => {
     col.classList.remove('dept-drop-before', 'dept-drop-after');
-    if (state.draggingDeptId !== null) {
-      e.preventDefault(); e.stopPropagation();
-      reorderDepartment(state.draggingDeptId, dept.id, state.deptDropTarget?.position || 'after');
-      state.draggingDeptId = null; state.deptDropTarget = null;
-      return;
-    }
+    if (state.draggingDeptId !== null) { e.preventDefault(); e.stopPropagation(); return; } // handled in dragend
     e.preventDefault(); col.classList.remove('drop-active');
     if (state.draggedRoleId !== null) dropRoleOnDept(dept.id); else dropOnDept(dept.id);
   });
@@ -2000,12 +2004,7 @@ function renderDeptColumn(dept) {
   });
   col.addEventListener('drop', e => {
     col.classList.remove('dept-drop-before', 'dept-drop-after');
-    if (state.draggingDeptId !== null) {
-      e.preventDefault(); e.stopPropagation();
-      reorderDepartment(state.draggingDeptId, dept.id, state.deptDropTarget?.position || 'after');
-      state.draggingDeptId = null; state.deptDropTarget = null;
-      return;
-    }
+    if (state.draggingDeptId !== null) { e.preventDefault(); e.stopPropagation(); return; } // handled in dragend
     e.preventDefault(); col.classList.remove('drop-active');
     if (state.draggedRoleId !== null) dropRoleOnDept(dept.id); else dropOnDept(dept.id);
   });
