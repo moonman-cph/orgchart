@@ -183,3 +183,20 @@ body {
 #sim-banner svg { color: #d97706; flex-shrink: 0; }
 body.sim-mode #sim-banner { display: flex; }
 body.sim-mode #app-content { border-left: 3px solid #fbbf24; }
+
+/* ── Planned Change Banner (shared across pages) ──────────────── */
+#planned-change-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 24px;
+  background: #eff6ff;
+  border-bottom: 1.5px solid #93c5fd;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e40af;
+}
+#planned-change-banner svg { color: #3b82f6; flex-shrink: 0; }
+body.planned-change-mode #planned-change-banner { display: flex; }
+body.planned-change-mode #app-content { border-left: 3px solid #93c5fd; }

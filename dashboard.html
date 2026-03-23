@@ -100,6 +100,14 @@
       <button onclick="location.reload()" style="padding:4px 12px;font-size:12px;background:rgba(146,64,14,0.08);border:1px solid rgba(146,64,14,0.2);color:#92400e;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:500">Refresh data</button>
     </div>
   </div>
+  <div id="planned-change-banner">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="12" height="12" rx="1.5"/>
+      <line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/>
+      <line x1="2" y1="7" x2="14" y2="7"/>
+    </svg>
+    <span id="pc-banner-label">Planned change scheduled</span>
+  </div>
   <div id="app-header">
     <div class="header-crumb">
       <span class="header-crumb-root">OrgChart</span>
@@ -210,6 +218,17 @@ async function init() {
   // Show sim banner and poll for state changes
   if (simActive) {
     document.body.classList.add('sim-mode');
+  }
+
+  // Show planned-change banner if one is scheduled
+  if (saved.plannedChange) {
+    const pc = saved.plannedChange;
+    const d = new Date(pc.effectiveAt);
+    const dateStr = d.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' })
+      + ' at ' + d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+    document.getElementById('pc-banner-label').textContent =
+      `Planned change scheduled: "${pc.label || 'Untitled'}" — effective ${dateStr}`;
+    document.body.classList.add('planned-change-mode');
   }
   setInterval(async () => {
     try {

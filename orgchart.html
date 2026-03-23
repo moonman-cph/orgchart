@@ -83,7 +83,7 @@
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/>
         </svg>
-        Snapshots
+        Timeline
       </a>
       <a class="nav-item" href="#" id="settings-nav-btn">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -159,7 +159,22 @@
   <span id="sim-banner-label">Simulation Mode — changes are not saved</span>
   <div style="display:flex;gap:8px;margin-left:auto">
     <button id="sim-discard-btn" class="btn btn-ghost" style="padding:4px 12px;font-size:12px">Discard</button>
+    <button id="sim-freeze-btn" class="btn btn-ghost" style="padding:4px 12px;font-size:12px">Freeze as planned change</button>
     <button id="sim-apply-btn" class="btn btn-primary" style="padding:4px 12px;font-size:12px">Apply changes</button>
+  </div>
+</div>
+
+<div id="planned-change-banner">
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="3" width="12" height="12" rx="1.5"/>
+    <line x1="5" y1="1" x2="5" y2="5"/><line x1="11" y1="1" x2="11" y2="5"/>
+    <line x1="2" y1="7" x2="14" y2="7"/>
+  </svg>
+  <span id="pc-banner-label">Planned change scheduled</span>
+  <div style="display:flex;gap:8px;margin-left:auto">
+    <button id="pc-edit-btn"   class="btn btn-ghost" style="padding:4px 12px;font-size:12px">Edit</button>
+    <button id="pc-apply-btn"  class="btn btn-ghost" style="padding:4px 12px;font-size:12px">Apply now</button>
+    <button id="pc-cancel-btn" class="btn btn-ghost" style="padding:4px 12px;font-size:12px;color:#ef4444;border-color:#fca5a5">Cancel plan</button>
   </div>
 </div>
 
@@ -557,12 +572,30 @@
 <div id="snapshots-modal-backdrop">
   <div id="snapshots-modal-panel">
     <div class="modal-header">
-      <span class="modal-title">Snapshots</span>
+      <span class="modal-title">Timeline</span>
       <button class="modal-close" id="snapshots-close-btn" title="Close">&#x2715;</button>
     </div>
     <div class="modal-body" style="overflow-y:auto">
       <button class="btn btn-primary" id="snapshots-take-btn" style="width:100%;margin-bottom:12px">Save snapshot</button>
       <div id="snapshots-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Freeze as Planned Change Modal -->
+<div id="freeze-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(16,24,40,0.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:24px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+    <div class="modal-header" style="margin-bottom:16px">
+      <span class="modal-title">Freeze as Planned Change</span>
+      <button class="modal-close" id="freeze-modal-close-btn" title="Close">&#x2715;</button>
+    </div>
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Set the date and time when this planned change should take effect. The org chart will auto-apply it at that time.</div>
+    <label class="form-label">Effective date &amp; time</label>
+    <input type="datetime-local" id="freeze-date-input" class="form-input" style="width:100%;margin-bottom:8px">
+    <div id="freeze-modal-warn" style="font-size:12px;color:#ef4444;min-height:16px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" id="freeze-modal-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="freeze-modal-confirm-btn">Freeze</button>
     </div>
   </div>
 </div>
@@ -1268,6 +1301,9 @@ let snapshots = [];
 let simMode   = false;
 let simBackup = null;
 let simLabel  = '';
+
+let plannedChange    = null; // { label, effectiveAt, frozenAt, data: {departments,roles,persons,roleAssignments,teams} }
+let _pcCheckInterval = null;
 
 let hiddenDepts = new Set();
 let collapsedManagers = new Set(); // role IDs whose direct reports are collapsed
@@ -2891,11 +2927,52 @@ document.getElementById('add-to-role-modal-backdrop').addEventListener('click', 
 
 function renderSnapshotList() {
   const list = document.getElementById('snapshots-list');
-  if (snapshots.length === 0) {
+  list.innerHTML = '';
+
+  // ── Planned change (future) ───────────────────────────────────────────────
+  if (plannedChange) {
+    const d = new Date(plannedChange.effectiveAt);
+    const dateStr = d.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' })
+      + ' at ' + d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+    const pcItem = document.createElement('div');
+    pcItem.className = 'snapshot-item';
+    pcItem.style.cssText = 'background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;margin-bottom:8px';
+    pcItem.innerHTML = `
+      <div class="snapshot-item-info">
+        <div class="snapshot-item-label" style="display:flex;align-items:center;gap:6px">
+          <span style="background:#3b82f6;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;letter-spacing:0.04em">SCHEDULED</span>
+          ${plannedChange.label}
+        </div>
+        <div class="snapshot-item-date" style="color:#3b82f6">Effective ${dateStr}</div>
+      </div>
+      <div class="snapshot-item-actions">
+        <button class="btn btn-ghost" id="tl-pc-edit-btn" style="font-size:12px;padding:4px 10px">Edit</button>
+        <button class="btn btn-ghost" id="tl-pc-cancel-btn" style="font-size:12px;padding:4px 10px;color:#ef4444;border-color:#fca5a5">Cancel</button>
+      </div>`;
+    list.appendChild(pcItem);
+    pcItem.querySelector('#tl-pc-edit-btn').addEventListener('click', () => { closeSnapshotsModal(); unfreezeToEdit(); });
+    pcItem.querySelector('#tl-pc-cancel-btn').addEventListener('click', () => { closeSnapshotsModal(); cancelPlannedChange(); });
+    // divider
+    const div = document.createElement('div');
+    div.style.cssText = 'border-top:1px solid var(--border);margin:12px 0 8px;';
+    const divLabel = document.createElement('div');
+    divLabel.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px';
+    divLabel.textContent = 'Past snapshots';
+    list.appendChild(div);
+    list.appendChild(divLabel);
+  }
+
+  if (snapshots.length === 0 && !plannedChange) {
     list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:13px">No snapshots yet</div>';
     return;
   }
-  list.innerHTML = '';
+  if (snapshots.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'text-align:center;color:var(--text-muted);padding:16px;font-size:13px';
+    empty.textContent = 'No past snapshots';
+    list.appendChild(empty);
+    return;
+  }
   [...snapshots].reverse().forEach(snap => {
     const d = new Date(snap.date);
     const dateStr = d.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
@@ -3012,7 +3089,129 @@ function updateSimBanner() {
     : 'Simulation Mode — changes are not saved';
 }
 
-document.getElementById('simulate-nav-btn').addEventListener('click', e => { e.preventDefault(); if (!simMode) enterSimulation(); });
+// ── Planned Change ─────────────────────────────────────────────────────────────
+
+function openFreezeModal() {
+  // Pre-fill to tomorrow at 09:00
+  const t = new Date(); t.setDate(t.getDate() + 1); t.setHours(9, 0, 0, 0);
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('freeze-date-input').value =
+    `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`;
+  document.getElementById('freeze-modal-warn').textContent = '';
+  document.getElementById('freeze-modal-backdrop').style.display = 'flex';
+}
+
+function closeFreezeModal() {
+  document.getElementById('freeze-modal-backdrop').style.display = 'none';
+}
+
+function freezeAsPlannedChange() {
+  const val = document.getElementById('freeze-date-input').value;
+  if (!val) { document.getElementById('freeze-modal-warn').textContent = 'Please choose a date and time.'; return; }
+  const effectiveAt = new Date(val).toISOString();
+  if (new Date(effectiveAt) <= new Date()) { document.getElementById('freeze-modal-warn').textContent = 'Effective date must be in the future.'; return; }
+  plannedChange = {
+    label: simLabel || 'Planned Change',
+    effectiveAt,
+    frozenAt: new Date().toISOString(),
+    data: JSON.parse(JSON.stringify({ departments, roles, persons, roleAssignments, teams }))
+  };
+  exitSimulation(false);   // restores live data, clears sim-mode, deletes /api/sim-data
+  saveToStorage();          // persists plannedChange to /api/data
+  closeFreezeModal();
+  updatePlannedChangeBanner();
+  startPlannedChangeTimer();
+}
+
+function unfreezeToEdit() {
+  if (!plannedChange) return;
+  if (!confirm(`Edit the planned change "${plannedChange.label}"? It will re-enter simulation mode.`)) return;
+  simBackup = JSON.parse(JSON.stringify({ departments, roles, persons, roleAssignments, teams }));
+  departments.splice(0,    departments.length,    ...JSON.parse(JSON.stringify(plannedChange.data.departments)));
+  roles.splice(0,          roles.length,          ...JSON.parse(JSON.stringify(plannedChange.data.roles)));
+  persons.splice(0,        persons.length,        ...JSON.parse(JSON.stringify(plannedChange.data.persons)));
+  roleAssignments.splice(0,roleAssignments.length,...JSON.parse(JSON.stringify(plannedChange.data.roleAssignments)));
+  teams.splice(0,          teams.length,          ...JSON.parse(JSON.stringify(plannedChange.data.teams)));
+  simLabel = plannedChange.label;
+  plannedChange = null;
+  clearInterval(_pcCheckInterval); _pcCheckInterval = null;
+  simMode = true;
+  document.body.classList.add('sim-mode');
+  fetch('/api/sim-data', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, snapshots, _simLabel: simLabel })
+  }).catch(() => {});
+  saveToStorage();
+  updateSimBanner();
+  updatePlannedChangeBanner();
+  render();
+}
+
+function cancelPlannedChange() {
+  if (!plannedChange) return;
+  if (!confirm(`Cancel the planned change "${plannedChange.label}"? This cannot be undone.`)) return;
+  plannedChange = null;
+  clearInterval(_pcCheckInterval); _pcCheckInterval = null;
+  saveToStorage();
+  updatePlannedChangeBanner();
+  render();
+}
+
+function applyPlannedChange(silent = false) {
+  if (!plannedChange) return;
+  // Auto-snapshot the current live state before applying
+  snapshots.push({
+    id: Date.now(),
+    label: `Before: ${plannedChange.label}`,
+    date: new Date().toISOString(),
+    data: JSON.parse(JSON.stringify({ departments, roles, persons, roleAssignments, teams }))
+  });
+  departments.splice(0,    departments.length,    ...JSON.parse(JSON.stringify(plannedChange.data.departments)));
+  roles.splice(0,          roles.length,          ...JSON.parse(JSON.stringify(plannedChange.data.roles)));
+  persons.splice(0,        persons.length,        ...JSON.parse(JSON.stringify(plannedChange.data.persons)));
+  roleAssignments.splice(0,roleAssignments.length,...JSON.parse(JSON.stringify(plannedChange.data.roleAssignments)));
+  teams.splice(0,          teams.length,          ...JSON.parse(JSON.stringify(plannedChange.data.teams)));
+  plannedChange = null;
+  clearInterval(_pcCheckInterval); _pcCheckInterval = null;
+  saveToStorage();
+  updatePlannedChangeBanner();
+  render();
+  if (!silent) {
+    const bar = document.getElementById('status-bar');
+    if (bar) { bar.textContent = 'Planned change applied.'; bar.classList.add('visible'); setTimeout(() => bar.classList.remove('visible'), 3000); }
+  }
+}
+
+function updatePlannedChangeBanner() {
+  if (plannedChange) {
+    document.body.classList.add('planned-change-mode');
+    const d = new Date(plannedChange.effectiveAt);
+    const dateStr = d.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' })
+      + ' at ' + d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+    document.getElementById('pc-banner-label').textContent =
+      `Planned change: "${plannedChange.label}" — effective ${dateStr}`;
+  } else {
+    document.body.classList.remove('planned-change-mode');
+  }
+}
+
+function startPlannedChangeTimer() {
+  clearInterval(_pcCheckInterval); _pcCheckInterval = null;
+  if (!plannedChange) return;
+  const check = () => { if (plannedChange && new Date() >= new Date(plannedChange.effectiveAt)) applyPlannedChange(); };
+  check(); // immediate check in case date already passed
+  if (plannedChange) _pcCheckInterval = setInterval(check, 30000);
+}
+
+document.getElementById('sim-freeze-btn').addEventListener('click', openFreezeModal);
+document.getElementById('freeze-modal-close-btn').addEventListener('click', closeFreezeModal);
+document.getElementById('freeze-modal-cancel-btn').addEventListener('click', closeFreezeModal);
+document.getElementById('freeze-modal-backdrop').addEventListener('click', e => { if (e.target === document.getElementById('freeze-modal-backdrop')) closeFreezeModal(); });
+document.getElementById('freeze-modal-confirm-btn').addEventListener('click', freezeAsPlannedChange);
+document.getElementById('pc-edit-btn').addEventListener('click', unfreezeToEdit);
+document.getElementById('pc-apply-btn').addEventListener('click', () => { if (confirm('Apply the planned change to the live org chart now?')) applyPlannedChange(); });
+document.getElementById('pc-cancel-btn').addEventListener('click', cancelPlannedChange);
+
+document.getElementById('simulate-nav-btn').addEventListener('click', e => { e.preventDefault(); if (plannedChange) unfreezeToEdit(); else if (!simMode) enterSimulation(); });
 document.getElementById('sim-discard-btn').addEventListener('click', () => { if (confirm('Discard simulation? All changes will be lost.')) exitSimulation(false); });
 document.getElementById('sim-apply-btn').addEventListener('click', () => { if (confirm('Apply simulation changes to the live org chart?')) exitSimulation(true); });
 
@@ -3496,7 +3695,7 @@ function saveToStorage() {
     fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, snapshots, _simLabel: simLabel })
+      body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, snapshots, _simLabel: simLabel, plannedChange })
     }).catch(e => console.warn('Save failed:', e));
   }, 300);
 }
@@ -3521,7 +3720,8 @@ async function loadFromStorage() {
     if (saved.teams) teams.splice(0, teams.length, ...saved.teams);
     if (saved.settings) Object.assign(settings, saved.settings);
     if (saved.salaryBands) Object.assign(SALARY_BANDS, saved.salaryBands);
-    if (saved.snapshots) snapshots.splice(0, snapshots.length, ...saved.snapshots);
+    if (saved.snapshots)     snapshots.splice(0, snapshots.length, ...saved.snapshots);
+    if (saved.plannedChange) plannedChange = saved.plannedChange;
 
     // ── Migration 1: department IDs string → numeric ──────────────────────────
     if (departments.length && typeof departments[0].id === 'string') {
@@ -3783,7 +3983,9 @@ async function init() {
   const overlay = document.getElementById('loading-overlay');
   try {
     await loadFromStorage();
-    updateSimBanner(); // restore banner label if a sim session was found
+    updateSimBanner();           // restore banner label if a sim session was found
+    updatePlannedChangeBanner(); // restore planned-change banner if one is persisted
+    startPlannedChangeTimer();   // start auto-apply timer if a planned change exists
     // If server had no data, seed defaults (or migrate from localStorage)
     if (!departments.length) {
       const localRaw = localStorage.getItem('orgchart_data_v4');
