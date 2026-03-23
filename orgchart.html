@@ -2977,7 +2977,12 @@ function enterSimulation() {
   simMode   = true;
   document.body.classList.add('sim-mode');
   updateSimBanner();
-  saveToStorage(); // push initial state to /api/sim-data so dashboard can read it
+  // Immediate (non-debounced) save so dashboard can read it even if user navigates right away
+  fetch('/api/sim-data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, snapshots, _simLabel: simLabel })
+  }).catch(() => {});
 }
 
 function exitSimulation(apply) {
@@ -3489,7 +3494,7 @@ function saveToStorage() {
     fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, snapshots })
+      body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, snapshots, _simLabel: simLabel })
     }).catch(e => console.warn('Save failed:', e));
   }, 300);
 }
@@ -3573,6 +3578,22 @@ async function loadFromStorage() {
 
     // ── Migration 4: ensure orgId on all entities (required for M2 DB migration) ─
     [departments, teams, roles, persons, roleAssignments].forEach(arr => arr.forEach(e => { e.orgId = e.orgId ?? 'default'; }));
+
+    // ── Restore simulation session if one is active on the server ─────────────
+    const simRes = await fetch('/api/sim-data');
+    if (simRes.ok) {
+      const simSaved = await simRes.json();
+      // Back up the live data we just loaded, then overlay with sim data
+      simBackup = JSON.parse(JSON.stringify({ departments, roles, persons, roleAssignments, teams }));
+      if (simSaved.departments)     departments.splice(0,     departments.length,     ...simSaved.departments.map(d => ({ ...d, headRoleId: d.headRoleId ?? null })));
+      if (simSaved.roles)           roles.splice(0,           roles.length,           ...simSaved.roles.map(r => ({ ...r, teamId: r.teamId || null, secondaryManagerRoleIds: r.secondaryManagerRoleIds || [] })));
+      if (simSaved.persons)         persons.splice(0,         persons.length,         ...simSaved.persons);
+      if (simSaved.roleAssignments) roleAssignments.splice(0, roleAssignments.length, ...simSaved.roleAssignments);
+      if (simSaved.teams)           teams.splice(0,           teams.length,           ...simSaved.teams);
+      simLabel = simSaved._simLabel || '';
+      simMode  = true;
+      document.body.classList.add('sim-mode');
+    }
 
   } catch (e) {
     throw e; // re-throw so init() can show error overlay
@@ -3760,6 +3781,7 @@ async function init() {
   const overlay = document.getElementById('loading-overlay');
   try {
     await loadFromStorage();
+    updateSimBanner(); // restore banner label if a sim session was found
     // If server had no data, seed defaults (or migrate from localStorage)
     if (!departments.length) {
       const localRaw = localStorage.getItem('orgchart_data_v4');

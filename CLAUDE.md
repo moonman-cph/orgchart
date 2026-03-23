@@ -45,7 +45,7 @@ All state is persisted to `orgchart-data.json` via the server API. The schema:
 
 ## Git Workflow
 
-After completing any major change (new feature, significant UI change, bug fix, data model update), always suggest the user commit and push with a ready-to-use commit message, e.g.:
+After completing any significant change (new feature, significant UI change, bug fix, data model update), always commit and push to GitHub in one step. Minor tweaks or small fixes within a larger session can be batched — push when the overall change is meaningful. Always include `&& git push` in the suggested command:
 
 ```
 git add orgchart.html && git commit -m "Your message here" && git push
