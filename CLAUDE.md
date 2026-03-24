@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-HR org chart app served by a minimal Node.js/Express server. All three HTML files are single-file apps (inline CSS + inline JS). Data is stored in `orgchart-data.json` on disk and served via `GET /POST /api/data`. Every data change is recorded in `changelog.json` via a server-side diff engine (see [Changelog / Audit Log](#changelog--audit-log)).
+HR org chart app served by a minimal Node.js/Express server. All HTML files are single-file apps (inline CSS + inline JS) except where external CSS/JS is shared via `shared.css` and `shared-nav.js`. Data is stored in `orgchart-data.json` on disk and served via `GET /POST /api/data`. Every data change is recorded in `changelog.json` via a server-side diff engine (see [Changelog / Audit Log](#changelog--audit-log)).
 
 ## Startup
 
@@ -26,9 +26,13 @@ Data is stored in `orgchart-data.json` — back it up by copying the file.
 - **`server.js`** — Express server on port 3000. Serves static files + `GET /api/data` / `POST /api/data` / `GET /api/changelog` / `GET /api/changelog/summary`.
 - **`orgchart.html`** — Primary app. Interactive org chart with employee editing, department filtering, drag-and-drop, Add Employee modal, and salary totals. This is the source of truth for data.
 - **`dashboard.html`** — Analytics dashboard. Reads data from `/api/data`.
-- **`dashboard-v2.html`** — Analytics dashboard (v2, redesigned). Also reads from `/api/data`.
 - **`directory.html`** — Employee directory. Reads and writes persons via `/api/data`.
+- **`paybands.html`** — Pay Bands configuration page. Reads and writes salary bands and location multipliers via `/api/data`.
 - **`changelog.html`** — Read-only audit log viewer. Shows every data change grouped by save event, with filters and field-level detail. Reads from `/api/changelog`.
+- **`ai.html`** — AI Assistant page UI shell. Reads data from `/api/data`. (Backend not yet implemented — M6.)
+- **`shared-nav.js`** — Left navigation component shared by all pages. Auto-detects current page.
+- **`shared.css`** / **`[page].css`** — Shared base styles and per-page stylesheets.
+- **`fixtures/`** — Sample CSV files for testing the CSV import feature.
 
 ## Data Model
 

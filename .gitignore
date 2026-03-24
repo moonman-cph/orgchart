@@ -1,3 +1,16 @@
 node_modules/
 orgchart-data.json
 .claude/
+
+# Runtime data (generated, not source)
+changelog.json
+
+# Environment config — commit .env.example, not .env
+.env
+.env.*
+!.env.example
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
