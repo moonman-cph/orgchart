@@ -391,7 +391,7 @@
             <th style="width:130px">Label</th>
             <th>Description</th>
             <th style="width:110px">Min /mo</th>
-            <th style="width:110px">Midpoint</th>
+            <th style="width:110px">Midpoint <span style="font-weight:400;opacity:0.6">(auto)</span></th>
             <th style="width:110px">Max /mo</th>
             <th style="width:80px"></th>
             <th style="width:36px"></th>
@@ -403,7 +403,6 @@
         <input type="text" id="add-band-id" placeholder="ID e.g. L9" maxlength="8" title="Level identifier (unique, e.g. L9, IC1)">
         <input type="text" id="add-band-label" placeholder="Label" maxlength="40">
         <input type="number" id="add-band-min" placeholder="Min /mo" min="1">
-        <input type="number" id="add-band-mid" placeholder="Midpoint" min="1">
         <input type="number" id="add-band-max" placeholder="Max /mo" min="1">
         <button class="band-save-btn" onclick="addBand()">Add band</button>
         <span id="add-band-error"></span>
@@ -573,7 +572,6 @@ function fmtNum(n) {
 
 function validateBandRow(level) {
   const min = parseFloat(document.getElementById(`band-min-${level}`).value);
-  const mid = parseFloat(document.getElementById(`band-mid-${level}`).value);
   const max = parseFloat(document.getElementById(`band-max-${level}`).value);
   const label = document.getElementById(`band-label-${level}`).value;
   const desc = document.getElementById(`band-desc-${level}`).value;
@@ -582,11 +580,8 @@ function validateBandRow(level) {
   const warns = [];
 
   if (isNaN(min) || min <= 0) errors.push('Min must be a positive number');
-  if (isNaN(mid) || mid <= 0) errors.push('Midpoint must be a positive number');
   if (isNaN(max) || max <= 0) errors.push('Max must be a positive number');
   if (!errors.length) {
-    if (mid < min) errors.push('Midpoint cannot be less than Min');
-    if (mid > max) errors.push('Midpoint cannot exceed Max');
     if (min >= max) errors.push('Max must be greater than Min');
   }
   if (label.length > 40) errors.push('Label too long (max 40 characters)');
@@ -650,7 +645,9 @@ function renderBandTable() {
         <input class="band-input" id="band-min-${level}" type="number" value="${band.min || ''}" min="1" placeholder="0">
       </td>
       <td>
-        <input class="band-input" id="band-mid-${level}" type="number" value="${band.midpoint || ''}" min="1" placeholder="0">
+        <div id="band-mid-${level}" style="padding:5px 8px;font-size:13px;color:var(--text-secondary);font-variant-numeric:tabular-nums">
+          ${band.min && band.max ? fmtNum(Math.round((band.min + band.max) / 2)) : '—'}
+        </div>
       </td>
       <td>
         <input class="band-input" id="band-max-${level}" type="number" value="${band.max || ''}" min="1" placeholder="0">
@@ -664,10 +661,16 @@ function renderBandTable() {
     `;
     tbody.appendChild(tr);
 
-    // Blur validation
-    ['min','mid','max'].forEach(type => {
-      const id = type === 'mid' ? `band-mid-${level}` : `band-${type}-${level}`;
-      document.getElementById(id).addEventListener('blur', () => {
+    // Blur validation + live midpoint refresh
+    ['min','max'].forEach(type => {
+      document.getElementById(`band-${type}-${level}`).addEventListener('input', () => {
+        const minV = parseFloat(document.getElementById(`band-min-${level}`).value);
+        const maxV = parseFloat(document.getElementById(`band-max-${level}`).value);
+        const midEl = document.getElementById(`band-mid-${level}`);
+        midEl.textContent = (!isNaN(minV) && !isNaN(maxV) && maxV > minV)
+          ? fmtNum(Math.round((minV + maxV) / 2)) : '—';
+      });
+      document.getElementById(`band-${type}-${level}`).addEventListener('blur', () => {
         const { errors, warns } = validateBandRow(level);
         const errEl = document.getElementById(`band-err-${level}`);
         const warnEl = document.getElementById(`band-warn-${level}`);
@@ -733,27 +736,24 @@ async function addBand() {
   const idRaw = document.getElementById('add-band-id').value.trim().toUpperCase();
   const label = document.getElementById('add-band-label').value.trim();
   const min   = parseFloat(document.getElementById('add-band-min').value);
-  const mid   = parseFloat(document.getElementById('add-band-mid').value);
   const max   = parseFloat(document.getElementById('add-band-max').value);
   const errEl = document.getElementById('add-band-error');
 
   const showErr = msg => { errEl.textContent = msg; errEl.style.display = 'inline'; };
   errEl.style.display = 'none';
 
-  if (!idRaw)                       return showErr('Enter a level ID (e.g. L9).');
+  if (!idRaw)                            return showErr('Enter a level ID (e.g. L9).');
   if (!/^[A-Z0-9_-]{1,8}$/.test(idRaw)) return showErr('ID must be 1–8 alphanumeric characters.');
-  if (levelOrder.includes(idRaw))   return showErr(`"${idRaw}" already exists.`);
-  if (isNaN(min) || min <= 0)       return showErr('Min must be a positive number.');
-  if (isNaN(mid) || mid <= 0)       return showErr('Midpoint must be a positive number.');
-  if (isNaN(max) || max <= 0)       return showErr('Max must be a positive number.');
-  if (min >= max)                   return showErr('Max must be greater than Min.');
-  if (mid < min || mid > max)       return showErr('Midpoint must be between Min and Max.');
+  if (levelOrder.includes(idRaw))        return showErr(`"${idRaw}" already exists.`);
+  if (isNaN(min) || min <= 0)            return showErr('Min must be a positive number.');
+  if (isNaN(max) || max <= 0)            return showErr('Max must be a positive number.');
+  if (min >= max)                        return showErr('Max must be greater than Min.');
 
   levelOrder.push(idRaw);
-  salaryBands[idRaw] = { min, midpoint: mid, max, label, description: '' };
+  salaryBands[idRaw] = { min, midpoint: Math.round((min + max) / 2), max, label, description: '' };
 
   // Clear add-band inputs
-  ['add-band-id','add-band-label','add-band-min','add-band-mid','add-band-max'].forEach(id => {
+  ['add-band-id','add-band-label','add-band-min','add-band-max'].forEach(id => {
     document.getElementById(id).value = '';
   });
 
@@ -772,11 +772,13 @@ async function saveBandRow(level) {
 
   if (!valid) return;
 
+  const min = parseFloat(document.getElementById(`band-min-${level}`).value);
+  const max = parseFloat(document.getElementById(`band-max-${level}`).value);
   salaryBands[level] = {
     ...(salaryBands[level] || {}),
-    min:         parseFloat(document.getElementById(`band-min-${level}`).value),
-    midpoint:    parseFloat(document.getElementById(`band-mid-${level}`).value),
-    max:         parseFloat(document.getElementById(`band-max-${level}`).value),
+    min,
+    midpoint:    Math.round((min + max) / 2),
+    max,
     label:       document.getElementById(`band-label-${level}`).value.trim(),
     description: document.getElementById(`band-desc-${level}`).value.trim(),
   };
