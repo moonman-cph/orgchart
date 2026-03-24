@@ -259,6 +259,44 @@ roleAssignments.forEach(a => {
 });
 const bandTotal = bandHealth.inBand.length + bandHealth.below.length + bandHealth.above.length;
 
+// ── Age distribution ──────────────────────────────────────────────
+const ageBuckets = [
+  { label: 'Under 20', min: 0,  max: 19,  color: '#7c6af5' },
+  { label: '20–29',    min: 20, max: 29,  color: '#2a9aaa' },
+  { label: '30–39',    min: 30, max: 39,  color: '#e8622a' },
+  { label: '40–49',    min: 40, max: 49,  color: '#4caf7d' },
+  { label: '50–59',    min: 50, max: 59,  color: '#f5a623' },
+  { label: '60+',      min: 60, max: 999, color: '#a8a29e' },
+];
+function calcAge(dob) {
+  if (!dob) return null;
+  const b = new Date(dob), today = new Date();
+  let age = today.getFullYear() - b.getFullYear();
+  const hadBirthday = today >= new Date(today.getFullYear(), b.getMonth(), b.getDate());
+  if (!hadBirthday) age--;
+  return age;
+}
+const ageCounts = Object.fromEntries(ageBuckets.map(b => [b.label, 0]));
+let ageKnown = 0;
+activePersons.forEach(p => {
+  const age = calcAge(p.dateOfBirth);
+  if (age === null) return;
+  ageKnown++;
+  const bucket = ageBuckets.find(b => age >= b.min && age <= b.max);
+  if (bucket) ageCounts[bucket.label]++;
+});
+
+// median age, largest bucket, unrecorded count
+const allAges = activePersons.map(p => calcAge(p.dateOfBirth)).filter(a => a !== null).sort((a,b) => a-b);
+const medianAge = allAges.length
+  ? (allAges.length % 2 === 0
+      ? Math.round((allAges[allAges.length/2 - 1] + allAges[allAges.length/2]) / 2)
+      : allAges[Math.floor(allAges.length/2)])
+  : null;
+const largestBucket = ageBuckets.reduce((best, b) =>
+  ageCounts[b.label] > ageCounts[best.label] ? b : best, ageBuckets[0]);
+const ageUnknown = activePersons.length - ageKnown;
+
 const flagGroups = [
   { key: 'salaryReviewNeeded',      label: 'Salary review needed',     color: 'amber' },
   { key: 'performanceReviewNeeded', label: 'Performance review needed', color: 'red'   },
@@ -403,7 +441,7 @@ kpiDefs.forEach(k => {
 
 // ── Row 2a: Gender Overview ────────────────────────────────────────
 {
-  const card = makeCard('span-2', 'Gender Overview', `${activePersons.length} employees`);
+  const card = makeCard('span-1', 'Gender Overview', `${activePersons.length} employees`);
   const total = activePersons.length;
   if (total === 0) {
     const nd = document.createElement('div'); nd.className = 'no-data'; nd.textContent = 'No employees yet.';
@@ -457,7 +495,54 @@ kpiDefs.forEach(k => {
   grid.appendChild(card);
 }
 
-// ── Row 2b: Gender Pay Gap ─────────────────────────────────────────
+// ── Row 2b: Age Distribution ───────────────────────────────────────
+{
+  const card = makeCard('span-1', 'Age Distribution', ageKnown > 0 ? `${ageKnown} employees` : null);
+  if (ageKnown === 0) {
+    const nd = document.createElement('div'); nd.className = 'no-data'; nd.textContent = 'No date of birth data recorded.';
+    card.appendChild(nd);
+  } else {
+    const segments = ageBuckets
+      .filter(b => ageCounts[b.label] > 0)
+      .map(b => ({ label: b.label, value: ageCounts[b.label], color: b.color }));
+    const allSegs = ageBuckets.map(b => ({ label: b.label, value: ageCounts[b.label], color: b.color }));
+    const wrap = document.createElement('div');
+    wrap.className = 'donut-wrap';
+    wrap.appendChild(buildDonut(segments, ageKnown, 'people'));
+    const legend = document.createElement('div');
+    legend.className = 'donut-legend';
+    allSegs.filter(s => s.value > 0).forEach(s => {
+      const pct = Math.round(s.value / ageKnown * 100);
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `
+        <span class="legend-dot" style="background:${s.color}"></span>
+        <span class="legend-label">${s.label}</span>
+        <span class="legend-value">${s.value}</span>
+        <span class="legend-pct">${pct}%</span>`;
+      legend.appendChild(item);
+    });
+    wrap.appendChild(legend);
+    card.appendChild(wrap);
+    const secondary = document.createElement('div');
+    secondary.className = 'gender-secondary';
+    const largestPct = ageKnown ? Math.round(ageCounts[largestBucket.label] / ageKnown * 100) : 0;
+    [
+      { label: 'Median age',        value: medianAge !== null ? `${medianAge} years` : '—' },
+      { label: 'Largest age group', value: `${largestBucket.label} (${ageCounts[largestBucket.label]}, ${largestPct}%)` },
+      { label: 'Age unrecorded',    value: `${ageUnknown} employee${ageUnknown !== 1 ? 's' : ''}` },
+    ].forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'gender-stat';
+      row.innerHTML = `<span class="gender-stat-label">${s.label}</span><span class="gender-stat-value">${s.value}</span>`;
+      secondary.appendChild(row);
+    });
+    card.appendChild(secondary);
+  }
+  grid.appendChild(card);
+}
+
+// ── Row 2c: Gender Pay Gap ─────────────────────────────────────────
 {
   const card = makeCard('span-2', 'Gender Pay Gap', settings.viewOnly ? 'Hidden' : null);
   if (settings.viewOnly) {

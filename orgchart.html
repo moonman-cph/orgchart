@@ -118,6 +118,7 @@
         <div id="modal-avatar"></div>
         <div id="modal-avatar-badge" class="modal-avatar-badge">⚠</div>
         <div id="modal-person-name" style="font-size:14px;font-weight:600;color:var(--text-primary);margin-top:8px;text-align:center;"></div>
+        <div id="modal-person-role-subtitle" style="font-size:12px;color:var(--text-muted);margin-top:2px;text-align:center;"></div>
         <div id="modal-person-emp-id" class="modal-emp-id"></div>
       </div>
       <div class="form-group" id="modal-gender-display" style="display:none;">
@@ -865,135 +866,135 @@ let roles = [
 
 let persons = [
   // Executive
-  { id:1,   name:'David Bowie',         salary:220000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:2,   name:'Meryl Streep',        salary:195000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:3,   name:'Freddie Mercury',     salary:190000, salaryReviewNeeded:true,  gender:'male'                          },
-  { id:4,   name:'Audrey Hepburn',      salary:195000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:5,   name:'Elvis Presley',       salary:185000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:6,   name:'Cate Blanchett',      salary:180000, salaryReviewNeeded:true,  gender:'female'                        },
+  { id:1,   name:'David Bowie',         salary:220000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0001', email:'david.bowie@acme.com',          phone:'+44 7700 900142', dateOfBirth:'1960-01-08', nationality:'British',        address:'14 Carnaby Street, London W1F 9PT, UK',              hireDate:'2012-03-15', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:2,   name:'Meryl Streep',        salary:195000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0002', email:'meryl.streep@acme.com',         phone:'+1 (212) 555-0184', dateOfBirth:'1963-06-22', nationality:'American',       address:'820 Fifth Avenue, New York, NY 10065, USA',          hireDate:'2012-07-01', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:3,   name:'Freddie Mercury',     salary:190000, salaryReviewNeeded:true,  gender:'male',   employeeId:'EMP-0003', email:'freddie.mercury@acme.com',      phone:'+44 7911 123456', dateOfBirth:'1963-09-05', nationality:'British',        address:'1 Logan Place, Kensington, London W8 6DE, UK',       hireDate:'2013-01-10', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:4,   name:'Audrey Hepburn',      salary:195000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0004', email:'audrey.hepburn@acme.com',       phone:'+32 2 555 0192',  dateOfBirth:'1964-05-04', nationality:'Belgian',        address:'Rue de la Loi 42, 1040 Brussels, Belgium',           hireDate:'2012-11-20', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:5,   name:'Elvis Presley',       salary:185000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0005', email:'elvis.presley@acme.com',        phone:'+1 (901) 555-0137', dateOfBirth:'1962-01-08', nationality:'American',       address:'3764 Elvis Presley Blvd, Memphis, TN 38116, USA',    hireDate:'2013-04-01', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:6,   name:'Cate Blanchett',      salary:180000, salaryReviewNeeded:true,  gender:'female', employeeId:'EMP-0006', email:'cate.blanchett@acme.com',       phone:'+61 412 345 678', dateOfBirth:'1965-05-14', nationality:'Australian',     address:'88 George Street, Sydney NSW 2000, Australia',       hireDate:'2013-08-12', contractType:'Permanent',   payFrequency:'Monthly' },
   // Engineering
-  { id:7,   name:'Michael Jackson',     salary:160000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:8,   name:'Marlon Brando',       salary:105000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:9,   name:'Aretha Franklin',     salary:100000, salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:10,  name:'Al Pacino',           salary:98000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:11,  name:'Whitney Houston',     salary:65000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:12,  name:'Jack Nicholson',      salary:68000,  salaryReviewNeeded:true,  gender:'male'                          },
-  { id:13,  name:'Tina Turner',         salary:62000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:14,  name:'Katharine Hepburn',   salary:60000,  salaryReviewNeeded:false, gender:'female', onLeave:true           },
-  { id:15,  name:'Prince',              salary:48000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:16,  name:'Sophia Loren',        salary:45000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:17,  name:'Bob Dylan',           salary:50000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:18,  name:'Ingrid Bergman',      salary:44000,  salaryReviewNeeded:false, gender:'female', performanceReviewNeeded:true },
-  { id:19,  name:'Mick Jagger',         salary:35000,  salaryReviewNeeded:false, gender:'male',   isNew:true             },
-  { id:20,  name:'Grace Kelly',         salary:33000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:21,  name:'Jimi Hendrix',        salary:66000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:22,  name:'Marilyn Monroe',      salary:64000,  salaryReviewNeeded:true,  gender:'female', performanceReviewNeeded:true },
-  { id:23,  name:'Bruce Springsteen',   salary:60000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:24,  name:'Elizabeth Taylor',    salary:47000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:25,  name:'Kurt Cobain',         salary:46000,  salaryReviewNeeded:false, gender:'male',   onLeave:true           },
-  { id:26,  name:'Bette Davis',         salary:49000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:27,  name:'Stevie Wonder',       salary:43000,  salaryReviewNeeded:false, gender:'male',   isNew:true             },
-  { id:28,  name:'Humphrey Bogart',     salary:34000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:29,  name:'Janis Joplin',        salary:36000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:30,  name:'Cary Grant',          salary:67000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:31,  name:'Billie Holiday',      salary:63000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:32,  name:'James Dean',          salary:59000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true },
-  { id:33,  name:'Nina Simone',         salary:47000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:34,  name:'Marlon Wayans',       salary:45000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:35,  name:'Ray Charles',         salary:50000,  salaryReviewNeeded:false, gender:'male'                          },
+  { id:7,   name:'Michael Jackson',     salary:160000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0007', email:'michael.jackson@acme.com',      phone:'+1 (310) 555-0209', dateOfBirth:'1968-08-29', nationality:'American',       address:'5860 Havenhurst Drive, Los Angeles, CA 90028, USA',  hireDate:'2013-02-28', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:8,   name:'Marlon Brando',       salary:105000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0008', email:'marlon.brando@acme.com',        phone:'+1 (212) 555-0316', dateOfBirth:'1975-04-03', nationality:'American',       address:'242 West 104th Street, New York, NY 10025, USA',     hireDate:'2015-06-01', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:9,   name:'Aretha Franklin',     salary:100000, salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0009', email:'aretha.franklin@acme.com',      phone:'+1 (313) 555-0421', dateOfBirth:'1978-03-25', nationality:'American',       address:'16 West Grand Blvd, Detroit, MI 48202, USA',         hireDate:'2023-09-11', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:10,  name:'Al Pacino',           salary:98000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0010', email:'al.pacino@acme.com',            phone:'+1 (212) 555-0548', dateOfBirth:'1976-04-25', nationality:'American',       address:'57 East 79th Street, New York, NY 10075, USA',       hireDate:'2016-03-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:11,  name:'Whitney Houston',     salary:65000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0011', email:'whitney.houston@acme.com',      phone:'+1 (973) 555-0162', dateOfBirth:'1982-08-09', nationality:'American',       address:'32 Dodd Street, Newark, NJ 07105, USA',              hireDate:'2018-05-07', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:12,  name:'Jack Nicholson',      salary:68000,  salaryReviewNeeded:true,  gender:'male',   employeeId:'EMP-0012', email:'jack.nicholson@acme.com',       phone:'+1 (310) 555-0734', dateOfBirth:'1980-04-22', nationality:'American',       address:'12801 Mulholland Drive, Beverly Hills, CA 90210, USA', hireDate:'2017-09-18', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:13,  name:'Tina Turner',         salary:62000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0013', email:'tina.turner@acme.com',          phone:'+41 44 555 0193', dateOfBirth:'1983-11-26', nationality:'American',       address:'Bergstrasse 14, 8032 Zurich, Switzerland',           hireDate:'2019-03-04', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:14,  name:'Katharine Hepburn',   salary:60000,  salaryReviewNeeded:false, gender:'female', onLeave:true,          employeeId:'EMP-0014', email:'katharine.hepburn@acme.com',    phone:'+1 (203) 555-0847', dateOfBirth:'1982-05-12', nationality:'American',       address:'67 Fenwick Road, Old Saybrook, CT 06475, USA',       hireDate:'2018-07-23', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:15,  name:'Prince',              salary:48000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0015', email:'prince@acme.com',               phone:'+1 (612) 555-0955', dateOfBirth:'1987-06-07', nationality:'American',       address:'7801 Audubon Road, Chanhassen, MN 55317, USA',       hireDate:'2020-01-13', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:16,  name:'Sophia Loren',        salary:45000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0016', email:'sophia.loren@acme.com',         phone:'+39 06 555 0266', dateOfBirth:'1990-09-20', nationality:'Italian',        address:'Via Veneto 28, 00187 Rome, Italy',                   hireDate:'2023-11-06', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:17,  name:'Bob Dylan',           salary:50000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0017', email:'bob.dylan@acme.com',            phone:'+1 (612) 555-0371', dateOfBirth:'1986-05-24', nationality:'American',       address:'2425 31st Avenue South, Minneapolis, MN 55406, USA', hireDate:'2020-08-17', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:18,  name:'Ingrid Bergman',      salary:44000,  salaryReviewNeeded:false, gender:'female', performanceReviewNeeded:true, employeeId:'EMP-0018', email:'ingrid.bergman@acme.com',       phone:'+46 70 555 0182', dateOfBirth:'1988-08-29', nationality:'Swedish',        address:'Strandvägen 7, 114 56 Stockholm, Sweden',            hireDate:'2021-04-06', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:19,  name:'Mick Jagger',         salary:35000,  salaryReviewNeeded:false, gender:'male',   isNew:true,            employeeId:'EMP-0019', email:'mick.jagger@acme.com',          phone:'+44 7700 900319', dateOfBirth:'1993-07-26', nationality:'British',        address:'Flat 3, 48 Edith Grove, London SW10 0LB, UK',        hireDate:'2024-02-19', contractType:'Fixed-term',  payFrequency:'Monthly' },
+  { id:20,  name:'Grace Kelly',         salary:33000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0020', email:'grace.kelly@acme.com',          phone:'+1 (215) 555-0428', dateOfBirth:'1995-11-12', nationality:'American',       address:'3901 Henry Avenue, Philadelphia, PA 19129, USA',     hireDate:'2024-05-01', contractType:'Fixed-term',  payFrequency:'Monthly' },
+  { id:21,  name:'Jimi Hendrix',        salary:66000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0021', email:'jimi.hendrix@acme.com',         phone:'+1 (206) 555-0537', dateOfBirth:'1982-11-27', nationality:'American',       address:'1208 34th Avenue, Seattle, WA 98122, USA',           hireDate:'2017-10-11', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:22,  name:'Marilyn Monroe',      salary:64000,  salaryReviewNeeded:true,  gender:'female', performanceReviewNeeded:true, employeeId:'EMP-0022', email:'marilyn.monroe@acme.com',       phone:'+1 (310) 555-0643', dateOfBirth:'1983-06-01', nationality:'American',       address:'12305 Fifth Helena Drive, Los Angeles, CA 90049, USA', hireDate:'2018-02-26', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:23,  name:'Bruce Springsteen',   salary:60000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0023', email:'bruce.springsteen@acme.com',    phone:'+1 (732) 555-0759', dateOfBirth:'1984-09-23', nationality:'American',       address:'4 East Main Street, Freehold, NJ 07728, USA',        hireDate:'2019-07-08', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:24,  name:'Elizabeth Taylor',    salary:47000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0024', email:'elizabeth.taylor@acme.com',     phone:'+44 7700 900824', dateOfBirth:'1987-02-27', nationality:'British',        address:'19 Victor Road, Hampstead, London NW3 4PH, UK',      hireDate:'2020-11-02', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:25,  name:'Kurt Cobain',         salary:46000,  salaryReviewNeeded:false, gender:'male',   onLeave:true,          employeeId:'EMP-0025', email:'kurt.cobain@acme.com',          phone:'+1 (360) 555-0931', dateOfBirth:'1988-02-20', nationality:'American',       address:'171 Lake Washington Blvd, Aberdeen, WA 98520, USA',  hireDate:'2021-06-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:26,  name:'Bette Davis',         salary:49000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0026', email:'bette.davis@acme.com',          phone:'+1 (617) 555-0246', dateOfBirth:'1987-04-05', nationality:'American',       address:'55 Prospect Street, Lowell, MA 01852, USA',          hireDate:'2020-09-21', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:27,  name:'Stevie Wonder',       salary:43000,  salaryReviewNeeded:false, gender:'male',   isNew:true,            employeeId:'EMP-0027', email:'stevie.wonder@acme.com',        phone:'+1 (313) 555-0357', dateOfBirth:'1990-05-13', nationality:'American',       address:'2648 West Grand Blvd, Detroit, MI 48208, USA',       hireDate:'2023-03-27', contractType:'Fixed-term',  payFrequency:'Monthly' },
+  { id:28,  name:'Humphrey Bogart',     salary:34000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0028', email:'humphrey.bogart@acme.com',      phone:'+1 (212) 555-0462', dateOfBirth:'1993-12-25', nationality:'American',       address:'312 East 48th Street, New York, NY 10017, USA',      hireDate:'2023-08-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:29,  name:'Janis Joplin',        salary:36000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0029', email:'janis.joplin@acme.com',         phone:'+1 (409) 555-0573', dateOfBirth:'1993-01-19', nationality:'American',       address:'4050 Procter Street, Port Arthur, TX 77642, USA',    hireDate:'2024-09-02', contractType:'Fixed-term',  payFrequency:'Monthly' },
+  { id:30,  name:'Cary Grant',          salary:67000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0030', email:'cary.grant@acme.com',           phone:'+44 7700 900630', dateOfBirth:'1981-01-18', nationality:'British',        address:'9 Archibald Road, Clifton, Bristol BS8 4AP, UK',     hireDate:'2016-12-05', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:31,  name:'Billie Holiday',      salary:63000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0031', email:'billie.holiday@acme.com',       phone:'+1 (443) 555-0685', dateOfBirth:'1983-04-07', nationality:'American',       address:'219 West Monument Street, Baltimore, MD 21201, USA', hireDate:'2018-11-19', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:32,  name:'James Dean',          salary:59000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true, employeeId:'EMP-0032', email:'james.dean@acme.com',           phone:'+1 (765) 555-0791', dateOfBirth:'1985-02-08', nationality:'American',       address:'3 N. 2nd Street, Fairmount, IN 46928, USA',          hireDate:'2019-10-28', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:33,  name:'Nina Simone',         salary:47000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0033', email:'nina.simone@acme.com',          phone:'+1 (704) 555-0896', dateOfBirth:'1988-02-21', nationality:'American',       address:'30 Kelly Street, Tryon, NC 28782, USA',              hireDate:'2021-01-11', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:34,  name:'Marlon Wayans',       salary:45000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0034', email:'marlon.wayans@acme.com',        phone:'+1 (212) 555-0102', dateOfBirth:'1989-07-23', nationality:'American',       address:'40 Riverside Drive, New York, NY 10024, USA',        hireDate:'2021-07-19', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:35,  name:'Ray Charles',         salary:50000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0035', email:'ray.charles@acme.com',          phone:'+1 (229) 555-0218', dateOfBirth:'1987-09-23', nationality:'American',       address:'1200 Ray Charles Blvd, Albany, GA 31701, USA',       hireDate:'2020-04-30', contractType:'Permanent',   payFrequency:'Monthly' },
   // Product  (roles 10030–10032 in Delta Wing are vacant)
-  { id:36,  name:'Denzel Washington',   salary:155000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:37,  name:'Beyonce Knowles',     salary:110000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:38,  name:'Robert De Niro',      salary:105000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:39,  name:'Madonna Ciccone',     salary:80000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:40,  name:'Tom Hanks',           salary:78000,  salaryReviewNeeded:true,  gender:'male'                          },
-  { id:41,  name:'Rihanna Fenty',       salary:108000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:42,  name:'Dustin Hoffman',      salary:58000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true },
-  { id:43,  name:'Adele Adkins',        salary:56000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:44,  name:'Jodie Foster',        salary:77000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:45,  name:'Elton John',          salary:57000,  salaryReviewNeeded:false, gender:'male',   onLeave:true           },
-  { id:46,  name:'Natalie Portman',     salary:43000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:47,  name:'Johnny Cash',         salary:42000,  salaryReviewNeeded:false, gender:'male'                          },
+  { id:36,  name:'Denzel Washington',   salary:155000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0036', email:'denzel.washington@acme.com',    phone:'+1 (718) 555-0323', dateOfBirth:'1968-12-28', nationality:'American',       address:'2880 Laconia Avenue, The Bronx, NY 10469, USA',      hireDate:'2013-06-17', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:37,  name:'Beyonce Knowles',     salary:110000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0037', email:'beyonce.knowles@acme.com',      phone:'+1 (713) 555-0436', dateOfBirth:'1975-09-04', nationality:'American',       address:'3346 Parkwood Drive, Houston, TX 77021, USA',        hireDate:'2015-01-26', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:38,  name:'Robert De Niro',      salary:105000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0038', email:'robert.de.niro@acme.com',       phone:'+1 (212) 555-0549', dateOfBirth:'1975-08-17', nationality:'American',       address:'110 Greenwich Street, New York, NY 10006, USA',      hireDate:'2015-11-09', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:39,  name:'Madonna Ciccone',     salary:80000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0039', email:'madonna.ciccone@acme.com',      phone:'+1 (212) 555-0654', dateOfBirth:'1982-08-16', nationality:'American',       address:'1 Central Park West, New York, NY 10023, USA',       hireDate:'2022-10-03', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:40,  name:'Tom Hanks',           salary:78000,  salaryReviewNeeded:true,  gender:'male',   employeeId:'EMP-0040', email:'tom.hanks@acme.com',            phone:'+1 (310) 555-0767', dateOfBirth:'1981-07-09', nationality:'American',       address:'225 26th Street, Santa Monica, CA 90402, USA',       hireDate:'2017-04-24', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:41,  name:'Rihanna Fenty',       salary:108000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0041', email:'rihanna.fenty@acme.com',        phone:'+1 (246) 555-0871', dateOfBirth:'1975-02-20', nationality:'Barbadian',      address:'1 Westbury Road, Bridgetown, Barbados BB11000',       hireDate:'2015-08-31', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:42,  name:'Dustin Hoffman',      salary:58000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true, employeeId:'EMP-0042', email:'dustin.hoffman@acme.com',       phone:'+1 (310) 555-0984', dateOfBirth:'1985-08-08', nationality:'American',       address:'614 S. Maple Drive, Beverly Hills, CA 90210, USA',   hireDate:'2020-06-15', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:43,  name:'Adele Adkins',        salary:56000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0043', email:'adele.adkins@acme.com',         phone:'+44 7700 900143', dateOfBirth:'1986-05-05', nationality:'British',        address:'38 Balham High Road, London SW12 9BS, UK',           hireDate:'2020-02-10', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:44,  name:'Jodie Foster',        salary:77000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0044', email:'jodie.foster@acme.com',         phone:'+1 (310) 555-0255', dateOfBirth:'1981-11-19', nationality:'American',       address:'304 S. Rodeo Drive, Beverly Hills, CA 90212, USA',   hireDate:'2017-07-03', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:45,  name:'Elton John',          salary:57000,  salaryReviewNeeded:false, gender:'male',   onLeave:true,          employeeId:'EMP-0045', email:'elton.john@acme.com',           phone:'+44 7700 900345', dateOfBirth:'1985-03-25', nationality:'British',        address:'Woodside, Windsor Road, Windsor SL4 3BE, UK',        hireDate:'2019-11-18', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:46,  name:'Natalie Portman',     salary:43000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0046', email:'natalie.portman@acme.com',      phone:'+972 52 555 0461', dateOfBirth:'1991-06-09', nationality:'Israeli',        address:'HaYarkon Street 98, Tel Aviv 6343200, Israel',       hireDate:'2023-05-22', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:47,  name:'Johnny Cash',         salary:42000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0047', email:'johnny.cash@acme.com',          phone:'+1 (501) 555-0573', dateOfBirth:'1990-02-26', nationality:'American',       address:'61 Cash Drive, Kingsland, AR 71652, USA',            hireDate:'2022-03-07', contractType:'Permanent',   payFrequency:'Monthly' },
   // Design
-  { id:48,  name:'Charlize Theron',     salary:150000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:49,  name:'Frank Sinatra',       salary:95000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:50,  name:'Penelope Cruz',       salary:92000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:51,  name:'Jim Morrison',        salary:65000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:52,  name:'Halle Berry',         salary:63000,  salaryReviewNeeded:false, gender:'female', performanceReviewNeeded:true },
-  { id:53,  name:'Leonard Cohen',       salary:46000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:54,  name:'Sandra Bullock',      salary:64000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:55,  name:'Lou Reed',            salary:44000,  salaryReviewNeeded:false, gender:'male',   isNew:true             },
+  { id:48,  name:'Charlize Theron',     salary:150000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0048', email:'charlize.theron@acme.com',      phone:'+27 82 555 0148', dateOfBirth:'1970-08-07', nationality:'South African',  address:'14 Constantia Road, Benoni, Gauteng 1501, South Africa', hireDate:'2014-02-19', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:49,  name:'Frank Sinatra',       salary:95000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0049', email:'frank.sinatra@acme.com',        phone:'+1 (201) 555-0694', dateOfBirth:'1977-12-12', nationality:'American',       address:'415 Monroe Street, Hoboken, NJ 07030, USA',          hireDate:'2015-04-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:50,  name:'Penelope Cruz',       salary:92000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0050', email:'penelope.cruz@acme.com',        phone:'+34 612 345 678', dateOfBirth:'1978-04-28', nationality:'Spanish',        address:'Calle Serrano 41, 28001 Madrid, Spain',               hireDate:'2022-07-18', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:51,  name:'Jim Morrison',        salary:65000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0051', email:'jim.morrison@acme.com',         phone:'+1 (954) 555-0807', dateOfBirth:'1983-12-08', nationality:'American',       address:'2210 NE 38th Street, Melbourne, FL 32904, USA',      hireDate:'2018-08-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:52,  name:'Halle Berry',         salary:63000,  salaryReviewNeeded:false, gender:'female', performanceReviewNeeded:true, employeeId:'EMP-0052', email:'halle.berry@acme.com',          phone:'+1 (216) 555-0912', dateOfBirth:'1983-08-14', nationality:'American',       address:'99 East 9th Avenue, Cleveland, OH 44104, USA',       hireDate:'2018-04-11', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:53,  name:'Leonard Cohen',       salary:46000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0053', email:'leonard.cohen@acme.com',        phone:'+1 (514) 555-0127', dateOfBirth:'1988-09-21', nationality:'Canadian',       address:'28 Belvedere Road, Westmount, QC H3Y 1G3, Canada',   hireDate:'2021-10-04', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:54,  name:'Sandra Bullock',      salary:64000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0054', email:'sandra.bullock@acme.com',       phone:'+1 (512) 555-0233', dateOfBirth:'1983-07-26', nationality:'American',       address:'604 W. 7th Street, Austin, TX 78701, USA',           hireDate:'2018-12-03', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:55,  name:'Lou Reed',            salary:44000,  salaryReviewNeeded:false, gender:'male',   isNew:true,            employeeId:'EMP-0055', email:'lou.reed@acme.com',             phone:'+1 (718) 555-0348', dateOfBirth:'1990-03-02', nationality:'American',       address:'7 Sycamore Avenue, Freeport, NY 11520, USA',         hireDate:'2023-07-31', contractType:'Fixed-term',  payFrequency:'Monthly' },
   // Sales
-  { id:56,  name:'Anthony Hopkins',     salary:175000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:57,  name:'Amy Winehouse',       salary:100000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:58,  name:'Clint Eastwood',      salary:98000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:59,  name:'Joni Mitchell',       salary:95000,  salaryReviewNeeded:true,  gender:'female'                        },
-  { id:60,  name:'Paul Newman',         salary:83000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:61,  name:'Dolly Parton',        salary:81000,  salaryReviewNeeded:false, gender:'female', performanceReviewNeeded:true },
-  { id:62,  name:'Gene Hackman',        salary:73000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:63,  name:'Taylor Swift',        salary:75000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:64,  name:'Orson Welles',        salary:72000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:65,  name:'Alicia Keys',         salary:43000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:66,  name:'Sidney Poitier',      salary:41000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:67,  name:'Shakira Mebarak',     salary:82000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:68,  name:'Gregory Peck',        salary:80000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:69,  name:'Cardi B',             salary:72000,  salaryReviewNeeded:false, gender:'female', onLeave:true           },
-  { id:70,  name:'Laurence Olivier',    salary:74000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:71,  name:'Nicki Minaj',         salary:42000,  salaryReviewNeeded:true,  gender:'female'                        },
-  { id:72,  name:'Marlon Wayans',       salary:41000,  salaryReviewNeeded:false, gender:'male',   isNew:true             },
-  { id:73,  name:'Lady Gaga',           salary:71000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:74,  name:'Cillian Murphy',      salary:73000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true },
-  { id:75,  name:'Billie Eilish',       salary:40000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
+  { id:56,  name:'Anthony Hopkins',     salary:175000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0056', email:'anthony.hopkins@acme.com',      phone:'+44 29 2055 0156', dateOfBirth:'1966-12-31', nationality:'Welsh',          address:'4 Castle Street, Port Talbot, Wales SA13 1BT, UK',   hireDate:'2012-09-03', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:57,  name:'Amy Winehouse',       salary:100000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0057', email:'amy.winehouse@acme.com',        phone:'+44 7700 900457', dateOfBirth:'1977-09-14', nationality:'British',        address:'30 Camden Square, London NW1 9XA, UK',               hireDate:'2015-03-23', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:58,  name:'Clint Eastwood',      salary:98000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0058', email:'clint.eastwood@acme.com',       phone:'+1 (831) 555-0562', dateOfBirth:'1977-05-31', nationality:'American',       address:'3198 Sunset Drive, Carmel-by-the-Sea, CA 93923, USA', hireDate:'2015-07-06', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:59,  name:'Joni Mitchell',       salary:95000,  salaryReviewNeeded:true,  gender:'female', employeeId:'EMP-0059', email:'joni.mitchell@acme.com',        phone:'+1 (403) 555-0676', dateOfBirth:'1977-11-07', nationality:'Canadian',       address:'116 2nd Avenue NW, Fort Macleod, AB T0L 0Z0, Canada', hireDate:'2016-01-11', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:60,  name:'Paul Newman',         salary:83000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0060', email:'paul.newman@acme.com',          phone:'+1 (203) 555-0789', dateOfBirth:'1980-01-26', nationality:'American',       address:'57 Oenoke Ridge, New Canaan, CT 06840, USA',          hireDate:'2016-10-17', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:61,  name:'Dolly Parton',        salary:81000,  salaryReviewNeeded:false, gender:'female', performanceReviewNeeded:true, employeeId:'EMP-0061', email:'dolly.parton@acme.com',         phone:'+1 (865) 555-0894', dateOfBirth:'1980-01-19', nationality:'American',       address:'700 Dollywood Lane, Pigeon Forge, TN 37863, USA',    hireDate:'2017-06-29', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:62,  name:'Gene Hackman',        salary:73000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0062', email:'gene.hackman@acme.com',         phone:'+1 (505) 555-0109', dateOfBirth:'1981-01-30', nationality:'American',       address:'318 Old Santa Fe Trail, Santa Fe, NM 87501, USA',    hireDate:'2017-11-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:63,  name:'Taylor Swift',        salary:75000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0063', email:'taylor.swift@acme.com',         phone:'+1 (610) 555-0215', dateOfBirth:'1985-12-13', nationality:'American',       address:'78 W. Main Street, Wyomissing, PA 19610, USA',       hireDate:'2022-08-29', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:64,  name:'Orson Welles',        salary:72000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0064', email:'orson.welles@acme.com',         phone:'+1 (262) 555-0328', dateOfBirth:'1981-05-06', nationality:'American',       address:'463 Jefferson Street, Kenosha, WI 53140, USA',       hireDate:'2018-10-16', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:65,  name:'Alicia Keys',         salary:43000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0065', email:'alicia.keys@acme.com',          phone:'+1 (212) 555-0431', dateOfBirth:'1991-01-25', nationality:'American',       address:'560 West 43rd Street, New York, NY 10036, USA',      hireDate:'2023-02-13', contractType:'Fixed-term',  payFrequency:'Monthly' },
+  { id:66,  name:'Sidney Poitier',      salary:41000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0066', email:'sidney.poitier@acme.com',       phone:'+1 (242) 555-0543', dateOfBirth:'1991-02-20', nationality:'Bahamian',       address:'East Bay Street, Nassau, Bahamas N-7776',             hireDate:'2022-05-16', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:67,  name:'Shakira Mebarak',     salary:82000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0067', email:'shakira.mebarak@acme.com',      phone:'+57 312 345 6789', dateOfBirth:'1980-02-02', nationality:'Colombian',      address:'Calle 72 No. 11-31, Barranquilla, Colombia',          hireDate:'2017-03-28', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:68,  name:'Gregory Peck',        salary:80000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0068', email:'gregory.peck@acme.com',         phone:'+1 (858) 555-0657', dateOfBirth:'1980-04-05', nationality:'American',       address:'1024 Prospect Street, La Jolla, CA 92037, USA',      hireDate:'2017-08-07', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:69,  name:'Cardi B',             salary:72000,  salaryReviewNeeded:false, gender:'female', onLeave:true,          employeeId:'EMP-0069', email:'cardi.b@acme.com',              phone:'+1 (718) 555-0762', dateOfBirth:'1985-10-11', nationality:'American',       address:'980 Intervale Avenue, The Bronx, NY 10459, USA',     hireDate:'2019-04-22', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:70,  name:'Laurence Olivier',    salary:74000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0070', email:'laurence.olivier@acme.com',     phone:'+44 7700 900870', dateOfBirth:'1981-05-22', nationality:'British',        address:'24 Chester Terrace, London NW1 4ND, UK',             hireDate:'2018-01-08', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:71,  name:'Nicki Minaj',         salary:42000,  salaryReviewNeeded:true,  gender:'female', employeeId:'EMP-0071', email:'nicki.minaj@acme.com',          phone:'+1 (868) 555-0976', dateOfBirth:'1991-12-08', nationality:'Trinidadian',    address:'12 Ariapita Avenue, Port of Spain, Trinidad',         hireDate:'2022-11-28', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:72,  name:'Marlon Wayans',       salary:41000,  salaryReviewNeeded:false, gender:'male',   isNew:true,            employeeId:'EMP-0072', email:'m.wayans@acme.com',             phone:'+1 (212) 555-0182', dateOfBirth:'1992-07-23', nationality:'American',       address:'815 Amsterdam Avenue, New York, NY 10025, USA',      hireDate:'2024-01-15', contractType:'Fixed-term',  payFrequency:'Monthly' },
+  { id:73,  name:'Lady Gaga',           salary:71000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0073', email:'lady.gaga@acme.com',            phone:'+1 (212) 555-0295', dateOfBirth:'1982-03-28', nationality:'American',       address:'176 Grand Street, New York, NY 10013, USA',          hireDate:'2018-06-25', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:74,  name:'Cillian Murphy',      salary:73000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true, employeeId:'EMP-0074', email:'cillian.murphy@acme.com',       phone:'+353 85 555 0374', dateOfBirth:'1981-05-25', nationality:'Irish',          address:'14 Morrison Island, Cork T12 HY82, Ireland',          hireDate:'2018-03-19', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:75,  name:'Billie Eilish',       salary:40000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0075', email:'billie.eilish@acme.com',        phone:'+1 (747) 555-0488', dateOfBirth:'1996-12-18', nationality:'American',       address:'6316 Farmdale Avenue, North Hollywood, CA 91606, USA', hireDate:'2024-07-08', contractType:'Fixed-term',  payFrequency:'Monthly' },
   // Marketing
-  { id:76,  name:'Bette Midler',        salary:165000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:77,  name:'Bruno Mars',          salary:96000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:78,  name:'Viola Davis',         salary:62000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:79,  name:'Eminem Mathers',      salary:64000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:80,  name:'Julianne Moore',      salary:44000,  salaryReviewNeeded:false, gender:'female', performanceReviewNeeded:true },
-  { id:81,  name:'Jay-Z Carter',        salary:92000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:82,  name:'Chadwick Boseman',    salary:61000,  salaryReviewNeeded:false, gender:'male',   isNew:true             },
-  { id:83,  name:'Kendrick Lamar',      salary:43000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:84,  name:'Lupita Nyong\'o',     salary:42000,  salaryReviewNeeded:false, gender:'female', onLeave:true           },
-  { id:85,  name:'Eddie Vedder',        salary:90000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:86,  name:'Zendaya Coleman',     salary:60000,  salaryReviewNeeded:true,  gender:'female'                        },
-  { id:87,  name:'Chris Martin',        salary:33000,  salaryReviewNeeded:false, gender:'male',   isNew:true             },
+  { id:76,  name:'Bette Midler',        salary:165000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0076', email:'bette.midler@acme.com',         phone:'+1 (808) 555-0176', dateOfBirth:'1967-12-01', nationality:'American',       address:'2222 Kalakaua Avenue, Honolulu, HI 96815, USA',      hireDate:'2012-06-25', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:77,  name:'Bruno Mars',          salary:96000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0077', email:'bruno.mars@acme.com',           phone:'+1 (808) 555-0283', dateOfBirth:'1977-10-08', nationality:'American',       address:'1233 Waimanu Street, Honolulu, HI 96814, USA',       hireDate:'2015-09-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:78,  name:'Viola Davis',         salary:62000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0078', email:'viola.davis@acme.com',          phone:'+1 (401) 555-0394', dateOfBirth:'1983-08-11', nationality:'American',       address:'22 Benefit Street, Providence, RI 02903, USA',       hireDate:'2022-04-04', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:79,  name:'Eminem Mathers',      salary:64000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0079', email:'eminem.mathers@acme.com',       phone:'+1 (313) 555-0507', dateOfBirth:'1982-10-17', nationality:'American',       address:'19946 Dresden Street, Detroit, MI 48205, USA',       hireDate:'2018-07-30', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:80,  name:'Julianne Moore',      salary:44000,  salaryReviewNeeded:false, gender:'female', performanceReviewNeeded:true, employeeId:'EMP-0080', email:'julianne.moore@acme.com',       phone:'+1 (910) 555-0613', dateOfBirth:'1989-12-03', nationality:'American',       address:'2701 Fort Bragg Road, Fayetteville, NC 28303, USA',  hireDate:'2021-09-13', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:81,  name:'Jay-Z Carter',        salary:92000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0081', email:'jay-z.carter@acme.com',         phone:'+1 (718) 555-0724', dateOfBirth:'1978-12-04', nationality:'American',       address:'560 State Street, Brooklyn, NY 11217, USA',          hireDate:'2015-05-20', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:82,  name:'Chadwick Boseman',    salary:61000,  salaryReviewNeeded:false, gender:'male',   isNew:true,            employeeId:'EMP-0082', email:'chadwick.boseman@acme.com',     phone:'+1 (843) 555-0836', dateOfBirth:'1984-11-29', nationality:'American',       address:'128 East Avenue, Anderson, SC 29621, USA',           hireDate:'2022-01-31', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:83,  name:'Kendrick Lamar',      salary:43000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0083', email:'kendrick.lamar@acme.com',       phone:'+1 (951) 555-0942', dateOfBirth:'1989-06-17', nationality:'American',       address:'1425 E. Compton Blvd, Compton, CA 90221, USA',       hireDate:'2021-11-22', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:84,  name:'Lupita Nyong\'o',     salary:42000,  salaryReviewNeeded:false, gender:'female', onLeave:true,          employeeId:'EMP-0084', email:'lupita.nyongo@acme.com',        phone:'+254 722 555 048', dateOfBirth:'1989-03-01', nationality:'Kenyan',         address:'Valley Arcade, Lavington, Nairobi 00100, Kenya',     hireDate:'2021-08-09', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:85,  name:'Eddie Vedder',        salary:90000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0085', email:'eddie.vedder@acme.com',         phone:'+1 (206) 555-0157', dateOfBirth:'1978-12-23', nationality:'American',       address:'2220 2nd Avenue, Seattle, WA 98121, USA',            hireDate:'2016-05-02', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:86,  name:'Zendaya Coleman',     salary:60000,  salaryReviewNeeded:true,  gender:'female', employeeId:'EMP-0086', email:'zendaya.coleman@acme.com',      phone:'+1 (510) 555-0263', dateOfBirth:'1985-09-01', nationality:'American',       address:'6355 Christie Avenue, Emeryville, CA 94608, USA',    hireDate:'2020-12-07', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:87,  name:'Chris Martin',        salary:33000,  salaryReviewNeeded:false, gender:'male',   isNew:true,            employeeId:'EMP-0087', email:'chris.martin@acme.com',         phone:'+44 7700 900387', dateOfBirth:'1994-03-02', nationality:'British',        address:'Flat 2, 71 Whitmore Road, Exeter EX4 6RA, UK',       hireDate:'2024-10-14', contractType:'Fixed-term',  payFrequency:'Monthly' },
   // Customer Success
-  { id:88,  name:'Nicole Kidman',       salary:160000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:89,  name:'Thom Yorke',          salary:98000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:90,  name:'Cate Winslet',        salary:95000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:91,  name:'Kanye West',          salary:76000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true },
-  { id:92,  name:'Tilda Swinton',       salary:78000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:93,  name:'Pharrell Williams',   salary:60000,  salaryReviewNeeded:false, gender:'male',   isNew:true             },
-  { id:94,  name:'Jessica Lange',       salary:58000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:95,  name:'Jack White',          salary:96000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:96,  name:'Judi Dench',          salary:44000,  salaryReviewNeeded:false, gender:'female', onLeave:true           },
-  { id:97,  name:'Dua Lipa',            salary:76000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:98,  name:'Daniel Day-Lewis',    salary:58000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:99,  name:'Post Malone',         salary:56000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true },
-  { id:100, name:'Olivia Colman',       salary:44000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:101, name:'Harry Styles',        salary:56000,  salaryReviewNeeded:false, gender:'male',   isNew:true             },
-  { id:102, name:'Florence Pugh',       salary:55000,  salaryReviewNeeded:false, gender:'female'                        },
+  { id:88,  name:'Nicole Kidman',       salary:160000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0088', email:'nicole.kidman@acme.com',        phone:'+61 423 456 789', dateOfBirth:'1968-06-20', nationality:'Australian',     address:'25 Cascade Street, Paddington, Sydney NSW 2021, Australia', hireDate:'2013-10-07', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:89,  name:'Thom Yorke',          salary:98000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0089', email:'thom.yorke@acme.com',           phone:'+44 7700 900489', dateOfBirth:'1977-10-07', nationality:'British',        address:'Abingdon Road 12, Oxford OX1 4LJ, UK',               hireDate:'2015-12-01', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:90,  name:'Cate Winslet',        salary:95000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0090', email:'cate.winslet@acme.com',         phone:'+44 7700 900590', dateOfBirth:'1977-10-05', nationality:'British',        address:'10 The Grove, Reading RG1 5TG, UK',                   hireDate:'2016-04-11', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:91,  name:'Kanye West',          salary:76000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true, employeeId:'EMP-0091', email:'kanye.west@acme.com',           phone:'+1 (773) 555-0691', dateOfBirth:'1981-06-08', nationality:'American',       address:'7415 S. Shore Drive, Chicago, IL 60649, USA',        hireDate:'2018-09-24', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:92,  name:'Tilda Swinton',       salary:78000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0092', email:'tilda.swinton@acme.com',        phone:'+44 7700 900792', dateOfBirth:'1981-11-05', nationality:'British',        address:'8 Inverleith Row, Edinburgh EH3 5LR, UK',            hireDate:'2017-02-06', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:93,  name:'Pharrell Williams',   salary:60000,  salaryReviewNeeded:false, gender:'male',   isNew:true,            employeeId:'EMP-0093', email:'pharrell.williams@acme.com',    phone:'+1 (757) 555-0893', dateOfBirth:'1984-04-05', nationality:'American',       address:'2205 Mediterranean Avenue, Virginia Beach, VA 23451, USA', hireDate:'2022-06-20', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:94,  name:'Jessica Lange',       salary:58000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0094', email:'jessica.lange@acme.com',        phone:'+1 (218) 555-0994', dateOfBirth:'1985-04-20', nationality:'American',       address:'104 Main Street N, Cloquet, MN 55720, USA',          hireDate:'2020-03-02', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:95,  name:'Jack White',          salary:96000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0095', email:'jack.white@acme.com',           phone:'+1 (313) 555-0209', dateOfBirth:'1978-07-09', nationality:'American',       address:'1945 Pallister Street, Detroit, MI 48206, USA',      hireDate:'2016-07-18', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:96,  name:'Judi Dench',          salary:44000,  salaryReviewNeeded:false, gender:'female', onLeave:true,          employeeId:'EMP-0096', email:'judi.dench@acme.com',           phone:'+44 7700 900396', dateOfBirth:'1988-12-09', nationality:'British',        address:'30 Sackville Gardens, Finchley, London N3 2NR, UK',  hireDate:'2021-05-17', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:97,  name:'Dua Lipa',            salary:76000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0097', email:'dua.lipa@acme.com',             phone:'+44 7700 900497', dateOfBirth:'1986-08-22', nationality:'British',        address:'14 Barnsbury Square, London N1 1JL, UK',             hireDate:'2022-09-12', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:98,  name:'Daniel Day-Lewis',    salary:58000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0098', email:'daniel.day-lewis@acme.com',     phone:'+44 7700 900598', dateOfBirth:'1985-04-29', nationality:'British',        address:'21 Church Row, Hampstead, London NW3 6UP, UK',       hireDate:'2020-05-11', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:99,  name:'Post Malone',         salary:56000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true, employeeId:'EMP-0099', email:'post.malone@acme.com',          phone:'+1 (972) 555-0699', dateOfBirth:'1987-07-04', nationality:'American',       address:'4404 Skillman Avenue, Dallas, TX 75206, USA',        hireDate:'2021-03-08', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:100, name:'Olivia Colman',       salary:44000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0100', email:'olivia.colman@acme.com',        phone:'+44 7700 900500', dateOfBirth:'1989-01-30', nationality:'British',        address:'5 Cavendish Road, Norwich NR2 2AB, UK',               hireDate:'2022-02-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:101, name:'Harry Styles',        salary:56000,  salaryReviewNeeded:false, gender:'male',   isNew:true,            employeeId:'EMP-0101', email:'harry.styles@acme.com',         phone:'+44 7700 900601', dateOfBirth:'1987-02-01', nationality:'British',        address:'Flat 8, 97 Holmes Road, London NW5 3AX, UK',         hireDate:'2022-12-05', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:102, name:'Florence Pugh',       salary:55000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0102', email:'florence.pugh@acme.com',        phone:'+44 7700 900702', dateOfBirth:'1987-01-03', nationality:'British',        address:'2 Summertown Parade, Oxford OX2 7PY, UK',            hireDate:'2021-07-26', contractType:'Permanent',   payFrequency:'Monthly' },
   // People & HR
-  { id:103, name:'Paul McCartney',      salary:155000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:104, name:'Margot Robbie',       salary:92000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:105, name:'Mick Fleetwood',      salary:76000,  salaryReviewNeeded:false, gender:'male',   onLeave:true           },
-  { id:106, name:'Ana de Armas',        salary:72000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:107, name:'John Lennon',         salary:60000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:108, name:'Saoirse Ronan',       salary:45000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:109, name:'Patti Smith',         salary:43000,  salaryReviewNeeded:true,  gender:'female', performanceReviewNeeded:true },
-  { id:110, name:'Anya Taylor-Joy',     salary:42000,  salaryReviewNeeded:false, gender:'female', isNew:true             },
+  { id:103, name:'Paul McCartney',      salary:155000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0103', email:'paul.mccartney@acme.com',       phone:'+44 7700 900803', dateOfBirth:'1968-06-18', nationality:'British',        address:'20 Forthlin Road, Allerton, Liverpool L18 9TN, UK',  hireDate:'2013-09-02', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:104, name:'Margot Robbie',       salary:92000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0104', email:'margot.robbie@acme.com',        phone:'+61 434 567 890', dateOfBirth:'1978-07-02', nationality:'Australian',     address:'15 Dalley Street, Melbourne VIC 3000, Australia',    hireDate:'2016-06-27', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:105, name:'Mick Fleetwood',      salary:76000,  salaryReviewNeeded:false, gender:'male',   onLeave:true,          employeeId:'EMP-0105', email:'mick.fleetwood@acme.com',       phone:'+44 7700 900905', dateOfBirth:'1981-06-24', nationality:'British',        address:'18 Cornwall Terrace, Redruth, Cornwall TR15 2JH, UK', hireDate:'2017-12-11', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:106, name:'Ana de Armas',        salary:72000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0106', email:'ana.de.armas@acme.com',         phone:'+53 5 555 0106', dateOfBirth:'1982-04-30', nationality:'Cuban',          address:'Calle Obispo 418, La Habana 10100, Cuba',             hireDate:'2018-11-05', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:107, name:'John Lennon',         salary:60000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0107', email:'john.lennon@acme.com',          phone:'+44 7700 900107', dateOfBirth:'1984-10-09', nationality:'British',        address:'251 Menlove Avenue, Woolton, Liverpool L25 7SA, UK', hireDate:'2019-08-19', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:108, name:'Saoirse Ronan',       salary:45000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0108', email:'saoirse.ronan@acme.com',        phone:'+353 87 555 0108', dateOfBirth:'1990-04-12', nationality:'Irish',          address:'6 Wolfe Tone Street, Carlow Town R93 YV91, Ireland', hireDate:'2023-04-17', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:109, name:'Patti Smith',         salary:43000,  salaryReviewNeeded:true,  gender:'female', performanceReviewNeeded:true, employeeId:'EMP-0109', email:'patti.smith@acme.com',          phone:'+1 (856) 555-0209', dateOfBirth:'1990-12-30', nationality:'American',       address:'47 Mullica Hill Road, Woodbury, NJ 08096, USA',      hireDate:'2022-07-04', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:110, name:'Anya Taylor-Joy',     salary:42000,  salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0110', email:'anya.taylor-joy@acme.com',      phone:'+44 7700 900310', dateOfBirth:'1991-04-16', nationality:'British',        address:'33 Cadogan Place, London SW1X 9RX, UK',               hireDate:'2023-10-23', contractType:'Fixed-term',  payFrequency:'Monthly' },
   // Finance
-  { id:111, name:'Roger Waters',        salary:158000, salaryReviewNeeded:false, gender:'male'                          },
-  { id:112, name:'Cynthia Erivo',       salary:93000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:113, name:'David Gilmour',       salary:78000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true },
-  { id:114, name:'Regina King',         salary:58000,  salaryReviewNeeded:false, gender:'female'                        },
-  { id:115, name:'Ozzy Osbourne',       salary:56000,  salaryReviewNeeded:false, gender:'male',   onLeave:true           },
-  { id:116, name:'Zoe Saldana',         salary:44000,  salaryReviewNeeded:true,  gender:'female'                        },
+  { id:111, name:'Roger Waters',        salary:158000, salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0111', email:'roger.waters@acme.com',         phone:'+44 7700 900411', dateOfBirth:'1968-09-06', nationality:'British',        address:'35 Great Guildford Street, Southwark, London SE1 0ES, UK', hireDate:'2013-03-18', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:112, name:'Cynthia Erivo',       salary:93000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0112', email:'cynthia.erivo@acme.com',        phone:'+44 7700 900512', dateOfBirth:'1978-01-08', nationality:'British',        address:'122 Stockwell Park Road, Stockwell, London SW9 0DA, UK', hireDate:'2016-08-22', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:113, name:'David Gilmour',       salary:78000,  salaryReviewNeeded:false, gender:'male',   performanceReviewNeeded:true, employeeId:'EMP-0113', email:'david.gilmour@acme.com',        phone:'+44 7700 900613', dateOfBirth:'1981-03-06', nationality:'British',        address:'4 Sea Lane, Goring-by-Sea, West Sussex BN12 4PD, UK', hireDate:'2017-05-15', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:114, name:'Regina King',         salary:58000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0114', email:'regina.king@acme.com',          phone:'+1 (323) 555-0714', dateOfBirth:'1985-01-15', nationality:'American',       address:'4250 Crenshaw Blvd, Los Angeles, CA 90008, USA',     hireDate:'2020-10-26', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:115, name:'Ozzy Osbourne',       salary:56000,  salaryReviewNeeded:false, gender:'male',   onLeave:true,          employeeId:'EMP-0115', email:'ozzy.osbourne@acme.com',        phone:'+44 7700 900815', dateOfBirth:'1985-12-03', nationality:'British',        address:'14 Lodge Road, Aston, Birmingham B6 6HG, UK',        hireDate:'2019-01-28', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:116, name:'Zoe Saldana',         salary:44000,  salaryReviewNeeded:true,  gender:'female', employeeId:'EMP-0116', email:'zoe.saldana@acme.com',          phone:'+1 (718) 555-0916', dateOfBirth:'1989-06-19', nationality:'American',       address:'2700 Jerome Avenue, The Bronx, NY 10468, USA',       hireDate:'2021-12-06', contractType:'Permanent',   payFrequency:'Monthly' },
   // Legal
-  { id:117, name:'Stevie Nicks',        salary:162000, salaryReviewNeeded:false, gender:'female'                        },
-  { id:118, name:'Michelle Yeoh',       salary:100000, salaryReviewNeeded:false, gender:'female', isNew:true             },
-  { id:119, name:'Eddie Van Halen',     salary:78000,  salaryReviewNeeded:false, gender:'male'                          },
-  { id:120, name:'Salma Hayek',         salary:76000,  salaryReviewNeeded:false, gender:'female'                        },
+  { id:117, name:'Stevie Nicks',        salary:162000, salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0117', email:'stevie.nicks@acme.com',         phone:'+1 (602) 555-0117', dateOfBirth:'1967-05-26', nationality:'American',       address:'5350 E. Camelback Road, Phoenix, AZ 85018, USA',     hireDate:'2013-07-08', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:118, name:'Michelle Yeoh',       salary:100000, salaryReviewNeeded:false, gender:'female', isNew:true,            employeeId:'EMP-0118', email:'michelle.yeoh@acme.com',        phone:'+60 12 555 0118', dateOfBirth:'1977-08-06', nationality:'Malaysian',      address:'Jalan Ampang 180, Kuala Lumpur 50450, Malaysia',      hireDate:'2022-03-14', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:119, name:'Eddie Van Halen',     salary:78000,  salaryReviewNeeded:false, gender:'male',   employeeId:'EMP-0119', email:'eddie.van.halen@acme.com',      phone:'+1 (626) 555-0219', dateOfBirth:'1981-01-26', nationality:'American',       address:'1432 Fair Oaks Avenue, Pasadena, CA 91030, USA',     hireDate:'2017-01-22', contractType:'Permanent',   payFrequency:'Monthly' },
+  { id:120, name:'Salma Hayek',         salary:76000,  salaryReviewNeeded:false, gender:'female', employeeId:'EMP-0120', email:'salma.hayek@acme.com',          phone:'+52 55 5555 0120', dateOfBirth:'1981-09-02', nationality:'Mexican',        address:'Avenida Álvaro Obregón 204, Colonia Roma, CDMX 06700, Mexico', hireDate:'2018-06-11', contractType:'Permanent',   payFrequency:'Monthly' },
 ];
 const DEFAULT_PERSONS = persons.map(p => ({ id: p.id, gender: p.gender }));
 
@@ -1983,46 +1984,75 @@ function renderDeptColumn(dept) {
   const deptTeams = getTeamsForDept(dept.id);
 
   if (deptTeams.length > 0) {
-    // Render dept-level roles (teamId null) as "General" section first
+    // Render dept-level root roles (teamId null) above the teams
     const deptRootRoles = roles.filter(r => r.departmentId === dept.id && r.managerRoleId === null && !r.teamId);
     if (deptRootRoles.length > 0) {
-      const genHeader = document.createElement('div');
-      genHeader.className = 'team-subheader first-team';
-      const genNameSpan = document.createElement('span');
-      genNameSpan.className = 'team-subheader-name';
-      genNameSpan.textContent = 'General';
-      genHeader.appendChild(genNameSpan);
-      const genKey = '__general__' + dept.id;
-      const genCollapseBtn = document.createElement('button');
-      genCollapseBtn.className = 'team-collapse-btn';
-      genCollapseBtn.textContent = collapsedTeams.has(genKey) ? '▶' : '▼';
-      genCollapseBtn.title = collapsedTeams.has(genKey) ? 'Expand' : 'Collapse';
-      genCollapseBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        collapsedTeams.has(genKey) ? collapsedTeams.delete(genKey) : collapsedTeams.add(genKey);
-        render();
-      });
-      genHeader.appendChild(genCollapseBtn);
-      tree.appendChild(genHeader);
-      if (collapsedTeams.has(genKey)) {
-        const ghost = document.createElement('div');
-        ghost.className = 'collapsed-ghost';
-        ghost.textContent = `▶ ${deptRootRoles.length} role${deptRootRoles.length !== 1 ? 's' : ''} hidden — click to expand`;
-        ghost.addEventListener('click', () => { collapsedTeams.delete(genKey); render(); });
-        tree.appendChild(ghost);
-      } else {
+      if (dept.companyWide && deptRootRoles.length > 1) {
+        const rootRow = document.createElement('div');
+        rootRow.className = 'cw-root-row';
         deptRootRoles.forEach(deptDirector => {
           const rootNode = document.createElement('div');
           rootNode.className = 'tree-node';
           rootNode.appendChild(renderCard(deptDirector));
-          const subtree = renderTree(deptDirector.id, dept.id, true, undefined, !!dept.companyWide);
+          const subtree = renderTree(deptDirector.id, dept.id, true, undefined, true);
           if (subtree) rootNode.appendChild(subtree);
-          tree.appendChild(rootNode);
+          rootRow.appendChild(rootNode);
         });
+        tree.appendChild(rootRow);
+      } else {
+        const genHeader = document.createElement('div');
+        genHeader.className = 'team-subheader first-team';
+        const genNameSpan = document.createElement('span');
+        genNameSpan.className = 'team-subheader-name';
+        genNameSpan.textContent = 'General';
+        genHeader.appendChild(genNameSpan);
+        const genKey = '__general__' + dept.id;
+        const genCollapseBtn = document.createElement('button');
+        genCollapseBtn.className = 'team-collapse-btn';
+        genCollapseBtn.textContent = collapsedTeams.has(genKey) ? '▶' : '▼';
+        genCollapseBtn.title = collapsedTeams.has(genKey) ? 'Expand' : 'Collapse';
+        genCollapseBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          collapsedTeams.has(genKey) ? collapsedTeams.delete(genKey) : collapsedTeams.add(genKey);
+          render();
+        });
+        genHeader.appendChild(genCollapseBtn);
+        tree.appendChild(genHeader);
+        if (collapsedTeams.has(genKey)) {
+          const ghost = document.createElement('div');
+          ghost.className = 'collapsed-ghost';
+          ghost.textContent = `▶ ${deptRootRoles.length} role${deptRootRoles.length !== 1 ? 's' : ''} hidden — click to expand`;
+          ghost.addEventListener('click', () => { collapsedTeams.delete(genKey); render(); });
+          tree.appendChild(ghost);
+        } else {
+          deptRootRoles.forEach(deptDirector => {
+            const rootNode = document.createElement('div');
+            rootNode.className = 'tree-node';
+            rootNode.appendChild(renderCard(deptDirector));
+            const subtree = renderTree(deptDirector.id, dept.id, true, undefined, !!dept.companyWide);
+            if (subtree) rootNode.appendChild(subtree);
+            tree.appendChild(rootNode);
+          });
+        }
       }
     }
-    // Render team sub-sections below General
+
+    // For company-wide depts: lay teams out side by side in a horizontal row
+    let teamsRow = null;
+    if (dept.companyWide) {
+      teamsRow = document.createElement('div');
+      teamsRow.className = 'cw-teams-row';
+    }
+    const makeSection = () => {
+      if (!dept.companyWide) return tree;
+      const sec = document.createElement('div');
+      sec.className = 'cw-team-section';
+      teamsRow.appendChild(sec);
+      return sec;
+    };
+    // Render team sub-sections
     deptTeams.forEach(team => {
+      const sec = makeSection();
       const subHeader = document.createElement('div');
       subHeader.className = 'team-subheader';
       const nameSpan = document.createElement('span');
@@ -2045,13 +2075,13 @@ function renderDeptColumn(dept) {
       subHeader.addEventListener('dragover', e => { if (state.draggedPersonId !== null || state.draggedRoleId !== null) { e.preventDefault(); e.stopPropagation(); subHeader.classList.add('drop-target'); } });
       subHeader.addEventListener('dragleave', () => subHeader.classList.remove('drop-target'));
       subHeader.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); subHeader.classList.remove('drop-target'); dropOnTeam(team.id, dept.id); });
-      tree.appendChild(subHeader);
+      sec.appendChild(subHeader);
       if (collapsedTeams.has(team.id)) {
         const ghost = document.createElement('div');
         ghost.className = 'collapsed-ghost';
         ghost.textContent = `▶ ${teamRoleCount} role${teamRoleCount !== 1 ? 's' : ''} hidden — click to expand`;
         ghost.addEventListener('click', () => { collapsedTeams.delete(team.id); render(); });
-        tree.appendChild(ghost);
+        sec.appendChild(ghost);
       } else {
         const teamRoots = getTeamRootRoles(team.id);
         teamRoots.forEach(teamRoot => {
@@ -2069,23 +2099,39 @@ function renderDeptColumn(dept) {
           const rootNode = document.createElement('div');
           rootNode.className = 'tree-node';
           rootNode.appendChild(renderCard(teamRoot));
-          const subtree = renderTree(teamRoot.id, dept.id, false, team.id);
+          const subtree = renderTree(teamRoot.id, dept.id, false, team.id, !!dept.companyWide);
           if (subtree) rootNode.appendChild(subtree);
-          tree.appendChild(rootNode);
+          sec.appendChild(rootNode);
         });
       }
     });
+    if (teamsRow) tree.appendChild(teamsRow);
   } else {
     // No teams — render all root roles (managerRoleId === null)
     const rootRoles = roles.filter(r => r.departmentId === dept.id && r.managerRoleId === null && !r.teamId);
-    rootRoles.forEach(rootRole => {
-      const rootNode = document.createElement('div');
-      rootNode.className = 'tree-node';
-      rootNode.appendChild(renderCard(rootRole));
-      const subtree = renderTree(rootRole.id, dept.id, false, undefined, !!dept.companyWide);
-      if (subtree) rootNode.appendChild(subtree);
-      tree.appendChild(rootNode);
-    });
+    if (dept.companyWide && rootRoles.length > 1) {
+      // Multiple top-level roles in a company-wide dept: show them side by side
+      const rootRow = document.createElement('div');
+      rootRow.className = 'cw-root-row';
+      rootRoles.forEach(rootRole => {
+        const rootNode = document.createElement('div');
+        rootNode.className = 'tree-node';
+        rootNode.appendChild(renderCard(rootRole));
+        const subtree = renderTree(rootRole.id, dept.id, false, undefined, true);
+        if (subtree) rootNode.appendChild(subtree);
+        rootRow.appendChild(rootNode);
+      });
+      tree.appendChild(rootRow);
+    } else {
+      rootRoles.forEach(rootRole => {
+        const rootNode = document.createElement('div');
+        rootNode.className = 'tree-node';
+        rootNode.appendChild(renderCard(rootRole));
+        const subtree = renderTree(rootRole.id, dept.id, false, undefined, !!dept.companyWide);
+        if (subtree) rootNode.appendChild(subtree);
+        tree.appendChild(rootNode);
+      });
+    }
   }
 
   const orphans = getOrphanedRoles(dept.id);
@@ -2475,7 +2521,10 @@ function openCombinedModal(roleId, defaultTab) {
     document.getElementById('modal-avatar').textContent = getInitials(person.name);
     document.getElementById('modal-avatar-badge').classList.remove('visible');
     document.getElementById('modal-person-name').textContent = person.name;
-    document.getElementById('modal-person-emp-id').textContent = '#' + person.id;
+    document.getElementById('modal-person-role-subtitle').textContent = role ? role.title : '';
+    const empIdEl1 = document.getElementById('modal-person-emp-id');
+    empIdEl1.textContent = person.employeeId || '';
+    empIdEl1.style.display = person.employeeId ? '' : 'none';
     const genderDisplay = document.getElementById('modal-gender-display');
     const resolvedGender = person.gender || (DEFAULT_PERSONS.find(d => d.id === person.id) || {}).gender;
     if (resolvedGender) {
@@ -2584,7 +2633,7 @@ function openCombinedModal(roleId, defaultTab) {
     document.getElementById('modal-role-team-view').textContent = teamObj ? teamObj.name : '—';
   }
 
-  document.getElementById('modal-title-text').textContent = hasPerson ? person.name : (role ? role.title + ' (Vacant)' : 'Edit');
+  document.getElementById('modal-title-text').textContent = role ? (hasPerson ? role.title : role.title + ' (Vacant)') : 'Edit';
   document.getElementById('modal-backdrop').classList.add('visible');
 }
 
@@ -2604,7 +2653,8 @@ function openPersonModal(personId) {
     document.getElementById('modal-avatar').textContent = '?';
     document.getElementById('modal-avatar-badge').classList.remove('visible');
     document.getElementById('modal-person-name').textContent = `Employee #${person.id}`;
-    document.getElementById('modal-title-text').textContent = `Employee #${person.id}`;
+    document.getElementById('modal-person-role-subtitle').textContent = '';
+    document.getElementById('modal-title-text').textContent = 'Employee';
     PERSON_FLAGS.forEach(f => { document.getElementById(f.toggleId).style.display = 'none'; });
     document.getElementById('modal-person-role-info').style.display = 'none';
     document.getElementById('modal-comp-group').style.display = 'none';
@@ -2625,7 +2675,10 @@ function openPersonModal(personId) {
   document.getElementById('modal-avatar').textContent = getInitials(person.name);
   document.getElementById('modal-avatar-badge').classList.remove('visible');
   document.getElementById('modal-person-name').textContent = person.name;
-  document.getElementById('modal-person-emp-id').textContent = '#' + person.id;
+  document.getElementById('modal-person-role-subtitle').textContent = '';
+  const empIdEl2 = document.getElementById('modal-person-emp-id');
+  empIdEl2.textContent = person.employeeId || '';
+  empIdEl2.style.display = person.employeeId ? '' : 'none';
   const genderDisplay = document.getElementById('modal-gender-display');
   const resolvedGender = person.gender || (DEFAULT_PERSONS.find(d => d.id === person.id) || {}).gender;
   if (resolvedGender) {
@@ -2640,7 +2693,7 @@ function openPersonModal(personId) {
   document.getElementById('modal-person-remove-btn').style.display = 'none';
   document.getElementById('modal-person-fire-btn').style.display = '';
   updateSalaryBandDisplay(person, null);
-  document.getElementById('modal-title-text').textContent = person.name;
+  document.getElementById('modal-title-text').textContent = 'Employee';
   document.getElementById('modal-save-btn').style.display = settings.viewOnly ? 'none' : '';
   document.getElementById('modal-cancel-btn').textContent = settings.viewOnly ? 'Close' : 'Cancel';
   document.getElementById('modal-backdrop').classList.add('visible');
@@ -2772,6 +2825,31 @@ document.getElementById('modal-cancel-btn').addEventListener('click', closeModal
 document.getElementById('modal-role-assign-btn').addEventListener('click', () => {
   const roleId = state.editingRoleId;
   if (roleId !== null) {
+    const panel = document.getElementById('modal-panel');
+    if (panel.classList.contains('role-editing')) {
+      // Flush unsaved role edits to memory before closing, so they're included
+      // in the save that fires when the person assignment is confirmed.
+      // Do NOT call saveModal() here — that would trigger an extra render/save
+      // which could overwrite paybands.html changes with stale in-memory data.
+      const role = roles.find(r => r.id === roleId);
+      if (role) {
+        role.level = document.getElementById('modal-role-level').value;
+        role.title = document.getElementById('modal-role-title').value;
+        const deptSelVal = document.getElementById('modal-role-dept').value;
+        const deptObj = departments.find(d => String(d.id) === deptSelVal);
+        const newDept = deptObj ? deptObj.id : (isNaN(Number(deptSelVal)) ? deptSelVal : Number(deptSelVal));
+        if (newDept !== role.departmentId) {
+          role.departmentId = newDept;
+          const newDirector = getDirectorRole(newDept);
+          role.managerRoleId = newDirector ? newDirector.id : null;
+        }
+        const mgrVal = document.getElementById('modal-role-manager').value;
+        role.managerRoleId = mgrVal ? parseInt(mgrVal, 10) : null;
+        const teamVal = document.getElementById('modal-role-team').value;
+        role.teamId = teamVal ? parseInt(teamVal, 10) : null;
+        role.secondaryManagerRoleIds = getCurrentSecondaryIds();
+      }
+    }
     closeModal();
     openAssignPersonPicker(roleId);
   }
@@ -3126,7 +3204,7 @@ function enterSimulation() {
   fetch('/api/sim-data', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, snapshots, _simLabel: simLabel })
+    body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, levelOrder: LEVELS.map(l => l.id), snapshots, _simLabel: simLabel })
   }).catch(() => {});
 }
 
@@ -3202,7 +3280,7 @@ function unfreezeToEdit() {
     body: JSON.stringify({ departments: liveBackup.departments, roles: liveBackup.roles,
       persons: liveBackup.persons, roleAssignments: liveBackup.roleAssignments,
       teams: liveBackup.teams, titles: TITLES, settings, salaryBands: SALARY_BANDS,
-      snapshots, plannedChange: null })
+      levelOrder: LEVELS.map(l => l.id), snapshots, plannedChange: null })
   }).catch(() => {});
 
   departments.splice(0,    departments.length,    ...JSON.parse(JSON.stringify(plannedChange.data.departments)));
@@ -3216,7 +3294,7 @@ function unfreezeToEdit() {
   simMode = true;
   document.body.classList.add('sim-mode');
   fetch('/api/sim-data', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, snapshots, _simLabel: simLabel })
+    body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, levelOrder: LEVELS.map(l => l.id), snapshots, _simLabel: simLabel })
   }).catch(() => {});
   updateSimBanner();
   updatePlannedChangeBanner();
@@ -3765,7 +3843,7 @@ function saveToStorage(opts = {}) {
     fetch(endpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, locationMultipliers, snapshots, _simLabel: simLabel, plannedChange })
+      body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, levelOrder: LEVELS.map(l => l.id), locationMultipliers, snapshots, _simLabel: simLabel, plannedChange })
     }).catch(e => console.warn('Save failed:', e));
   }, 300);
 }

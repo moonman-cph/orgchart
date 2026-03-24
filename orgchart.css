@@ -129,10 +129,64 @@ body:not(.page-ready) #columns > .dept-column:nth-child(n+9) { animation-delay: 
 .dept-column.cw-col .dept-tree > .tree-node > .emp-card {
   width: 260px;
 }
+.dept-column.cw-col .tree-children.horizontal {
+  flex-wrap: nowrap;
+}
 .dept-column.cw-col .tree-children.horizontal > .tree-node {
-  flex: 1 1 200px;
-  min-width: 180px;
-  max-width: 300px;
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: none;
+}
+
+/* Company-wide with teams: lay teams out side by side */
+.dept-column.cw-col .cw-teams-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0;
+  align-items: flex-start;
+}
+.dept-column.cw-col .cw-team-section {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  padding: 0 16px;
+}
+.dept-column.cw-col .cw-team-section:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+/* Multiple top-level roots in a company-wide column: side by side */
+.dept-column.cw-col .cw-root-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+.dept-column.cw-col .cw-root-row > .tree-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.dept-column.cw-col .cw-root-row > .tree-node > .emp-card {
+  width: 260px;
+}
+.dept-column.cw-col .cw-root-row > .tree-node > .emp-card::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1.5px;
+  height: 10px;
+  background: #e4e7ec;
+  pointer-events: none;
+}
+.dept-column.cw-col .cw-root-row > .tree-node:not(:has(.tree-children.horizontal)) > .emp-card::after,
+.dept-column.cw-col .dept-tree > .tree-node:not(:has(.tree-children.horizontal)) > .emp-card::after {
+  display: none;
 }
 
 /* Vertical stem: bottom of top-level card → horizontal bar */

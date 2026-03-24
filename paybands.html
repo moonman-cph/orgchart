@@ -332,6 +332,43 @@
 }
 #pb-save-indicator.visible { display: flex; }
 #pb-save-indicator.error { color: #ef4444; }
+
+/* ── Delete-band modal ──────────────────────────────────── */
+#delete-band-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.35); z-index: 200;
+  align-items: center; justify-content: center;
+}
+#delete-band-overlay.open { display: flex; }
+#delete-band-modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 24px; width: 380px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+#delete-band-modal h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+#delete-band-modal p { margin: 0 0 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+#delete-band-select-row { margin-bottom: 20px; }
+#delete-band-select-row label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase;
+  letter-spacing: 0.05em; margin-bottom: 6px;
+}
+#delete-band-select {
+  width: 100%; padding: 6px 10px; border: 1px solid var(--border);
+  border-radius: 6px; font-family: inherit; font-size: 13px;
+  background: var(--surface); color: var(--text-primary);
+}
+#delete-band-select:focus { outline: none; border-color: var(--accent); }
+.delete-band-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.delete-band-actions button {
+  padding: 7px 16px; border-radius: 6px; font-family: inherit;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--border); transition: all 0.12s;
+}
+#delete-band-cancel { background: var(--surface); color: var(--text-secondary); }
+#delete-band-cancel:hover { background: var(--bg); }
+#delete-band-confirm { background: #ef4444; color: #fff; border-color: #ef4444; }
+#delete-band-confirm:hover { background: #dc2626; border-color: #dc2626; }
 </style>
 </head>
 <body>
@@ -445,6 +482,21 @@
 </div><!-- /#pb-inner -->
 </div><!-- /#pb-main -->
 </div><!-- /#app-content -->
+
+<div id="delete-band-overlay">
+  <div id="delete-band-modal">
+    <h3 id="delete-band-title">Delete pay band</h3>
+    <p id="delete-band-body"></p>
+    <div id="delete-band-select-row">
+      <label>Reassign roles to</label>
+      <select id="delete-band-select"></select>
+    </div>
+    <div class="delete-band-actions">
+      <button id="delete-band-cancel">Cancel</button>
+      <button id="delete-band-confirm">Reassign &amp; Delete</button>
+    </div>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -692,29 +744,109 @@ async function moveLevel(level, direction) {
   await saveAll(`Level order updated`);
 }
 
+let _deletePendingLevel = null;
+let _deletePendingData  = null;
+let _deletePendingCount = 0;
+
 async function deleteBand(level) {
-  // Safety check: fetch current roles and count how many use this level
-  let rolesUsingLevel = 0;
+  let fullData = null;
+  let affected = [];
   try {
     const res = await fetch('/api/data');
     if (res.ok) {
-      const data = await res.json();
-      rolesUsingLevel = (data.roles || []).filter(r => r.level === level).length;
+      fullData = await res.json();
+      affected = (fullData.roles || []).filter(r => r.level === level);
     }
-  } catch (e) { /* if fetch fails, allow with warning */ }
+  } catch (e) {}
 
-  if (rolesUsingLevel > 0) {
-    alert(`Cannot remove "${level}" — ${rolesUsingLevel} role${rolesUsingLevel > 1 ? 's are' : ' is'} currently assigned to this level.\n\nReassign those roles to a different level in the Org Chart first.`);
+  if (affected.length === 0) {
+    if (!confirm(`Remove pay band "${level}"?\n\nThis cannot be undone.`)) return;
+    levelOrder.splice(levelOrder.indexOf(level), 1);
+    delete salaryBands[level];
+    renderBandTable();
+    await saveAll(`Pay band ${level} removed`);
     return;
   }
 
-  if (!confirm(`Remove pay band "${level}"?\n\nThis cannot be undone. Any new roles must be assigned a different level.`)) return;
+  const otherLevels = levelOrder.filter(l => l !== level);
+  if (otherLevels.length === 0) {
+    alert('Cannot delete the only pay band.');
+    return;
+  }
 
-  levelOrder.splice(levelOrder.indexOf(level), 1);
-  delete salaryBands[level];
-  renderBandTable();
-  await saveAll(`Pay band ${level} removed`);
+  // Populate and show reassign modal
+  document.getElementById('delete-band-title').textContent = `Delete pay band "${level}"`;
+  const n = affected.length;
+  document.getElementById('delete-band-body').textContent =
+    `${n} role${n > 1 ? 's are' : ' is'} assigned to this level. Choose a band to reassign them to before deleting.`;
+
+  const select = document.getElementById('delete-band-select');
+  select.innerHTML = '';
+  const idx = levelOrder.indexOf(level);
+  const preferred = otherLevels[Math.min(idx, otherLevels.length - 1)];
+  otherLevels.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l;
+    const b = salaryBands[l];
+    opt.textContent = b && b.label ? `${l} — ${b.label}` : l;
+    if (l === preferred) opt.selected = true;
+    select.appendChild(opt);
+  });
+
+  _deletePendingLevel = level;
+  _deletePendingData  = fullData;
+  _deletePendingCount = n;
+  document.getElementById('delete-band-overlay').classList.add('open');
 }
+
+document.getElementById('delete-band-cancel').addEventListener('click', () => {
+  document.getElementById('delete-band-overlay').classList.remove('open');
+  _deletePendingLevel = null;
+  _deletePendingData  = null;
+  _deletePendingCount = 0;
+});
+
+document.getElementById('delete-band-confirm').addEventListener('click', async () => {
+  const overlay      = document.getElementById('delete-band-overlay');
+  const targetLevel  = document.getElementById('delete-band-select').value;
+  const deletedLevel = _deletePendingLevel;
+  const count        = _deletePendingCount;
+  const full         = _deletePendingData || {};
+  overlay.classList.remove('open');
+
+  // Reassign roles in the full data snapshot
+  (full.roles || []).forEach(r => { if (r.level === deletedLevel) r.level = targetLevel; });
+
+  // Update module-level state
+  levelOrder.splice(levelOrder.indexOf(deletedLevel), 1);
+  delete salaryBands[deletedLevel];
+  renderBandTable();
+
+  // Single save with roles + pay bands together
+  const indicator = document.getElementById('pb-save-indicator');
+  indicator.textContent = 'Saving…';
+  indicator.className = 'visible';
+  try {
+    full.salaryBands          = salaryBands;
+    full.locationMultipliers  = locationMultipliers;
+    full.settings             = { ...(full.settings || {}), ...settings };
+    full.levelOrder           = levelOrder;
+    const reason = `Pay band ${deletedLevel} removed; ${count} role${count > 1 ? 's' : ''} reassigned to ${targetLevel}`;
+    const headers = { 'Content-Type': 'application/json', 'X-Source': 'ui', 'X-Change-Reason': reason.slice(0, 500) };
+    const resp = await fetch('/api/data', { method: 'POST', headers, body: JSON.stringify(full) });
+    if (!resp.ok) throw new Error('Save failed');
+    indicator.textContent = 'Saved';
+    setTimeout(() => { indicator.className = ''; }, 1500);
+  } catch (e) {
+    indicator.textContent = 'Save failed';
+    indicator.className = 'visible error';
+    setTimeout(() => { indicator.className = ''; }, 3000);
+  }
+
+  _deletePendingLevel = null;
+  _deletePendingData  = null;
+  _deletePendingCount = 0;
+});
 
 async function addBand() {
   const idRaw = document.getElementById('add-band-id').value.trim().toUpperCase();

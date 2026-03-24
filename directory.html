@@ -24,6 +24,7 @@
   <div class="header-divider"></div>
   <span id="headcount-badge" class="header-badge">0 people</span>
   <div class="header-spacer"></div>
+  <button class="header-btn primary" id="dir-add-person-btn">+ Person</button>
 </div>
 
 <div id="main">
@@ -95,6 +96,51 @@
 </div><!-- #main -->
 
 </div><!-- #app-content -->
+
+<!-- ── Add Person Modal ── -->
+<div id="dir-add-emp-modal-backdrop">
+  <div id="add-emp-modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">Add Person</span>
+      <button class="modal-close" id="dir-add-emp-modal-close-btn" title="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Name <span style="color:#ef4444">*</span></label>
+        <input type="text" id="dir-add-emp-name" class="form-control" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gender</label>
+        <div id="dir-add-emp-gender-group" style="display:flex;gap:6px;">
+          <button type="button" class="btn btn-ghost dir-add-gender-btn" data-gender="male"   style="flex:1;padding:6px 0;font-size:12.5px;">Male</button>
+          <button type="button" class="btn btn-ghost dir-add-gender-btn" data-gender="female" style="flex:1;padding:6px 0;font-size:12.5px;">Female</button>
+          <button type="button" class="btn btn-ghost dir-add-gender-btn" data-gender="other"  style="flex:1;padding:6px 0;font-size:12.5px;">Other</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monthly salary</label>
+        <input type="number" id="dir-add-emp-salary" class="form-control" placeholder="e.g. 5000" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Country</label>
+        <select id="dir-add-emp-country" class="form-control"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">City <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <input type="text" id="dir-add-emp-city" class="form-control" placeholder="e.g. Copenhagen" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign to position (optional)</label>
+        <select id="dir-add-emp-role" class="form-control"></select>
+      </div>
+      <div class="modal-warning" id="dir-add-emp-warning"></div>
+    </div>
+    <div class="modal-footer" style="display:flex">
+      <button class="btn btn-ghost" id="dir-add-emp-cancel-btn">Cancel</button>
+      <button class="btn btn-primary" id="dir-add-emp-save-btn">Add Person</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── Person Detail Modal ── -->
 <div id="person-modal-backdrop">
@@ -1284,9 +1330,110 @@ document.getElementById('person-modal-backdrop').addEventListener('click', e => 
 // Escape key
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    if (isEditing) exitEditMode(false);
-    else closePersonModal();
+    if (document.getElementById('dir-add-emp-modal-backdrop').classList.contains('visible')) {
+      closeDirAddPersonModal();
+    } else if (isEditing) {
+      exitEditMode(false);
+    } else {
+      closePersonModal();
+    }
   }
+});
+
+// ── Add Person Modal ───────────────────────────────────────────────────────────
+function openDirAddPersonModal() {
+  const roleSel = document.getElementById('dir-add-emp-role');
+  roleSel.innerHTML = '';
+  const noRole = document.createElement('option');
+  noRole.value = ''; noRole.textContent = '— None (unassigned) —';
+  roleSel.appendChild(noRole);
+  const assignedRoleIds = new Set(roleAssignments.map(a => a.roleId));
+  const vacantRoles = roles.filter(r => !assignedRoleIds.has(r.id));
+  vacantRoles.sort((a, b) => {
+    const da = departments.find(d => d.id === a.departmentId);
+    const db = departments.find(d => d.id === b.departmentId);
+    return (da ? da.name : '').localeCompare(db ? db.name : '') || a.title.localeCompare(b.title);
+  });
+  vacantRoles.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id;
+    const dept = departments.find(d => d.id === r.departmentId);
+    const team = r.teamId ? teams.find(t => t.id === r.teamId) : null;
+    opt.textContent = `${dept ? dept.name : '?'}: ${r.title}${team ? ` [${team.name}]` : ''} (${r.level})`;
+    roleSel.appendChild(opt);
+  });
+
+  document.getElementById('dir-add-emp-name').value = '';
+  document.getElementById('dir-add-emp-salary').value = '';
+  document.getElementById('dir-add-emp-city').value = '';
+
+  const countrySel = document.getElementById('dir-add-emp-country');
+  countrySel.innerHTML = '<option value="">— None —</option>';
+  COUNTRY_LIST.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.code; opt.textContent = c.name;
+    countrySel.appendChild(opt);
+  });
+
+  document.querySelectorAll('.dir-add-gender-btn').forEach(b => b.classList.remove('active'));
+  const warn = document.getElementById('dir-add-emp-warning');
+  warn.textContent = ''; warn.classList.remove('visible');
+
+  document.getElementById('dir-add-emp-modal-backdrop').classList.add('visible');
+  setTimeout(() => document.getElementById('dir-add-emp-name').focus(), 50);
+}
+
+function closeDirAddPersonModal() {
+  document.getElementById('dir-add-emp-modal-backdrop').classList.remove('visible');
+}
+
+async function saveDirAddPersonModal() {
+  const name = document.getElementById('dir-add-emp-name').value.trim();
+  const warn = document.getElementById('dir-add-emp-warning');
+  if (!name) {
+    warn.textContent = 'Name is required.'; warn.classList.add('visible');
+    document.getElementById('dir-add-emp-name').focus(); return;
+  }
+  const genderBtn = document.querySelector('.dir-add-gender-btn.active');
+  if (!genderBtn) {
+    warn.textContent = 'Please select a gender.'; warn.classList.add('visible'); return;
+  }
+  const gender = genderBtn.dataset.gender;
+  const salaryRaw = document.getElementById('dir-add-emp-salary').value;
+  const roleVal = document.getElementById('dir-add-emp-role').value;
+  const roleId = roleVal ? parseInt(roleVal, 10) : null;
+  let salary = salaryRaw ? parseInt(salaryRaw, 10) : 0;
+  if (!salary && roleId) {
+    const r = roles.find(x => x.id === roleId);
+    if (r && salaryBands && salaryBands[r.level]) salary = salaryBands[r.level].min || 0;
+  }
+  const country = document.getElementById('dir-add-emp-country').value || null;
+  const city = document.getElementById('dir-add-emp-city').value.trim() || null;
+  const newId = persons.length ? Math.max(...persons.map(p => p.id)) + 1 : 1;
+  persons.push({ id: newId, name, salary, gender, country, city,
+    salaryReviewNeeded: false, performanceReviewNeeded: false, isNew: false, onLeave: false, orgId: 'default' });
+  if (roleId) {
+    const raMaxId = roleAssignments.reduce((m, a) => Math.max(m, a.id ?? 0), 0);
+    roleAssignments.push({ id: raMaxId + 1, personId: newId, roleId, percentage: 100, orgId: 'default' });
+  }
+  closeDirAddPersonModal();
+  render();
+  await saveToStorage();
+}
+
+document.getElementById('dir-add-person-btn').addEventListener('click', openDirAddPersonModal);
+document.getElementById('dir-add-emp-modal-close-btn').addEventListener('click', closeDirAddPersonModal);
+document.getElementById('dir-add-emp-cancel-btn').addEventListener('click', closeDirAddPersonModal);
+document.getElementById('dir-add-emp-save-btn').addEventListener('click', saveDirAddPersonModal);
+document.getElementById('dir-add-emp-modal-backdrop').addEventListener('click', e => {
+  if (e.target === document.getElementById('dir-add-emp-modal-backdrop')) closeDirAddPersonModal();
+});
+document.getElementById('dir-add-emp-gender-group').addEventListener('click', e => {
+  const btn = e.target.closest('.dir-add-gender-btn');
+  if (!btn) return;
+  const isActive = btn.classList.contains('active');
+  document.querySelectorAll('.dir-add-gender-btn').forEach(b => b.classList.remove('active'));
+  if (!isActive) btn.classList.add('active');
 });
 
 // ── Department filter population ───────────────────────────────────────────────

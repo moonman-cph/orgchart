@@ -354,7 +354,7 @@
 
       <div class="filter-group">
         <label>Search</label>
-        <input type="text" id="f-search" placeholder="Entity, field, reason…">
+        <input type="text" id="f-search" placeholder="Search name, field, type, value…">
       </div>
 
       <div class="filter-group">
@@ -401,11 +401,6 @@
       </div>
 
       <div class="filter-group">
-        <label>Field</label>
-        <input type="text" id="f-field" placeholder="e.g. salary, name">
-      </div>
-
-      <div class="filter-group">
         <label>Display</label>
         <div class="filter-check-group">
           <label><input type="checkbox" id="f-expand-bulk"> Show individual bulk entries</label>
@@ -416,7 +411,6 @@
     </div>
     <div class="filter-actions">
       <button class="btn-sm" id="f-clear-btn">Clear</button>
-      <button class="btn-sm primary" id="f-apply-btn">Apply</button>
     </div>
   </div>
 
@@ -531,16 +525,10 @@ async function loadData() {
 
 function buildQueryParams() {
   const p = { limit: 2000, offset: 0 };
-  const field = document.getElementById('f-field').value.trim();
-  if (field) p.field = field;
-
   const fromVal = document.getElementById('f-from').value;
   const toVal   = document.getElementById('f-to').value;
   if (fromVal) p.from = fromVal + 'T00:00:00.000Z';
   if (toVal)   p.to   = toVal   + 'T23:59:59.999Z';
-
-  if (document.getElementById('f-only-sensitive').checked) p.isSensitive = 'true';
-
   return p;
 }
 
@@ -608,6 +596,11 @@ function applyClientFilters(batches) {
           String(e.newValue || '').toLowerCase().includes(searchTerm)
         );
       }
+      if (!entries.length) return null;
+    }
+
+    if (document.getElementById('f-only-sensitive').checked) {
+      entries = entries.filter(e => e.isSensitive);
       if (!entries.length) return null;
     }
 
@@ -745,25 +738,30 @@ async function init() {
 }
 
 // ── Event wiring ──────────────────────────────────────────────────────────────
-document.getElementById('f-apply-btn').addEventListener('click', async () => {
+function debounce(fn, ms) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+async function reloadAndRender() {
   page = 0;
   const data = await loadData().catch(() => ({ entries: [] }));
   allBatches = groupIntoBatches(data.entries || []);
   filteredBatches = applyClientFilters(allBatches);
   render(filteredBatches);
-});
+}
+
+// Date and field filters are server-side — trigger a reload on change
+document.getElementById('f-from').addEventListener('change', reloadAndRender);
+document.getElementById('f-to').addEventListener('change', reloadAndRender);
 
 document.getElementById('f-clear-btn').addEventListener('click', () => {
   document.getElementById('f-search').value = '';
-  document.getElementById('f-field').value = '';
   document.getElementById('f-from').value = '';
   document.getElementById('f-to').value = '';
   document.getElementById('f-expand-bulk').checked = false;
   document.getElementById('f-only-sensitive').checked = false;
   document.querySelectorAll('#f-entity-types input, #f-operations input, #f-sources input').forEach(i => i.checked = true);
-  page = 0;
-  filteredBatches = applyClientFilters(allBatches);
-  render(filteredBatches);
+  reloadAndRender();
 });
 
 // Live search filter (no server round-trip)
@@ -781,15 +779,12 @@ document.getElementById('f-search').addEventListener('input', () => {
     render(filteredBatches);
   });
 });
-document.getElementById('f-expand-bulk').addEventListener('change', () => {
-  page = 0;
-  filteredBatches = applyClientFilters(allBatches);
-  render(filteredBatches);
-});
-document.getElementById('f-only-sensitive').addEventListener('change', () => {
-  page = 0;
-  filteredBatches = applyClientFilters(allBatches);
-  render(filteredBatches);
+['f-expand-bulk', 'f-only-sensitive'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    page = 0;
+    filteredBatches = applyClientFilters(allBatches);
+    render(filteredBatches);
+  });
 });
 
 document.getElementById('pg-prev').addEventListener('click', () => { page--; render(filteredBatches); document.getElementById('cl-content').scrollTop = 0; });
