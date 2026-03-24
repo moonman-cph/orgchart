@@ -310,44 +310,28 @@
 }
 #preview-bar select:focus { outline: none; border-color: var(--accent); }
 
-/* ── App header / hero ──────────────────────────────────── */
+/* ── App header ─────────────────────────────────────────── */
 #app-header {
-  display: flex; align-items: center; gap: 0;
-  padding: 0;
-  background: linear-gradient(135deg, #0f3d4a 0%, #1a5a6e 60%, #0e4155 100%);
-  flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 24px; height: 54px;
+  background: rgba(255,255,255,0.93);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0; z-index: 10;
 }
-#app-header::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 80% 50%, rgba(255,255,255,0.04) 0%, transparent 60%);
-  pointer-events: none;
-}
-#header-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-  padding: 22px 32px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-#app-header h1 { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
-#app-header .header-sub { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 1px; }
-.header-divider { display: none; }
-.header-meta { display: none; }
+.header-crumb { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.header-crumb-root { color: var(--text-muted); }
+.header-crumb-sep  { color: var(--text-muted); font-size: 14px; line-height: 1; }
+.header-crumb-current { font-weight: 600; color: var(--text-primary); }
+.header-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
 
 /* ── Saving indicator ───────────────────────────────────── */
 #pb-save-indicator {
-  font-size: 12px; color: rgba(255,255,255,0.5);
+  font-size: 12px; color: var(--text-muted);
   display: none; align-items: center; gap: 4px;
 }
 #pb-save-indicator.visible { display: flex; }
-#pb-save-indicator.error { color: #fca5a5; }
+#pb-save-indicator.error { color: #ef4444; }
 </style>
 </head>
 <body>
@@ -358,13 +342,13 @@
 <div id="app-content">
 
 <div id="app-header">
-  <div id="header-inner">
-    <div style="flex:1">
-      <h1>Pay Bands</h1>
-      <div class="header-sub">Compensation structure by level</div>
-    </div>
-    <div id="pb-save-indicator">Saving…</div>
+  <div class="header-crumb">
+    <span class="header-crumb-root">OrgChart</span>
+    <span class="header-crumb-sep">/</span>
+    <span class="header-crumb-current">Pay Bands</span>
   </div>
+  <div style="flex:1"></div>
+  <div id="pb-save-indicator">Saving…</div>
 </div>
 
 <div id="pb-main">
