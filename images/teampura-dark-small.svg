@@ -1,0 +1,49 @@
+<svg width="220" height="60" viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dks1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A5C57"/>
+      <stop offset="100%" stop-color="#0A2E2C"/>
+    </linearGradient>
+    <linearGradient id="dks2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1F9082"/>
+      <stop offset="100%" stop-color="#0F4A44"/>
+    </linearGradient>
+    <linearGradient id="dks3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3AC4B2"/>
+      <stop offset="100%" stop-color="#1A8C7E"/>
+    </linearGradient>
+    <linearGradient id="dks4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F88A4E"/>
+      <stop offset="100%" stop-color="#E05A14"/>
+    </linearGradient>
+    <filter id="dkssh" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.30"/>
+    </filter>
+    <filter id="dksglow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feFlood flood-color="#F06A28" flood-opacity="0.28" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <ellipse cx="28" cy="50" rx="18" ry="5" fill="url(#dks1)" filter="url(#dkssh)"/>
+  <ellipse cx="24" cy="48" rx="6" ry="1.5" fill="white" opacity="0.05"/>
+  <ellipse cx="28" cy="40" rx="14" ry="4" fill="url(#dks2)" transform="rotate(-2 28 40)" filter="url(#dkssh)"/>
+  <ellipse cx="24" cy="38.5" rx="5" ry="1.2" fill="white" opacity="0.06" transform="rotate(-2 24 38.5)"/>
+  <ellipse cx="28.5" cy="31.5" rx="9.5" ry="3.5" fill="url(#dks3)" transform="rotate(1.5 28.5 31.5)" filter="url(#dkssh)"/>
+  <ellipse cx="26" cy="30" rx="3.5" ry="1" fill="white" opacity="0.08" transform="rotate(1.5 26 30)"/>
+  <ellipse cx="28" cy="24" rx="6" ry="3" fill="url(#dks4)" transform="rotate(-1 28 24)" filter="url(#dksglow)"/>
+  <ellipse cx="26" cy="22.5" rx="2" ry="0.8" fill="white" opacity="0.22" transform="rotate(-1 26 22.5)"/>
+
+  <line x1="11" y1="45.2" x2="45" y2="45.2" stroke="rgba(0,0,0,0.35)" stroke-width="0.9" opacity="0.95"/>
+  <line x1="15" y1="36.2" x2="41" y2="36.2" stroke="rgba(0,0,0,0.35)" stroke-width="0.8" opacity="0.90"/>
+  <line x1="20" y1="28.0" x2="37" y2="28.0" stroke="rgba(0,0,0,0.35)" stroke-width="0.7" opacity="0.85"/>
+
+  <ellipse cx="28" cy="55" rx="16" ry="2.5" fill="#1A8C7E" opacity="0.12"/>
+
+  <text font-family="Outfit, sans-serif" font-size="24" letter-spacing="-1.0">
+    <tspan x="57" y="43" font-weight="700" fill="#ffffff">team</tspan><tspan dy="0" font-weight="400" fill="#F06A28">pura</tspan>
+  </text>
+  <text x="58" y="53" font-family="Outfit, sans-serif" font-weight="400" font-size="6" letter-spacing="2.4" fill="#2A6660">PEOPLE PLATFORM</text>
+</svg>

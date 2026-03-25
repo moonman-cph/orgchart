@@ -1,0 +1,50 @@
+<svg width="48" height="56" viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dki1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1A5C57"/>
+      <stop offset="100%" stop-color="#0A2E2C"/>
+    </linearGradient>
+    <linearGradient id="dki2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1F9082"/>
+      <stop offset="100%" stop-color="#0F4A44"/>
+    </linearGradient>
+    <linearGradient id="dki3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3AC4B2"/>
+      <stop offset="100%" stop-color="#1A8C7E"/>
+    </linearGradient>
+    <linearGradient id="dki4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F88A4E"/>
+      <stop offset="100%" stop-color="#E05A14"/>
+    </linearGradient>
+    <filter id="dkish" x="-40%" y="-20%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="dkiglow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="4.5" result="blur"/>
+      <feFlood flood-color="#F06A28" flood-opacity="0.32" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Stone 1: base -->
+  <ellipse cx="24" cy="50" rx="22" ry="6" fill="url(#dki1)" filter="url(#dkish)"/>
+  <ellipse cx="19" cy="47.5" rx="7.5" ry="1.8" fill="white" opacity="0.05"/>
+  <!-- Stone 2 -->
+  <ellipse cx="24" cy="38" rx="16" ry="5" fill="url(#dki2)" transform="rotate(-2 24 38)" filter="url(#dkish)"/>
+  <ellipse cx="20" cy="36" rx="5.5" ry="1.5" fill="white" opacity="0.06" transform="rotate(-2 20 36)"/>
+  <!-- Stone 3 -->
+  <ellipse cx="24.5" cy="27.5" rx="11" ry="4" fill="url(#dki3)" transform="rotate(1.5 24.5 27.5)" filter="url(#dkish)"/>
+  <ellipse cx="21.5" cy="26" rx="4" ry="1.1" fill="white" opacity="0.08" transform="rotate(1.5 21.5 26)"/>
+  <!-- Stone 4: top salmon — glowing -->
+  <ellipse cx="24" cy="18.5" rx="7" ry="3.5" fill="url(#dki4)" transform="rotate(-1 24 18.5)" filter="url(#dkiglow)"/>
+  <ellipse cx="21.5" cy="17" rx="2.5" ry="0.9" fill="white" opacity="0.24" transform="rotate(-1 21.5 17)"/>
+
+  <!-- Gaps -->
+  <line x1="3"  y1="44.2" x2="45" y2="44.2" stroke="rgba(0,0,0,0.35)" stroke-width="1.0" opacity="0.95"/>
+  <line x1="9"  y1="33.2" x2="39" y2="33.2" stroke="rgba(0,0,0,0.35)" stroke-width="0.9" opacity="0.90"/>
+  <line x1="14" y1="23.8" x2="35" y2="23.8" stroke="rgba(0,0,0,0.35)" stroke-width="0.8" opacity="0.85"/>
+
+  <!-- Ground glow -->
+  <ellipse cx="24" cy="56" rx="18" ry="2.5" fill="#1A8C7E" opacity="0.15"/>
+</svg>

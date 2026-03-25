@@ -22,51 +22,157 @@ function getPool() {
   return pool;
 }
 
-// ── Schema bootstrap (runs once on first DB call) ─────────────────────────────
+// ── Schema bootstrap + auto-migration (runs once on first DB call) ───────────
 
-const SCHEMA_SQL = `
-  CREATE TABLE IF NOT EXISTS org_state (
-    org_id     TEXT PRIMARY KEY DEFAULT 'default',
-    data       JSONB NOT NULL DEFAULT '{}',
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-  );
-
-  CREATE TABLE IF NOT EXISTS audit_log (
-    id               UUID        NOT NULL DEFAULT gen_random_uuid(),
-    org_id           TEXT        NOT NULL DEFAULT 'default',
-    correlation_id   UUID,
-    timestamp        TIMESTAMPTZ NOT NULL DEFAULT now(),
-    actor_id         TEXT,
-    actor_email      TEXT,
-    actor_role       TEXT,
-    actor_ip         TEXT,
-    actor_user_agent TEXT,
-    operation        TEXT        NOT NULL,
-    entity_type      TEXT,
-    entity_id        TEXT,
-    entity_label     TEXT,
-    field            TEXT,
-    old_value        JSONB,
-    new_value        JSONB,
-    change_reason    TEXT,
-    source           TEXT,
-    bulk_id          TEXT,
-    is_sensitive     BOOLEAN     NOT NULL DEFAULT false,
-    PRIMARY KEY (id)
-  );
-
-  CREATE INDEX IF NOT EXISTS audit_log_org_ts ON audit_log (org_id, timestamp DESC);
-  CREATE INDEX IF NOT EXISTS audit_log_corr   ON audit_log (correlation_id);
-  CREATE INDEX IF NOT EXISTS audit_log_entity ON audit_log (org_id, entity_type, entity_id);
-`;
+const SCHEMA_SQL = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 
 let _schemaReady = null;
 function ensureSchema() {
-  if (!_schemaReady) _schemaReady = getPool().query(SCHEMA_SQL);
+  if (!_schemaReady) _schemaReady = _initSchema();
   return _schemaReady;
 }
 
-// ── Row → camelCase entry (DB → API format) ───────────────────────────────────
+async function _initSchema() {
+  const pg = getPool();
+
+  // 1. Create all normalized tables (idempotent)
+  await pg.query(SCHEMA_SQL);
+
+  // 2. If departments table is empty, check if org_state has data to migrate
+  const countRes = await pg.query(`SELECT COUNT(*) FROM departments WHERE org_id = 'default'`);
+  if (Number(countRes.rows[0].count) > 0) return; // already populated
+
+  const tableCheck = await pg.query(`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'org_state'
+    )
+  `);
+  if (!tableCheck.rows[0].exists) return;
+
+  const blobRes = await pg.query(`SELECT data FROM org_state WHERE org_id = 'default'`);
+  const data = blobRes.rows[0]?.data;
+  if (!data || Object.keys(data).length === 0) return;
+
+  console.log('[db] Migrating data from org_state blob to normalized tables...');
+  await _migrateFromBlob(pg, data);
+  console.log('[db] Migration complete.');
+}
+
+async function _migrateFromBlob(pg, data) {
+  const orgId = 'default';
+  const toStr = v => v != null ? String(v) : null;
+  const client = await pg.connect();
+  try {
+    await client.query('BEGIN');
+
+    for (const d of data.departments ?? []) {
+      await client.query(`
+        INSERT INTO departments (id, org_id, name, color, description, head_role_id, company_wide)
+        VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id, org_id) DO UPDATE SET
+          name=EXCLUDED.name, color=EXCLUDED.color, description=EXCLUDED.description,
+          head_role_id=EXCLUDED.head_role_id, company_wide=EXCLUDED.company_wide
+      `, [toStr(d.id), orgId, d.name, d.color??null, d.description??null, toStr(d.headRoleId)??null, d.companyWide??false]);
+    }
+    for (const t of data.teams ?? []) {
+      await client.query(`
+        INSERT INTO teams (id, org_id, name, department_id) VALUES ($1,$2,$3,$4)
+        ON CONFLICT (id, org_id) DO UPDATE SET name=EXCLUDED.name, department_id=EXCLUDED.department_id
+      `, [toStr(t.id), orgId, t.name, toStr(t.departmentId)??null]);
+    }
+    for (const r of data.roles ?? []) {
+      await client.query(`
+        INSERT INTO roles (id, org_id, title, level, department_id, manager_role_id, team_id, secondary_manager_role_ids)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id, org_id) DO UPDATE SET
+          title=EXCLUDED.title, level=EXCLUDED.level, department_id=EXCLUDED.department_id,
+          manager_role_id=EXCLUDED.manager_role_id, team_id=EXCLUDED.team_id,
+          secondary_manager_role_ids=EXCLUDED.secondary_manager_role_ids
+      `, [toStr(r.id), orgId, r.title, r.level??null, toStr(r.departmentId)??null,
+          toStr(r.managerRoleId)??null, toStr(r.teamId)??null,
+          JSON.stringify((r.secondaryManagerRoleIds??[]).map(String))]);
+    }
+    for (const p of data.persons ?? []) {
+      await client.query(`
+        INSERT INTO persons (id, org_id, name, gender, salary, employee_id, email,
+          date_of_birth, nationality, address, hire_date, contract_type, pay_frequency,
+          salary_review_needed, performance_review_needed)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+        ON CONFLICT (id, org_id) DO UPDATE SET
+          name=EXCLUDED.name, gender=EXCLUDED.gender, salary=EXCLUDED.salary,
+          employee_id=EXCLUDED.employee_id, email=EXCLUDED.email,
+          date_of_birth=EXCLUDED.date_of_birth, nationality=EXCLUDED.nationality,
+          address=EXCLUDED.address, hire_date=EXCLUDED.hire_date,
+          contract_type=EXCLUDED.contract_type, pay_frequency=EXCLUDED.pay_frequency,
+          salary_review_needed=EXCLUDED.salary_review_needed,
+          performance_review_needed=EXCLUDED.performance_review_needed
+      `, [toStr(p.id), orgId, p.name, p.gender??null, p.salary??null, p.employeeId??null,
+          p.email??null, p.dateOfBirth??null, p.nationality??null, p.address??null,
+          p.hireDate??null, p.contractType??null, p.payFrequency??null,
+          p.salaryReviewNeeded??false, p.performanceReviewNeeded??false]);
+    }
+    for (const a of data.roleAssignments ?? []) {
+      const id = a.id != null ? toStr(a.id) : `${toStr(a.roleId)}_${toStr(a.personId)}`;
+      await client.query(`
+        INSERT INTO role_assignments (id, org_id, role_id, person_id, percentage)
+        VALUES ($1,$2,$3,$4,$5) ON CONFLICT (id, org_id) DO UPDATE SET
+          role_id=EXCLUDED.role_id, person_id=EXCLUDED.person_id, percentage=EXCLUDED.percentage
+      `, [id, orgId, toStr(a.roleId), toStr(a.personId), a.percentage??null]);
+    }
+    for (const [level, band] of Object.entries(data.salaryBands ?? {})) {
+      await client.query(`
+        INSERT INTO salary_bands (level, org_id, label, min, max, midpoint, currency)
+        VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (level, org_id) DO UPDATE SET
+          label=EXCLUDED.label, min=EXCLUDED.min, max=EXCLUDED.max,
+          midpoint=EXCLUDED.midpoint, currency=EXCLUDED.currency
+      `, [level, orgId, band.label??null, band.min??null, band.max??null, band.midpoint??null, band.currency??null]);
+    }
+    for (const [code, loc] of Object.entries(data.locationMultipliers ?? {})) {
+      await client.query(`
+        INSERT INTO location_multipliers (code, org_id, name, multiplier) VALUES ($1,$2,$3,$4)
+        ON CONFLICT (code, org_id) DO UPDATE SET name=EXCLUDED.name, multiplier=EXCLUDED.multiplier
+      `, [code, orgId, loc.name??null, loc.multiplier??null]);
+    }
+    const s = data.settings ?? {};
+    await client.query(`
+      INSERT INTO settings (org_id, currency, hide_salaries, view_only, hide_levels,
+        drag_drop_enabled, matrix_mode, use_location_multipliers)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (org_id) DO UPDATE SET
+        currency=EXCLUDED.currency, hide_salaries=EXCLUDED.hide_salaries,
+        view_only=EXCLUDED.view_only, hide_levels=EXCLUDED.hide_levels,
+        drag_drop_enabled=EXCLUDED.drag_drop_enabled, matrix_mode=EXCLUDED.matrix_mode,
+        use_location_multipliers=EXCLUDED.use_location_multipliers
+    `, [orgId, s.currency??'DKK', !!s.hideSalaries, !!s.viewOnly, !!s.hideLevels,
+        s.dragDropEnabled!=null ? !!s.dragDropEnabled : true, !!s.matrixMode, !!s.useLocationMultipliers]);
+    for (const key of ['titles','levelOrder','permissionGroups','assignmentPolicies','personPermissionOverrides']) {
+      if (data[key] != null) {
+        await client.query(`
+          INSERT INTO org_config (org_id, key, value) VALUES ($1,$2,$3)
+          ON CONFLICT (org_id, key) DO UPDATE SET value=EXCLUDED.value
+        `, [orgId, key, JSON.stringify(data[key])]);
+      }
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// Coerce string IDs back to numbers where the original data used numeric IDs.
+// Leaves UUID-style strings untouched.
+function coerceId(v) {
+  if (typeof v === 'string' && /^\d+$/.test(v)) return Number(v);
+  return v;
+}
+
+function toNum(v) { return v != null ? Number(v) : null; }
+function toBool(v, def = false) { return v != null ? Boolean(v) : def; }
+
+// ── Row → camelCase entry (audit_log DB → API) ────────────────────────────────
 
 function rowToEntry(row) {
   return {
@@ -110,24 +216,316 @@ function _fileAppend(entries) {
   fs.writeFileSync(CHANGELOG_FILE, JSON.stringify(log, null, 2), 'utf8');
 }
 
-// ── Public interface (always async) ───────────────────────────────────────────
+// ── getData: assemble full org state from normalized tables ───────────────────
 
-async function getData() {
+async function getData(orgId = 'default') {
   if (!process.env.DATABASE_URL) return _fileGetData();
   await ensureSchema();
-  const r = await getPool().query(`SELECT data FROM org_state WHERE org_id = 'default'`);
-  return r.rows[0]?.data ?? {};
+  const p = getPool();
+
+  const [
+    depts, teams, roles, persons, assigns,
+    bands, locs, settingsRes, configs,
+  ] = await Promise.all([
+    p.query('SELECT * FROM departments          WHERE org_id = $1', [orgId]),
+    p.query('SELECT * FROM teams                WHERE org_id = $1', [orgId]),
+    p.query('SELECT * FROM roles                WHERE org_id = $1', [orgId]),
+    p.query('SELECT * FROM persons              WHERE org_id = $1', [orgId]),
+    p.query('SELECT * FROM role_assignments     WHERE org_id = $1', [orgId]),
+    p.query('SELECT * FROM salary_bands         WHERE org_id = $1', [orgId]),
+    p.query('SELECT * FROM location_multipliers WHERE org_id = $1', [orgId]),
+    p.query('SELECT * FROM settings             WHERE org_id = $1', [orgId]),
+    p.query('SELECT key, value FROM org_config  WHERE org_id = $1', [orgId]),
+  ]);
+
+  // settings (single row or defaults)
+  const s = settingsRes.rows[0] ?? {};
+
+  // salary bands: rows → { L1: { label, min, max, midpoint, currency }, ... }
+  const salaryBands = {};
+  for (const r of bands.rows) {
+    salaryBands[r.level] = {
+      label:    r.label,
+      min:      toNum(r.min),
+      max:      toNum(r.max),
+      midpoint: toNum(r.midpoint),
+      currency: r.currency,
+    };
+  }
+
+  // location multipliers: rows → { US: { name, multiplier }, ... }
+  const locationMultipliers = {};
+  for (const r of locs.rows) {
+    locationMultipliers[r.code] = { name: r.name, multiplier: toNum(r.multiplier) };
+  }
+
+  // org_config key → value map
+  const cfg = {};
+  for (const r of configs.rows) cfg[r.key] = r.value;
+
+  // Return the same shape the frontend expects
+  const result = {
+    departments: depts.rows.map(r => ({
+      id:          coerceId(r.id),
+      orgId:       r.org_id,
+      name:        r.name,
+      color:       r.color,
+      description: r.description,
+      headRoleId:  coerceId(r.head_role_id),
+      companyWide: r.company_wide,
+    })),
+    teams: teams.rows.map(r => ({
+      id:           coerceId(r.id),
+      orgId:        r.org_id,
+      name:         r.name,
+      departmentId: coerceId(r.department_id),
+    })),
+    roles: roles.rows.map(r => ({
+      id:                      coerceId(r.id),
+      orgId:                   r.org_id,
+      title:                   r.title,
+      level:                   r.level,
+      departmentId:            coerceId(r.department_id),
+      managerRoleId:           coerceId(r.manager_role_id),
+      teamId:                  coerceId(r.team_id),
+      secondaryManagerRoleIds: (r.secondary_manager_role_ids ?? []).map(coerceId),
+    })),
+    persons: persons.rows.map(r => ({
+      id:                      coerceId(r.id),
+      orgId:                   r.org_id,
+      name:                    r.name,
+      gender:                  r.gender,
+      salary:                  toNum(r.salary),
+      employeeId:              r.employee_id,
+      email:                   r.email,
+      dateOfBirth:             r.date_of_birth,
+      nationality:             r.nationality,
+      address:                 r.address,
+      hireDate:                r.hire_date,
+      contractType:            r.contract_type,
+      payFrequency:            r.pay_frequency,
+      salaryReviewNeeded:      r.salary_review_needed,
+      performanceReviewNeeded: r.performance_review_needed,
+    })),
+    roleAssignments: assigns.rows.map(r => ({
+      id:         coerceId(r.id),
+      orgId:      r.org_id,
+      roleId:     coerceId(r.role_id),
+      personId:   coerceId(r.person_id),
+      percentage: toNum(r.percentage),
+    })),
+    settings: {
+      currency:               s.currency               ?? 'DKK',
+      hideSalaries:           toBool(s.hide_salaries),
+      viewOnly:               toBool(s.view_only),
+      hideLevels:             toBool(s.hide_levels),
+      dragDropEnabled:        s.drag_drop_enabled       != null ? toBool(s.drag_drop_enabled) : true,
+      matrixMode:             toBool(s.matrix_mode),
+      useLocationMultipliers: toBool(s.use_location_multipliers),
+    },
+    salaryBands,
+    locationMultipliers,
+    titles:                    cfg.titles                    ?? {},
+    levelOrder:                cfg.levelOrder                ?? [],
+    permissionGroups:          cfg.permissionGroups          ?? [],
+    assignmentPolicies:        cfg.assignmentPolicies        ?? [],
+    personPermissionOverrides: cfg.personPermissionOverrides ?? [],
+  };
+
+  // Return empty object (triggers client-side seed) if the DB has no data yet
+  if (result.departments.length === 0 && result.persons.length === 0) return {};
+
+  return result;
 }
 
-async function setData(data) {
+// ── setData: write full org state to normalized tables ────────────────────────
+
+async function setData(data, orgId = 'default') {
   if (!process.env.DATABASE_URL) return _fileSetData(data);
   await ensureSchema();
-  await getPool().query(
-    `INSERT INTO org_state (org_id, data, updated_at) VALUES ('default', $1, now())
-     ON CONFLICT (org_id) DO UPDATE SET data = $1, updated_at = now()`,
-    [JSON.stringify(data)]
-  );
+
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+
+    // ── departments ──────────────────────────────────────────────────────────
+    const depts = data.departments ?? [];
+    for (const d of depts) {
+      await client.query(`
+        INSERT INTO departments (id, org_id, name, color, description, head_role_id, company_wide)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        ON CONFLICT (id, org_id) DO UPDATE SET
+          name = EXCLUDED.name, color = EXCLUDED.color,
+          description = EXCLUDED.description, head_role_id = EXCLUDED.head_role_id,
+          company_wide = EXCLUDED.company_wide
+      `, [String(d.id), orgId, d.name, d.color ?? null, d.description ?? null,
+          d.headRoleId != null ? String(d.headRoleId) : null, d.companyWide ?? false]);
+    }
+    await client.query(
+      `DELETE FROM departments WHERE org_id = $1 AND id != ALL($2::text[])`,
+      [orgId, depts.map(d => String(d.id))]
+    );
+
+    // ── teams ────────────────────────────────────────────────────────────────
+    const teams = data.teams ?? [];
+    for (const t of teams) {
+      await client.query(`
+        INSERT INTO teams (id, org_id, name, department_id)
+        VALUES ($1,$2,$3,$4)
+        ON CONFLICT (id, org_id) DO UPDATE SET
+          name = EXCLUDED.name, department_id = EXCLUDED.department_id
+      `, [String(t.id), orgId, t.name,
+          t.departmentId != null ? String(t.departmentId) : null]);
+    }
+    await client.query(
+      `DELETE FROM teams WHERE org_id = $1 AND id != ALL($2::text[])`,
+      [orgId, teams.map(t => String(t.id))]
+    );
+
+    // ── roles ────────────────────────────────────────────────────────────────
+    const roles = data.roles ?? [];
+    for (const r of roles) {
+      await client.query(`
+        INSERT INTO roles (id, org_id, title, level, department_id, manager_role_id, team_id, secondary_manager_role_ids)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+        ON CONFLICT (id, org_id) DO UPDATE SET
+          title = EXCLUDED.title, level = EXCLUDED.level,
+          department_id = EXCLUDED.department_id, manager_role_id = EXCLUDED.manager_role_id,
+          team_id = EXCLUDED.team_id, secondary_manager_role_ids = EXCLUDED.secondary_manager_role_ids
+      `, [String(r.id), orgId, r.title, r.level ?? null,
+          r.departmentId    != null ? String(r.departmentId)    : null,
+          r.managerRoleId   != null ? String(r.managerRoleId)   : null,
+          r.teamId          != null ? String(r.teamId)          : null,
+          JSON.stringify((r.secondaryManagerRoleIds ?? []).map(String))]);
+    }
+    await client.query(
+      `DELETE FROM roles WHERE org_id = $1 AND id != ALL($2::text[])`,
+      [orgId, roles.map(r => String(r.id))]
+    );
+
+    // ── persons ──────────────────────────────────────────────────────────────
+    const persons = data.persons ?? [];
+    for (const p of persons) {
+      await client.query(`
+        INSERT INTO persons (
+          id, org_id, name, gender, salary, employee_id, email,
+          date_of_birth, nationality, address, hire_date,
+          contract_type, pay_frequency, salary_review_needed, performance_review_needed
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+        ON CONFLICT (id, org_id) DO UPDATE SET
+          name = EXCLUDED.name, gender = EXCLUDED.gender, salary = EXCLUDED.salary,
+          employee_id = EXCLUDED.employee_id, email = EXCLUDED.email,
+          date_of_birth = EXCLUDED.date_of_birth, nationality = EXCLUDED.nationality,
+          address = EXCLUDED.address, hire_date = EXCLUDED.hire_date,
+          contract_type = EXCLUDED.contract_type, pay_frequency = EXCLUDED.pay_frequency,
+          salary_review_needed = EXCLUDED.salary_review_needed,
+          performance_review_needed = EXCLUDED.performance_review_needed
+      `, [String(p.id), orgId, p.name, p.gender ?? null, p.salary ?? null,
+          p.employeeId  ?? null, p.email ?? null, p.dateOfBirth ?? null,
+          p.nationality ?? null, p.address ?? null, p.hireDate ?? null,
+          p.contractType ?? null, p.payFrequency ?? null,
+          p.salaryReviewNeeded ?? false, p.performanceReviewNeeded ?? false]);
+    }
+    await client.query(
+      `DELETE FROM persons WHERE org_id = $1 AND id != ALL($2::text[])`,
+      [orgId, persons.map(p => String(p.id))]
+    );
+
+    // ── role_assignments ─────────────────────────────────────────────────────
+    const assigns = data.roleAssignments ?? [];
+    for (const a of assigns) {
+      await client.query(`
+        INSERT INTO role_assignments (id, org_id, role_id, person_id, percentage)
+        VALUES ($1,$2,$3,$4,$5)
+        ON CONFLICT (id, org_id) DO UPDATE SET
+          role_id = EXCLUDED.role_id, person_id = EXCLUDED.person_id, percentage = EXCLUDED.percentage
+      `, [String(a.id), orgId, String(a.roleId), String(a.personId), a.percentage ?? null]);
+    }
+    await client.query(
+      `DELETE FROM role_assignments WHERE org_id = $1 AND id != ALL($2::text[])`,
+      [orgId, assigns.map(a => String(a.id))]
+    );
+
+    // ── salary_bands ─────────────────────────────────────────────────────────
+    const bandsObj = data.salaryBands ?? {};
+    const bandLevels = Object.keys(bandsObj);
+    for (const [level, band] of Object.entries(bandsObj)) {
+      await client.query(`
+        INSERT INTO salary_bands (level, org_id, label, min, max, midpoint, currency)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        ON CONFLICT (level, org_id) DO UPDATE SET
+          label = EXCLUDED.label, min = EXCLUDED.min, max = EXCLUDED.max,
+          midpoint = EXCLUDED.midpoint, currency = EXCLUDED.currency
+      `, [level, orgId, band.label ?? null, band.min ?? null,
+          band.max ?? null, band.midpoint ?? null, band.currency ?? null]);
+    }
+    if (bandLevels.length > 0) {
+      await client.query(
+        `DELETE FROM salary_bands WHERE org_id = $1 AND level != ALL($2::text[])`,
+        [orgId, bandLevels]
+      );
+    } else {
+      await client.query(`DELETE FROM salary_bands WHERE org_id = $1`, [orgId]);
+    }
+
+    // ── location_multipliers ─────────────────────────────────────────────────
+    const locsObj = data.locationMultipliers ?? {};
+    const locCodes = Object.keys(locsObj);
+    for (const [code, loc] of Object.entries(locsObj)) {
+      await client.query(`
+        INSERT INTO location_multipliers (code, org_id, name, multiplier)
+        VALUES ($1,$2,$3,$4)
+        ON CONFLICT (code, org_id) DO UPDATE SET
+          name = EXCLUDED.name, multiplier = EXCLUDED.multiplier
+      `, [code, orgId, loc.name ?? null, loc.multiplier ?? null]);
+    }
+    if (locCodes.length > 0) {
+      await client.query(
+        `DELETE FROM location_multipliers WHERE org_id = $1 AND code != ALL($2::text[])`,
+        [orgId, locCodes]
+      );
+    } else {
+      await client.query(`DELETE FROM location_multipliers WHERE org_id = $1`, [orgId]);
+    }
+
+    // ── settings ─────────────────────────────────────────────────────────────
+    const s = data.settings ?? {};
+    await client.query(`
+      INSERT INTO settings (
+        org_id, currency, hide_salaries, view_only, hide_levels,
+        drag_drop_enabled, matrix_mode, use_location_multipliers
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      ON CONFLICT (org_id) DO UPDATE SET
+        currency = EXCLUDED.currency, hide_salaries = EXCLUDED.hide_salaries,
+        view_only = EXCLUDED.view_only, hide_levels = EXCLUDED.hide_levels,
+        drag_drop_enabled = EXCLUDED.drag_drop_enabled, matrix_mode = EXCLUDED.matrix_mode,
+        use_location_multipliers = EXCLUDED.use_location_multipliers
+    `, [orgId, s.currency ?? 'DKK',
+        toBool(s.hideSalaries), toBool(s.viewOnly), toBool(s.hideLevels),
+        s.dragDropEnabled != null ? toBool(s.dragDropEnabled) : true,
+        toBool(s.matrixMode), toBool(s.useLocationMultipliers)]);
+
+    // ── org_config (titles, levelOrder, permissionGroups, etc.) ──────────────
+    const configKeys = ['titles', 'levelOrder', 'permissionGroups', 'assignmentPolicies', 'personPermissionOverrides'];
+    for (const key of configKeys) {
+      if (data[key] != null) {
+        await client.query(`
+          INSERT INTO org_config (org_id, key, value) VALUES ($1,$2,$3)
+          ON CONFLICT (org_id, key) DO UPDATE SET value = EXCLUDED.value
+        `, [orgId, key, JSON.stringify(data[key])]);
+      }
+    }
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
+
+// ── getChangelog ──────────────────────────────────────────────────────────────
 
 async function getChangelog() {
   if (!process.env.DATABASE_URL) return _fileGetChangelog();
@@ -137,6 +535,8 @@ async function getChangelog() {
   );
   return r.rows.map(rowToEntry);
 }
+
+// ── appendChangelogEntries ────────────────────────────────────────────────────
 
 async function appendChangelogEntries(entries) {
   if (!entries.length) return;
