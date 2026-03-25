@@ -1240,8 +1240,119 @@ const state = {
 let settings = { currency: 'DKK', hideSalaries: false, hideLevels: false, viewOnly: false, matrixMode: false, dragDropEnabled: true, dragMode: 'person', useLocationMultipliers: false };
 
 let snapshots = [];
-let permissionGroups = [];
-let assignmentPolicies = [];
+let permissionGroups = [
+  {
+    id: 'e1a2b3c4-d5e6-4f70-8192-a3b4c5d6e7f8',
+    orgId: 'default',
+    name: 'HR Admin',
+    description: 'Full access to all HR data, settings, and permissions.',
+    type: 'allow',
+    rights: ['view_org_chart','edit_org_chart','view_directory','edit_directory','view_salaries','edit_salaries','view_pay_bands','edit_pay_bands','view_changelog','manage_settings','manage_permissions'],
+    externalGroups: []
+  },
+  {
+    id: 'b4d5e6f7-0819-42a3-b435-d6e7f8c9a0b1',
+    orgId: 'default',
+    name: 'Finance Admin',
+    description: 'Access to salary and pay band data for Finance team members.',
+    type: 'allow',
+    rights: ['view_org_chart','view_directory','view_salaries','edit_salaries','view_pay_bands','edit_pay_bands','view_changelog'],
+    externalGroups: []
+  },
+  {
+    id: 'f2b3c4d5-e6f7-4081-9213-b4c5d6e7f8a9',
+    orgId: 'default',
+    name: 'Manager',
+    description: 'People managers — can edit org chart and directory, view salaries and pay bands.',
+    type: 'allow',
+    rights: ['view_org_chart','edit_org_chart','view_directory','edit_directory','view_salaries','view_pay_bands','view_changelog'],
+    externalGroups: []
+  },
+  {
+    id: 'a3c4d5e6-f708-4192-a324-c5d6e7f8b9a0',
+    orgId: 'default',
+    name: 'Employee (Standard)',
+    description: 'All employees — basic read access to the org chart and directory.',
+    type: 'allow',
+    rights: ['view_org_chart','view_directory'],
+    externalGroups: []
+  },
+  {
+    id: 'c5e6f708-192a-43b4-c546-e7f8d9a0b1c2',
+    orgId: 'default',
+    name: 'Offboarding',
+    description: 'Applied to employees during offboarding — removes all write access.',
+    type: 'deny',
+    rights: ['edit_org_chart','edit_directory','edit_salaries','edit_pay_bands','manage_settings','manage_permissions'],
+    externalGroups: []
+  }
+];
+let assignmentPolicies = [
+  {
+    id: 'd6f70819-2a3b-44c5-d657-f8e9a0b1c2d3',
+    orgId: 'default',
+    name: 'HR Senior Staff',
+    description: 'Senior HR staff (L5+) get full HR Admin access.',
+    rules: [
+      { field: 'departmentId', operator: 'in', value: [8] },
+      { field: 'level', operator: 'gte', value: 'L5' }
+    ],
+    groupIds: ['e1a2b3c4-d5e6-4f70-8192-a3b4c5d6e7f8']
+  },
+  {
+    id: 'e7081923-3b4c-45d6-e768-f9a0b1c2d3e4',
+    orgId: 'default',
+    name: 'HR All Staff',
+    description: 'All HR team members (L3+) get Manager-level access.',
+    rules: [
+      { field: 'departmentId', operator: 'in', value: [8] },
+      { field: 'level', operator: 'gte', value: 'L3' }
+    ],
+    groupIds: ['f2b3c4d5-e6f7-4081-9213-b4c5d6e7f8a9']
+  },
+  {
+    id: 'f8192a3b-4c5d-46e7-f879-0ab1c2d3e4f5',
+    orgId: 'default',
+    name: 'Finance Senior Staff',
+    description: 'Senior Finance staff (L5+) get Finance Admin access.',
+    rules: [
+      { field: 'departmentId', operator: 'in', value: [9] },
+      { field: 'level', operator: 'gte', value: 'L5' }
+    ],
+    groupIds: ['b4d5e6f7-0819-42a3-b435-d6e7f8c9a0b1']
+  },
+  {
+    id: '09293a4b-5d6e-47f8-09a0-1bc2d3e4f5a6',
+    orgId: 'default',
+    name: 'All Managers',
+    description: 'Senior ICs and managers (L5+) across all departments.',
+    rules: [
+      { field: 'level', operator: 'gte', value: 'L5' }
+    ],
+    groupIds: ['f2b3c4d5-e6f7-4081-9213-b4c5d6e7f8a9']
+  },
+  {
+    id: '1a3a4b5c-6e7f-4809-1ab1-2cd3e4f5a6b7',
+    orgId: 'default',
+    name: 'All Employees',
+    description: 'Everyone (L2+) gets standard employee read access.',
+    rules: [
+      { field: 'level', operator: 'gte', value: 'L2' }
+    ],
+    groupIds: ['a3c4d5e6-f708-4192-a324-c5d6e7f8b9a0']
+  },
+  {
+    id: '2b4b5c6d-7f80-4901-2bc2-3de4f5a6b7c8',
+    orgId: 'default',
+    name: 'C-Suite',
+    description: 'Executive leadership (dept 1, L8+) get full HR Admin access.',
+    rules: [
+      { field: 'departmentId', operator: 'eq', value: 1 },
+      { field: 'level', operator: 'gte', value: 'L8' }
+    ],
+    groupIds: ['e1a2b3c4-d5e6-4f70-8192-a3b4c5d6e7f8']
+  }
+];
 let personPermissionOverrides = [];
 let simMode   = false;
 let simBackup = null;
