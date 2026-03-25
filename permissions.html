@@ -512,10 +512,9 @@ const RULE_FIELDS = [
 
 // ── Level comparison ──────────────────────────────────────────────────────────
 
-const LEVEL_ORDER = ['L1','L2','L3','L4','L5','L6','L7','L8'];
-
 function levelIndex(l) {
-  const i = LEVEL_ORDER.indexOf(l);
+  const order = (data.levelOrder && data.levelOrder.length) ? data.levelOrder : ['L1','L2','L3','L4','L5','L6','L7','L8'];
+  const i = order.indexOf(l);
   return i >= 0 ? i : -1;
 }
 
@@ -789,7 +788,7 @@ function addRuleRow(existing) {
     if (field === 'level') {
       const sel = document.createElement('select');
       sel.style.width = '100%';
-      const levels = (data.settings && data.settings.levelOrder) || ['L1','L2','L3','L4','L5','L6','L7','L8'];
+      const levels = (data.levelOrder && data.levelOrder.length) ? data.levelOrder : ['L1','L2','L3','L4','L5','L6','L7','L8'];
       sel.innerHTML = levels.map(l => `<option value="${l}" ${existing && existing.value === l ? 'selected' : ''}>${l}</option>`).join('');
       valContainer.appendChild(sel);
     } else if (field === 'departmentId') {
@@ -1083,7 +1082,9 @@ function renderPreviewFilters() {
   deptSel.innerHTML = `<option value="">All departments</option>` +
     (data.departments || []).map(d => `<option value="${d.id}" ${prevDept === String(d.id) ? 'selected' : ''}>${escHtml(d.name)}</option>`).join('');
 
-  const levels = [...new Set((data.roles || []).map(r => r.level).filter(Boolean))].sort((a,b) => levelIndex(a) - levelIndex(b));
+  const levels = (data.levelOrder && data.levelOrder.length)
+    ? data.levelOrder
+    : [...new Set((data.roles || []).map(r => r.level).filter(Boolean))].sort((a,b) => levelIndex(a) - levelIndex(b));
   levelSel.innerHTML = `<option value="">All levels</option>` +
     levels.map(l => `<option value="${l}" ${prevLevel === l ? 'selected' : ''}>${l}</option>`).join('');
 }
