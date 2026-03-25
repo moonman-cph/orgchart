@@ -6,22 +6,22 @@ const { generateUUID, diffState } = require('../../lib/changelog-diff');
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    res.json(db.getData());
+    res.json(await db.getData());
   } catch (e) {
     res.json({});
   }
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     // 1. Read current state for diffing
-    const prev = db.getData();
+    const prev = await db.getData();
 
     // 2. Write new state
     const next = req.body;
-    db.setData(next);
+    await db.setData(next);
 
     // 3. Extract metadata from headers
     const correlationId  = generateUUID();
@@ -38,7 +38,7 @@ router.post('/', (req, res) => {
     // 4. Diff and append changelog (non-fatal — a changelog error must never block a save)
     try {
       const entries = diffState(prev, next, correlationId, meta);
-      db.appendChangelogEntries(entries);
+      await db.appendChangelogEntries(entries);
     } catch (clErr) {
       console.error('[changelog] diff/append failed:', clErr);
     }

@@ -44,7 +44,7 @@ app.use('/api/changelog', v1Changelog);
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
+  const storage = process.env.DATABASE_URL ? 'PostgreSQL' : `file (${db.DATA_FILE})`;
   console.log(`Org chart running at http://localhost:${PORT}`);
-  console.log(`Data file: ${db.DATA_FILE}`);
-  console.log(`Changelog: ${db.CHANGELOG_FILE}`);
+  console.log(`Storage: ${storage}`);
 });
