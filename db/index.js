@@ -50,7 +50,7 @@ const SCHEMA_SQL = `
     new_value        JSONB,
     change_reason    TEXT,
     source           TEXT,
-    bulk_id          UUID,
+    bulk_id          TEXT,
     is_sensitive     BOOLEAN     NOT NULL DEFAULT false,
     PRIMARY KEY (id)
   );
