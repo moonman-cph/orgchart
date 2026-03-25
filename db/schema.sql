@@ -60,8 +60,12 @@ CREATE TABLE IF NOT EXISTS persons (
   pay_frequency              TEXT,
   salary_review_needed       BOOLEAN NOT NULL DEFAULT false,
   performance_review_needed  BOOLEAN NOT NULL DEFAULT false,
+  extra                      JSONB   NOT NULL DEFAULT '{}', -- all other person fields
   PRIMARY KEY (id, org_id)
 );
+
+-- Add extra column if table was created before this column was introduced
+ALTER TABLE persons ADD COLUMN IF NOT EXISTS extra JSONB NOT NULL DEFAULT '{}';
 
 -- ── Role Assignments ──────────────────────────────────────────────────────────
 

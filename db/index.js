@@ -38,9 +38,14 @@ async function _initSchema() {
   // 1. Create all normalized tables (idempotent)
   await pg.query(SCHEMA_SQL);
 
-  // 2. If departments table is empty, check if org_state has data to migrate
-  const countRes = await pg.query(`SELECT COUNT(*) FROM departments WHERE org_id = 'default'`);
-  if (Number(countRes.rows[0].count) > 0) return; // already populated
+  // 2. Check migration version — re-run migration if needed
+  let migrationVersion = 0;
+  try {
+    const vr = await pg.query(`SELECT value FROM org_config WHERE org_id = 'default' AND key = '_migration_version'`);
+    migrationVersion = vr.rows[0] ? Number(vr.rows[0].value) : 0;
+  } catch { migrationVersion = 0; }
+
+  if (migrationVersion >= 2) return; // already up to date
 
   const tableCheck = await pg.query(`
     SELECT EXISTS (
@@ -48,15 +53,21 @@ async function _initSchema() {
       WHERE table_schema = 'public' AND table_name = 'org_state'
     )
   `);
-  if (!tableCheck.rows[0].exists) return;
 
-  const blobRes = await pg.query(`SELECT data FROM org_state WHERE org_id = 'default'`);
-  const data = blobRes.rows[0]?.data;
-  if (!data || Object.keys(data).length === 0) return;
+  if (tableCheck.rows[0].exists) {
+    const blobRes = await pg.query(`SELECT data FROM org_state WHERE org_id = 'default'`);
+    const data = blobRes.rows[0]?.data;
+    if (data && Object.keys(data).length > 0) {
+      console.log('[db] Running migration v2 (adds extra fields to persons)...');
+      await _migrateFromBlob(pg, data);
+      console.log('[db] Migration v2 complete.');
+    }
+  }
 
-  console.log('[db] Migrating data from org_state blob to normalized tables...');
-  await _migrateFromBlob(pg, data);
-  console.log('[db] Migration complete.');
+  await pg.query(`
+    INSERT INTO org_config (org_id, key, value) VALUES ('default', '_migration_version', '2')
+    ON CONFLICT (org_id, key) DO UPDATE SET value = '2'
+  `);
 }
 
 async function _migrateFromBlob(pg, data) {
@@ -92,11 +103,12 @@ async function _migrateFromBlob(pg, data) {
           JSON.stringify((r.secondaryManagerRoleIds??[]).map(String))]);
     }
     for (const p of data.persons ?? []) {
+      const extra = _personExtra(p);
       await client.query(`
         INSERT INTO persons (id, org_id, name, gender, salary, employee_id, email,
           date_of_birth, nationality, address, hire_date, contract_type, pay_frequency,
-          salary_review_needed, performance_review_needed)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+          salary_review_needed, performance_review_needed, extra)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
         ON CONFLICT (id, org_id) DO UPDATE SET
           name=EXCLUDED.name, gender=EXCLUDED.gender, salary=EXCLUDED.salary,
           employee_id=EXCLUDED.employee_id, email=EXCLUDED.email,
@@ -104,11 +116,13 @@ async function _migrateFromBlob(pg, data) {
           address=EXCLUDED.address, hire_date=EXCLUDED.hire_date,
           contract_type=EXCLUDED.contract_type, pay_frequency=EXCLUDED.pay_frequency,
           salary_review_needed=EXCLUDED.salary_review_needed,
-          performance_review_needed=EXCLUDED.performance_review_needed
+          performance_review_needed=EXCLUDED.performance_review_needed,
+          extra=EXCLUDED.extra
       `, [toStr(p.id), orgId, p.name, p.gender??null, p.salary??null, p.employeeId??null,
           p.email??null, p.dateOfBirth??null, p.nationality??null, p.address??null,
           p.hireDate??null, p.contractType??null, p.payFrequency??null,
-          p.salaryReviewNeeded??false, p.performanceReviewNeeded??false]);
+          p.salaryReviewNeeded??false, p.performanceReviewNeeded??false,
+          JSON.stringify(extra)]);
     }
     for (const a of data.roleAssignments ?? []) {
       const id = a.id != null ? toStr(a.id) : `${toStr(a.roleId)}_${toStr(a.personId)}`;
@@ -167,6 +181,22 @@ async function _migrateFromBlob(pg, data) {
 function coerceId(v) {
   if (typeof v === 'string' && /^\d+$/.test(v)) return Number(v);
   return v;
+}
+
+// Named person columns — everything else goes in the `extra` JSONB column.
+const NAMED_PERSON_FIELDS = new Set([
+  'id', 'orgId', 'name', 'gender', 'salary', 'employeeId', 'email',
+  'dateOfBirth', 'nationality', 'address', 'hireDate', 'contractType',
+  'payFrequency', 'salaryReviewNeeded', 'performanceReviewNeeded',
+]);
+
+// Returns the non-named fields of a person object for storage in `extra`.
+function _personExtra(p) {
+  const extra = {};
+  for (const [k, v] of Object.entries(p)) {
+    if (!NAMED_PERSON_FIELDS.has(k)) extra[k] = v;
+  }
+  return extra;
 }
 
 function toNum(v) { return v != null ? Number(v) : null; }
@@ -291,6 +321,8 @@ async function getData(orgId = 'default') {
       secondaryManagerRoleIds: (r.secondary_manager_role_ids ?? []).map(coerceId),
     })),
     persons: persons.rows.map(r => ({
+      // Spread extra fields first so named columns always take precedence
+      ...(r.extra ?? {}),
       id:                      coerceId(r.id),
       orgId:                   r.org_id,
       name:                    r.name,
@@ -410,8 +442,8 @@ async function setData(data, orgId = 'default') {
         INSERT INTO persons (
           id, org_id, name, gender, salary, employee_id, email,
           date_of_birth, nationality, address, hire_date,
-          contract_type, pay_frequency, salary_review_needed, performance_review_needed
-        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+          contract_type, pay_frequency, salary_review_needed, performance_review_needed, extra
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
         ON CONFLICT (id, org_id) DO UPDATE SET
           name = EXCLUDED.name, gender = EXCLUDED.gender, salary = EXCLUDED.salary,
           employee_id = EXCLUDED.employee_id, email = EXCLUDED.email,
@@ -419,12 +451,14 @@ async function setData(data, orgId = 'default') {
           address = EXCLUDED.address, hire_date = EXCLUDED.hire_date,
           contract_type = EXCLUDED.contract_type, pay_frequency = EXCLUDED.pay_frequency,
           salary_review_needed = EXCLUDED.salary_review_needed,
-          performance_review_needed = EXCLUDED.performance_review_needed
+          performance_review_needed = EXCLUDED.performance_review_needed,
+          extra = EXCLUDED.extra
       `, [String(p.id), orgId, p.name, p.gender ?? null, p.salary ?? null,
           p.employeeId  ?? null, p.email ?? null, p.dateOfBirth ?? null,
           p.nationality ?? null, p.address ?? null, p.hireDate ?? null,
           p.contractType ?? null, p.payFrequency ?? null,
-          p.salaryReviewNeeded ?? false, p.performanceReviewNeeded ?? false]);
+          p.salaryReviewNeeded ?? false, p.performanceReviewNeeded ?? false,
+          JSON.stringify(_personExtra(p))]);
     }
     await client.query(
       `DELETE FROM persons WHERE org_id = $1 AND id != ALL($2::text[])`,
