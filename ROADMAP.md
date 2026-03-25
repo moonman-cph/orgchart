@@ -20,10 +20,26 @@ Single user, single dummy organisation, flat JSON file persistence, single-file 
 
 ---
 
-## M2 — Database, API Layer & Multi-Tenancy Foundations (current)
-Replace the JSON file with **PostgreSQL on Azure**. The app is deployed on **Azure** with a managed **Azure Database for PostgreSQL** instance. PostgreSQL is chosen because it natively supports schema-per-tenant isolation, row-level security (RLS), field-level encryption via extensions (`pgcrypto`), JSON columns for flexible config, and scales from single-server to fully managed cloud deployments.
+## M2 — Database, API Layer & Multi-Tenancy Foundations (current — ~60% complete)
+Replace the JSON file with **PostgreSQL on Azure**. The app is deployed on **Azure App Service** with a managed **Azure Database for PostgreSQL** instance (`teampura-demo.postgres.database.azure.com`). PostgreSQL is chosen because it natively supports schema-per-tenant isolation, row-level security (RLS), field-level encryption via extensions (`pgcrypto`), JSON columns for flexible config, and scales from single-server to fully managed cloud deployments.
 
 Introduce a versioned REST API: all routes move to `/api/v1/`. No route may be removed or changed in a breaking way once published — add new versions instead.
+
+**M2 Progress:**
+| Component | Status | Notes |
+|-----------|--------|-------|
+| PostgreSQL connectivity | ✓ Done | Live on Azure (`db/index.js`) |
+| `/api/v1/` versioned routes | ✓ Done | M1 aliases still work for backward compat |
+| Async database layer | ✓ Done | File fallback for local dev |
+| Migration script | ✓ Done | `db/migrate.js` — idempotent JSON → DB import |
+| `audit_log` table | ✓ Done | Append-only, application-driven |
+| Changelog filtering API | ✓ Done | Full query/filter support |
+| Sensitive field detection | ✓ Done | `isSensitive` flag set in audit entries |
+| CDC triggers | ✗ Pending | Design in `db/schema.sql`, not yet deployed |
+| Normalized schema | ✗ Pending | 9-table design in `db/schema.sql`, not deployed — currently single JSONB blob in `org_state` |
+| Column-level encryption | ✗ Pending | `pgcrypto` placeholder in `.env.example` only |
+| Multi-tenancy isolation | ✗ Pending | No RLS or schema-per-tenant yet |
+| Input validation | ✗ Pending | API routes accept raw JSON without validation |
 
 Multi-tenancy is built into the data model from day one. Three deployment tiers will be supported by the same codebase, differing only in connection configuration:
 - **Shared** — schema-per-tenant in a shared PostgreSQL instance, row-level security enforced at DB level. For SME customers.
