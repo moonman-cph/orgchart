@@ -16,6 +16,13 @@
   //   detail — full description shown in the modal (plain text or simple HTML)
   const RELEASE_NOTES = [
     {
+      id:     'release-0.8.1-permissions-toggles',
+      date:   '26 Mar 2026',
+      title:  'Permission group editor — toggle UI (0.8.1)',
+      body:   'Rights in the permission group editor are now clear toggle switches with descriptions, all off by default.',
+      detail: 'When creating or editing a permission group in the Permissions page, each right is now shown as a labelled toggle switch with a one-line description of what it controls (e.g. "Drag, drop, and reorganise roles in the hierarchy"). Toggles are grouped by category (Org Chart, People, Compensation, Admin) and all start off when creating a new group. This makes the permissions setup the clear, authoritative place to configure what each group can and cannot do.',
+    },
+    {
       id:     'release-0.8.0-role-nav',
       date:   '26 Mar 2026',
       title:  'Role-based navigation & org chart permissions (0.8.0)',

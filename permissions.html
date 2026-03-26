@@ -169,17 +169,30 @@
 .type-toggle-opt.active-allow { background: #f0fdf4; color: #15803d; }
 .type-toggle-opt.active-deny  { background: #fff0f0; color: #b91c1c; }
 
-/* ── Rights grid ─────────────────────────────────────────── */
-.rights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
+/* ── Rights toggles ──────────────────────────────────────── */
+.rights-list { display: flex; flex-direction: column; gap: 2px; }
 .rights-group-label {
-  grid-column: 1 / -1;
   font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.07em; color: var(--text-muted); margin-top: 6px;
+  letter-spacing: 0.07em; color: var(--text-muted);
+  margin-top: 12px; margin-bottom: 4px;
 }
 .rights-group-label:first-child { margin-top: 0; }
-.right-check { display: flex; align-items: center; gap: 7px; cursor: pointer; }
-.right-check input { width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent); }
-.right-check-label { font-size: 12px; color: var(--text-primary); }
+.right-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  transition: background 0.12s; user-select: none;
+}
+.right-toggle-row:hover { background: var(--bg-hover, rgba(0,0,0,0.04)); }
+.right-toggle-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.right-toggle-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.right-toggle-desc  { font-size: 11px; color: var(--text-muted); }
+.right-toggle-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; pointer-events: none; }
+.right-toggle-track  { position: absolute; inset: 0; border-radius: 20px; transition: background 0.15s; }
+.right-toggle-thumb  {
+  position: absolute; top: 3px; left: 3px; width: 14px; height: 14px;
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.15s;
+}
 
 /* ── Rules builder ───────────────────────────────────────── */
 .rules-builder { display: flex; flex-direction: column; gap: 6px; }
@@ -347,8 +360,8 @@
               <textarea class="editor-input editor-textarea" id="ed-g-desc" placeholder="What does this group allow or restrict?"></textarea>
             </div>
             <div class="editor-field full">
-              <div class="editor-label">Rights <span class="sub">(what this group grants if Allow, or blocks if Deny)</span></div>
-              <div class="rights-grid" id="group-rights-grid"></div>
+              <div class="editor-label">Rights <span class="sub">(what this group grants if Allow, or blocks if Deny — new groups start with all off)</span></div>
+              <div class="rights-list" id="group-rights-grid"></div>
             </div>
             <div class="editor-field full">
               <div class="editor-label">Entra ID / Azure AD Group Names <span class="sub">(comma-separated — informational in M1, provisioned in M3)</span></div>
@@ -511,17 +524,17 @@ let data = {
 // ── Right definitions ─────────────────────────────────────────────────────────
 
 const RIGHTS = [
-  { group: 'Org Chart',    key: 'view_org_chart',      label: 'View Org Chart' },
-  { group: 'Org Chart',    key: 'edit_org_chart',      label: 'Edit Org Chart',      write: true },
-  { group: 'People',       key: 'view_directory',      label: 'View Directory' },
-  { group: 'People',       key: 'edit_directory',      label: 'Edit Directory',      write: true },
-  { group: 'People',       key: 'view_salaries',       label: 'View Salaries' },
-  { group: 'People',       key: 'edit_salaries',       label: 'Edit Salaries',       write: true },
-  { group: 'Compensation', key: 'view_pay_bands',      label: 'View Pay Bands',      comp: true },
-  { group: 'Compensation', key: 'edit_pay_bands',      label: 'Edit Pay Bands',      comp: true, write: true },
-  { group: 'Admin',        key: 'view_changelog',      label: 'View Changelog',      admin: true },
-  { group: 'Admin',        key: 'manage_settings',     label: 'Manage Settings',     admin: true, write: true },
-  { group: 'Admin',        key: 'manage_permissions',  label: 'Manage Permissions',  admin: true, write: true },
+  { group: 'Org Chart',    key: 'view_org_chart',     label: 'View Org Chart',     desc: 'Browse the org hierarchy and employee cards' },
+  { group: 'Org Chart',    key: 'edit_org_chart',     label: 'Edit Org Chart',     desc: 'Drag, drop, and reorganise roles in the hierarchy',   write: true },
+  { group: 'People',       key: 'view_directory',     label: 'View Directory',     desc: 'Browse the employee directory' },
+  { group: 'People',       key: 'edit_directory',     label: 'Edit Directory',     desc: 'Add, edit, and remove employees',                     write: true },
+  { group: 'People',       key: 'view_salaries',      label: 'View Salaries',      desc: 'See salary figures on employee records' },
+  { group: 'People',       key: 'edit_salaries',      label: 'Edit Salaries',      desc: 'Change salary values',                                write: true },
+  { group: 'Compensation', key: 'view_pay_bands',     label: 'View Pay Bands',     desc: 'See salary band definitions and ranges',              comp: true },
+  { group: 'Compensation', key: 'edit_pay_bands',     label: 'Edit Pay Bands',     desc: 'Create and modify salary bands',                      comp: true, write: true },
+  { group: 'Admin',        key: 'view_changelog',     label: 'View Changelog',     desc: 'Access the audit log of all data changes',            admin: true },
+  { group: 'Admin',        key: 'manage_settings',    label: 'Manage Settings',    desc: 'Change org settings, simulate, snapshots, and import', admin: true, write: true },
+  { group: 'Admin',        key: 'manage_permissions', label: 'Manage Permissions', desc: 'Configure permission groups, policies, and overrides', admin: true, write: true },
 ];
 
 const RULE_FIELDS = [
@@ -786,11 +799,34 @@ function buildRightsGrid(containerId, selected) {
   container.innerHTML = groups.map(grp => {
     const items = RIGHTS.filter(r => r.group === grp);
     return `<div class="rights-group-label">${grp}</div>
-      ${items.map(r => `<label class="right-check">
-        <input type="checkbox" value="${r.key}" ${selected.includes(r.key) ? 'checked' : ''}>
-        <span class="right-check-label">${r.label}</span>
-      </label>`).join('')}`;
+      ${items.map(r => {
+        const on = selected.includes(r.key);
+        return `<label class="right-toggle-row">
+          <input type="checkbox" value="${r.key}" ${on ? 'checked' : ''} style="opacity:0;width:0;height:0;position:absolute;">
+          <div class="right-toggle-text">
+            <span class="right-toggle-label">${r.label}</span>
+            <span class="right-toggle-desc">${r.desc}</span>
+          </div>
+          <div class="right-toggle-switch">
+            <span class="right-toggle-track" style="background:${on ? 'var(--accent)' : 'var(--border)'};"></span>
+            <span class="right-toggle-thumb" style="transform:${on ? 'translateX(16px)' : 'translateX(0)'};"></span>
+          </div>
+        </label>`;
+      }).join('')}`;
   }).join('');
+
+  // Wire each row to flip its hidden checkbox and update the toggle visual
+  container.querySelectorAll('.right-toggle-row').forEach(row => {
+    row.addEventListener('click', function(e) {
+      e.preventDefault();
+      const cb    = row.querySelector('input[type=checkbox]');
+      const track = row.querySelector('.right-toggle-track');
+      const thumb = row.querySelector('.right-toggle-thumb');
+      cb.checked = !cb.checked;
+      track.style.background = cb.checked ? 'var(--accent)' : 'var(--border)';
+      thumb.style.transform  = cb.checked ? 'translateX(16px)' : 'translateX(0)';
+    });
+  });
 }
 
 function saveGroup() {
