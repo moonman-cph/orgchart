@@ -2458,8 +2458,10 @@ function switchModalTab(tab) {
   const editBtn = document.getElementById('modal-role-edit-btn');
   editBtn.style.display = (tab === 'role' && !settings.viewOnly) ? 'flex' : 'none';
   const isRoleEditing = document.getElementById('modal-panel').classList.contains('role-editing');
-  document.getElementById('modal-save-btn').style.display = (tab === 'role' && !isRoleEditing) ? 'none' : '';
-  document.getElementById('modal-cancel-btn').textContent = (tab === 'role' && !isRoleEditing) ? 'Close' : 'Cancel';
+  // Save is only shown when actively editing a role; person-tab flags auto-save on click
+  const showSave = tab === 'role' && isRoleEditing;
+  document.getElementById('modal-save-btn').style.display = showSave ? '' : 'none';
+  document.getElementById('modal-cancel-btn').textContent = showSave ? 'Cancel' : 'Close';
 }
 
 function getTitlesForDept(deptId) {
@@ -2778,8 +2780,8 @@ function openPersonModal(personId) {
     document.getElementById('modal-person-remove-btn').textContent = 'Dismiss ghost (free up position)';
     document.getElementById('modal-person-fire-btn').style.display = 'none';
     document.getElementById('modal-gender-display').style.display = 'none';
-    document.getElementById('modal-save-btn').style.display = settings.viewOnly ? 'none' : '';
-    document.getElementById('modal-cancel-btn').textContent = settings.viewOnly ? 'Close' : 'Cancel';
+    document.getElementById('modal-save-btn').style.display = 'none';
+    document.getElementById('modal-cancel-btn').textContent = 'Close';
     document.getElementById('modal-backdrop').classList.add('visible');
     return;
   }
@@ -2810,8 +2812,8 @@ function openPersonModal(personId) {
   document.getElementById('modal-person-fire-btn').style.display = '';
   updateSalaryBandDisplay(person, null);
   document.getElementById('modal-title-text').textContent = 'Employee';
-  document.getElementById('modal-save-btn').style.display = settings.viewOnly ? 'none' : '';
-  document.getElementById('modal-cancel-btn').textContent = settings.viewOnly ? 'Close' : 'Cancel';
+  document.getElementById('modal-save-btn').style.display = 'none';
+  document.getElementById('modal-cancel-btn').textContent = 'Close';
   document.getElementById('modal-backdrop').classList.add('visible');
 }
 
