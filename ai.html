@@ -186,7 +186,7 @@
       persons.forEach(p => {
         const opt = document.createElement('option');
         opt.value = String(p.id);
-        opt.textContent = p.name;
+        opt.textContent = p.employeeId ? `${p.name} (${p.employeeId})` : p.name;
         if (String(p.id) === currentPersonId) opt.selected = true;
         personSelect.appendChild(opt);
       });

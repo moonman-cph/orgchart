@@ -184,6 +184,7 @@ function buildSystemPrompt(tier, personId, data) {
     const role   = ra ? roles.find(r => String(r.id) === String(ra.roleId)) : null;
     if (person) {
       identityLine = `\n\nThe user you are speaking with is: ${person.name}`;
+      if (person.employeeId) identityLine += ` (${person.employeeId})`;
       if (role) identityLine += `, ${role.title} (${role.level || 'unknown level'})`;
       identityLine += '. When they say "I", "me", "my team", "my reports", or "my manager", they are referring to this person. Always answer questions from their perspective using the org data above.';
     }
