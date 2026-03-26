@@ -8,19 +8,6 @@ HR org chart app served by a minimal Node.js/Express server. All HTML files are 
 
 ## Startup
 
-```bash
-# First time only
-npm install
-
-# Start the server (keep terminal open)
-npm start
-
-# Open in browser
-http://localhost:3000/orgchart.html
-```
-
-Data is stored in `orgchart-data.json` — back it up by copying the file.
-
 ## Files
 
 - **`server.js`** — Express server on port 3000. Serves static files + `GET /api/data` / `POST /api/data` / `GET /api/changelog` / `GET /api/changelog/summary`.
