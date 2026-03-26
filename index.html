@@ -339,7 +339,7 @@
       </div>
       <div class="demo-credential">
         <span class="demo-cred-key">Password</span>
-        <span class="demo-cred-val">••••••••</span>
+        <span class="demo-cred-val" id="demo-pass-val"></span>
         <button class="demo-copy-btn" id="demo-pass-btn" title="Fill password">Fill</button>
       </div>
     </div>
@@ -367,6 +367,7 @@
         if (!d.enabled) return;
         var box = document.getElementById('demoBox');
         document.getElementById('demo-email-val').textContent = d.email;
+        document.getElementById('demo-pass-val').textContent  = d.password;
         document.getElementById('demo-email-btn').onclick = function() { fillField('email', d.email, this); };
         document.getElementById('demo-pass-btn').onclick  = function() { fillField('password', d.password, this); };
         box.style.display = '';
