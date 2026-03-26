@@ -1397,6 +1397,7 @@ function levelTierClass(levelId) {
 function getLevelNum(levelId) { return parseInt(levelId.slice(1), 10); }
 
 function formatSalary(n) {
+  if (n == null) return '—';
   if (settings.currency === 'EUR') return '€' + n.toLocaleString('en-US') + '/mo';
   return n.toLocaleString('da-DK') + ' kr/mo';
 }
