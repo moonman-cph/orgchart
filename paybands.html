@@ -555,6 +555,10 @@ let salaryBands = {};
 let locationMultipliers = {};
 let settings = {};
 
+// Rights from /api/v1/auth/me — set in init() once auth:ready fires
+let canViewPayBands = false;
+let canEditPayBands = false;
+
 // ── Load / Save ────────────────────────────────────────────────────────────────
 
 async function loadData() {
@@ -660,26 +664,29 @@ function renderBandTable() {
     const isFirst = idx === 0;
     const isLast  = idx === levelOrder.length - 1;
 
+    const roAttr = canEditPayBands ? '' : 'readonly';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="padding:4px 8px;vertical-align:middle">
-        <button class="band-reorder-btn" onclick="moveLevel('${level}',-1)" title="Move up" ${isFirst ? 'disabled' : ''}>▲</button>
-        <button class="band-reorder-btn" onclick="moveLevel('${level}',1)" title="Move down" ${isLast ? 'disabled' : ''}>▼</button>
+        ${canEditPayBands ? `
+          <button class="band-reorder-btn" onclick="moveLevel('${level}',-1)" title="Move up" ${isFirst ? 'disabled' : ''}>▲</button>
+          <button class="band-reorder-btn" onclick="moveLevel('${level}',1)" title="Move down" ${isLast ? 'disabled' : ''}>▼</button>
+        ` : ''}
       </td>
       <td>
         <span class="band-level-chip" style="${chipStyle}">${level}</span>
         <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${band.label || ''}</div>
       </td>
       <td>
-        <input class="band-input" id="band-label-${level}" type="text" value="${(band.label || '').replace(/"/g, '&quot;')}" maxlength="40" placeholder="e.g. ${suggestion}">
+        <input class="band-input" id="band-label-${level}" type="text" value="${(band.label || '').replace(/"/g, '&quot;')}" maxlength="40" placeholder="e.g. ${suggestion}" ${roAttr}>
         <div class="band-row-error" id="band-err-${level}"></div>
         <div class="band-row-warn" id="band-warn-${level}"></div>
       </td>
       <td>
-        <textarea class="band-input band-textarea" id="band-desc-${level}" maxlength="200" placeholder="Optional description">${band.description || ''}</textarea>
+        <textarea class="band-input band-textarea" id="band-desc-${level}" maxlength="200" placeholder="Optional description" ${roAttr}>${band.description || ''}</textarea>
       </td>
       <td>
-        <input class="band-input" id="band-min-${level}" type="number" value="${band.min || ''}" min="1" placeholder="0">
+        <input class="band-input" id="band-min-${level}" type="number" value="${band.min || ''}" min="1" placeholder="0" ${roAttr}>
       </td>
       <td>
         <div id="band-mid-${level}" style="padding:5px 8px;font-size:13px;color:var(--text-secondary);font-variant-numeric:tabular-nums">
@@ -687,13 +694,13 @@ function renderBandTable() {
         </div>
       </td>
       <td>
-        <input class="band-input" id="band-max-${level}" type="number" value="${band.max || ''}" min="1" placeholder="0">
+        <input class="band-input" id="band-max-${level}" type="number" value="${band.max || ''}" min="1" placeholder="0" ${roAttr}>
       </td>
       <td>
-        <button class="band-save-btn" id="band-save-${level}" onclick="saveBandRow('${level}')">Save</button>
+        ${canEditPayBands ? `<button class="band-save-btn" id="band-save-${level}" onclick="saveBandRow('${level}')">Save</button>` : ''}
       </td>
       <td style="padding:4px 8px;vertical-align:middle">
-        <button class="band-delete-btn" onclick="deleteBand('${level}')" title="Remove ${level}">×</button>
+        ${canEditPayBands ? `<button class="band-delete-btn" onclick="deleteBand('${level}')" title="Remove ${level}">×</button>` : ''}
       </td>
     `;
     tbody.appendChild(tr);
@@ -930,6 +937,7 @@ function renderMultipliersSection() {
   const bg = document.getElementById('mult-toggle-bg');
   const thumb = document.getElementById('mult-toggle-thumb');
   cb.checked = !!enabled;
+  cb.disabled = !canEditPayBands;
   bg.className = 'toggle-bg' + (enabled ? ' on' : '');
   thumb.className = 'toggle-thumb' + (enabled ? ' on' : '');
 
@@ -965,15 +973,17 @@ function renderMultTable() {
       <td style="font-weight:500;color:var(--text-primary)">${entry.name} <span style="font-size:11px;color:var(--text-muted)">(${code})</span></td>
       <td>
         <input class="mult-input" type="number" value="${entry.multiplier}" min="0.01" max="10" step="0.01"
-          data-code="${code}" data-field="multiplier" onchange="updateMultField('${code}','multiplier',this.value)">
+          data-code="${code}" data-field="multiplier"
+          ${canEditPayBands ? `onchange="updateMultField('${code}','multiplier',this.value)"` : 'readonly'}>
       </td>
       <td>
         <input class="mult-cur-input" type="text" value="${entry.currency}" maxlength="3"
-          data-code="${code}" onchange="updateMultField('${code}','currency',this.value.toUpperCase())">
+          data-code="${code}"
+          ${canEditPayBands ? `onchange="updateMultField('${code}','currency',this.value.toUpperCase())"` : 'readonly'}>
       </td>
       <td class="mult-eff">${eff.min != null ? fmtNum(eff.min) + ' – ' + fmtNum(eff.max) : '—'}</td>
       <td>
-        <button class="mult-remove-btn" onclick="removeCountry('${code}')" title="Remove ${entry.name}">×</button>
+        ${canEditPayBands ? `<button class="mult-remove-btn" onclick="removeCountry('${code}')" title="Remove ${entry.name}">×</button>` : ''}
       </td>
     `;
     tbody.appendChild(tr);
@@ -1036,6 +1046,27 @@ document.getElementById('preview-level').addEventListener('change', () => {
 // ── Init ───────────────────────────────────────────────────────────────────────
 
 async function init() {
+  const rights = (window.__currentUser && window.__currentUser.rights) || [];
+  canViewPayBands = rights.includes('view_pay_bands');
+  canEditPayBands = rights.includes('edit_pay_bands');
+
+  if (!canViewPayBands) {
+    document.getElementById('pb-main').innerHTML = `
+      <div style="padding:80px 40px;text-align:center;color:var(--text-muted)">
+        <div style="font-size:32px;margin-bottom:16px">🔒</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:8px">Access restricted</div>
+        <div style="font-size:13px">You do not have permission to view pay band configuration.</div>
+      </div>`;
+    return;
+  }
+
+  if (!canEditPayBands) {
+    document.getElementById('add-band-row').style.display = 'none';
+    document.getElementById('add-country-row').style.display = 'none';
+    const suggestBtn = document.querySelector('.suggest-btn');
+    if (suggestBtn) suggestBtn.style.display = 'none';
+  }
+
   try {
     await loadData();
     renderBandTable();
@@ -1050,7 +1081,8 @@ async function init() {
   }
 }
 
-init();
+// Wait for shared-auth.js to confirm the user before initialising
+document.addEventListener('auth:ready', () => init());
 </script>
 <script src="/notifications.js"></script>
 </body>

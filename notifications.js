@@ -16,6 +16,13 @@
   //   detail — full description shown in the modal (plain text or simple HTML)
   const RELEASE_NOTES = [
     {
+      id:     'release-0.8.4-paybands-rights',
+      date:   '26 Mar 2026',
+      title:  'Pay Bands rights enforcement (0.8.4)',
+      body:   'The Pay Bands page is now fully rights-gated — users without view access see a blocked screen, and users without edit access see a read-only view.',
+      detail: 'Users without the <em>view_pay_bands</em> right see an access-restricted screen instead of the page content. Users with <em>view_pay_bands</em> but not <em>edit_pay_bands</em> see all band and multiplier data in read-only mode: inputs are non-editable, Save/Delete/reorder buttons are hidden, the Add Band and Add Country rows are hidden, and the location multiplier toggle is disabled.',
+    },
+    {
       id:     'release-0.8.3-directory-rights',
       date:   '26 Mar 2026',
       title:  'Directory rights enforcement (0.8.3)',
