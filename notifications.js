@@ -16,6 +16,13 @@
   //   detail — full description shown in the modal (plain text or simple HTML)
   const RELEASE_NOTES = [
     {
+      id:     'release-0.9.2-preview-data-scope',
+      date:   '26 Mar 2026',
+      title:  'Fix data scoping for user preview (0.9.2)',
+      body:   'Previewing as a person now correctly shows the data that person is entitled to see — salaries, pay bands, and org chart editing all reflect their actual permission groups.',
+      detail: 'When switching to view as a person via the Switch User modal, data was being filtered using the JWT base role (always "employee") rather than the person\'s actual effective rights from their permission groups. This caused the dashboard to show only one person, pay bands to appear empty, and the org chart to show a connection error. All three issues are now fixed by computing effective rights server-side before scoping data.',
+    },
+    {
       id:     'release-0.9.1-permissions-driven-preview',
       date:   '26 Mar 2026',
       title:  'Permissions-driven user preview (0.9.1)',

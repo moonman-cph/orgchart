@@ -4,13 +4,15 @@ const express = require('express');
 const db      = require('../../db');
 const { generateUUID, diffState } = require('../../lib/changelog-diff');
 const { scopeDataForUser }        = require('../../lib/data-scope');
-const { requireRole }             = require('../../lib/auth');
+const { getEffectiveRights }      = require('../../lib/permissions');
 
 const router = express.Router();
 
-// ── Write roles ───────────────────────────────────────────────────────────────
-// Only these roles may POST data changes.
-const WRITE_ROLES = ['super_admin', 'org_admin', 'hr'];
+// ── Write roles / rights ──────────────────────────────────────────────────────
+// JWT roles that may write (fallback when rights array is unavailable).
+const WRITE_ROLES  = ['super_admin', 'org_admin', 'hr'];
+// Any of these effective rights grants write access to /api/v1/data.
+const WRITE_RIGHTS = ['edit_org_chart', 'edit_directory', 'edit_salaries', 'edit_pay_bands'];
 
 // ── Input validation ───────────────────────────────────────────────────────────
 
@@ -54,7 +56,12 @@ function validateOrgData(body) {
 router.get('/', async (req, res) => {
   try {
     const data   = await db.getData(req.user.orgId);
-    const scoped = scopeDataForUser(data, req.user);
+    // Compute effective rights (respects permission groups / assignment policies)
+    // so that personId-previewed users get the data access their permissions grant,
+    // not just what their JWT base role implies.
+    let rights;
+    try { rights = getEffectiveRights(req.user, data); } catch (_) {}
+    const scoped = scopeDataForUser(data, req.user, rights);
     res.json(scoped);
   } catch (e) {
     res.json({});
@@ -64,14 +71,24 @@ router.get('/', async (req, res) => {
 // ── POST /api/v1/data ─────────────────────────────────────────────────────────
 // Writes full org state. Restricted to write roles.
 
-router.post('/', requireRole(...WRITE_ROLES), async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    // 1. Validate input
+    // 1. Authorise: check effective rights (respects permission groups / assignment
+    //    policies) so that personId-previewed users with write grants are not blocked
+    //    by their JWT base role.
+    const prev = await db.getData(req.user.orgId);
+    let canWrite = WRITE_ROLES.includes(req.user.role);
+    try {
+      const rights = getEffectiveRights(req.user, prev);
+      if (WRITE_RIGHTS.some(r => rights.includes(r))) canWrite = true;
+    } catch (_) {}
+    if (!canWrite) return res.status(403).json({ error: 'Access denied.' });
+
+    // 2. Validate input
     const validationError = validateOrgData(req.body);
     if (validationError) return res.status(400).json({ error: validationError });
 
-    // 2. Read current state for diffing
-    const prev = await db.getData(req.user.orgId);
+    // 3. Read current state already fetched above (prev) — used for diffing
 
     // 3. Write new state
     const next = req.body;
