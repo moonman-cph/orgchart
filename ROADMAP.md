@@ -94,6 +94,8 @@ Structured HR activities: onboarding checklists, role change requests, promotion
 ## M8 — Export & External Integrations
 PDF, CSV, Excel, XML, and JSON exports. Public API for third-party system integrations. Webhooks for events (role changes, new hires, salary changes). Import pipelines (the CSV import in M1 is a precursor to this).
 
+**Messaging platform bots (Slack / Microsoft Teams)** — A thin relay bot that receives messages in Slack or Teams, resolves the sender to a Teampura person (via email match), and calls the AI assistant API on their behalf. Permissions and data scoping are enforced identically to the web UI — the bot is a client of the existing API, not a bypass. Slack is the recommended first target; Teams follows the same pattern using Azure Bot Service (natural fit given the existing Azure deployment). Write-back (data change suggestions via interactive buttons / Adaptive Cards) is a natural extension of the web UI's confirm-before-apply flow.
+
 ---
 
 ## M9 — Onboarding & Guided UX
