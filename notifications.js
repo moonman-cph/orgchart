@@ -16,6 +16,13 @@
   //   detail — full description shown in the modal (plain text or simple HTML)
   const RELEASE_NOTES = [
     {
+      id:     'release-0.9.0-impersonate-by-person',
+      date:   '26 Mar 2026',
+      title:  'Impersonate any person (0.9.0)',
+      body:   'Super-admins can now log in as any person in the org directly from the Switch User modal — no user account required.',
+      detail: 'The Switch User modal now lists every person in the organisation. People with an existing user account show their role and use the normal login-as flow. People without an account show a role selector (Employee / Manager / HR Admin / Org Admin) — selecting a role and clicking Log in as creates a temporary impersonation session scoped to that person and role, with no credentials stored. This lets you verify permissions and UX for any person before real accounts are set up.',
+    },
+    {
       id:     'release-0.8.4-paybands-rights',
       date:   '26 Mar 2026',
       title:  'Pay Bands rights enforcement (0.8.4)',

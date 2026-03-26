@@ -399,42 +399,117 @@
     if (!listEl) return;
     listEl.innerHTML = '<p class="sum-loading">Loading…</p>';
 
-    fetch('/api/v1/users', { credentials: 'same-origin' })
-      .then(function(r) { return r.json(); })
-      .then(function(users) {
-        if (!users.length) { listEl.innerHTML = '<p class="sum-loading">No other users yet.</p>'; return; }
-        var myId = window.__currentUser && window.__currentUser.userId;
-        listEl.innerHTML = '<table class="sum-table"><thead><tr><th>Email</th><th>Role</th><th></th></tr></thead><tbody>' +
-          users.map(function(u) {
-            var badgeColor = ROLE_BADGE_COLORS[u.role] || '#78716c';
-            var badge = '<span style="background:' + badgeColor + ';color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap;">' + (ROLE_LABELS[u.role] || u.role) + '</span>';
-            var btn = u.id === myId
-              ? '<span style="font-size:11px;color:var(--text-muted);">Current</span>'
-              : '<button class="sum-login-btn" data-uid="' + u.id + '">Log in as</button>';
-            return '<tr><td style="font-size:13px;">' + u.email + '</td><td>' + badge + '</td><td>' + btn + '</td></tr>';
-          }).join('') +
-          '</tbody></table>';
+    var myId = window.__currentUser && window.__currentUser.userId;
 
-        listEl.querySelectorAll('.sum-login-btn').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            btn.disabled = true;
-            btn.textContent = '…';
-            fetch('/api/v1/auth/impersonate', {
-              method: 'POST',
-              credentials: 'same-origin',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: btn.dataset.uid }),
-            })
-              .then(function(r) { return r.json(); })
-              .then(function(res) {
-                if (res.ok) { location.reload(); }
-                else { btn.disabled = false; btn.textContent = 'Log in as'; alert(res.error || 'Failed.'); }
-              })
-              .catch(function() { btn.disabled = false; btn.textContent = 'Log in as'; });
-          });
+    Promise.all([
+      fetch('/api/v1/users', { credentials: 'same-origin' }).then(function(r) { return r.json(); }),
+      fetch('/api/v1/data',  { credentials: 'same-origin' }).then(function(r) { return r.json(); }),
+    ]).then(function(results) {
+      var users   = results[0];
+      var data    = results[1];
+      var persons = (data.persons || []).slice().sort(function(a, b) { return (a.name || '').localeCompare(b.name || ''); });
+
+      // Build lookup: personId → user account
+      var personUserMap = {};
+      users.forEach(function(u) {
+        if (u.person_id != null) personUserMap[String(u.person_id)] = u;
+      });
+      // Users with no person link (e.g. super_admin seed account)
+      var unlinkedUsers = users.filter(function(u) { return u.person_id == null; });
+
+      function badge(role) {
+        var color = ROLE_BADGE_COLORS[role] || '#78716c';
+        return '<span style="background:' + color + ';color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;white-space:nowrap;">' + (ROLE_LABELS[role] || role) + '</span>';
+      }
+
+      function roleSelector(defaultRole) {
+        return '<select class="sum-role-sel">' +
+          ['employee','manager','hr','org_admin'].map(function(r) {
+            return '<option value="' + r + '"' + (r === defaultRole ? ' selected' : '') + '>' + (ROLE_LABELS[r] || r) + '</option>';
+          }).join('') +
+          '</select>';
+      }
+
+      function renderRow(name, subtitle, roleCel, btnHtml) {
+        var initials = (name || '?').split(' ').map(function(p) { return p[0]; }).join('').slice(0,2).toUpperCase();
+        return '<tr>' +
+          '<td><div class="sum-person-cell">' +
+            '<div class="sum-avatar">' + initials + '</div>' +
+            '<div><div class="sum-person-name">' + name + '</div>' +
+            (subtitle ? '<div class="sum-person-sub">' + subtitle + '</div>' : '') +
+          '</div></div></td>' +
+          '<td>' + roleCel + '</td>' +
+          '<td>' + btnHtml + '</td>' +
+          '</tr>';
+      }
+
+      var rows = '';
+
+      // ── All persons ────────────────────────────────────────────────────────
+      persons.forEach(function(p) {
+        var linkedUser = personUserMap[String(p.id)];
+        var roleCel, btn;
+        if (linkedUser) {
+          var isCurrent = linkedUser.id === myId;
+          roleCel = badge(linkedUser.role);
+          btn = isCurrent
+            ? '<span style="font-size:11px;color:var(--text-muted)">Current</span>'
+            : '<button class="sum-login-btn" data-uid="' + linkedUser.id + '">Log in as</button>';
+        } else {
+          roleCel = roleSelector('employee');
+          btn = '<button class="sum-login-btn-person" data-pid="' + p.id + '">Log in as</button>';
+        }
+        var sub = linkedUser ? linkedUser.email : '<em style="color:var(--text-muted)">No account</em>';
+        rows += renderRow(p.name, sub, roleCel, btn);
+      });
+
+      // ── Users with no person link ──────────────────────────────────────────
+      if (unlinkedUsers.length) {
+        rows += '<tr><td colspan="3" style="padding:8px 12px 4px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;border-top:1px solid var(--border)">Other accounts</td></tr>';
+        unlinkedUsers.forEach(function(u) {
+          var isCurrent = u.id === myId;
+          var btn = isCurrent
+            ? '<span style="font-size:11px;color:var(--text-muted)">Current</span>'
+            : '<button class="sum-login-btn" data-uid="' + u.id + '">Log in as</button>';
+          rows += renderRow(u.email, null, badge(u.role), btn);
         });
-      })
-      .catch(function() { listEl.innerHTML = '<p class="sum-loading">Failed to load users.</p>'; });
+      }
+
+      listEl.innerHTML = '<table class="sum-table"><thead><tr><th>Person</th><th>Role</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+
+      // ── Wire up by-userId buttons ──────────────────────────────────────────
+      listEl.querySelectorAll('.sum-login-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          btn.disabled = true; btn.textContent = '…';
+          fetch('/api/v1/auth/impersonate', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: btn.dataset.uid }),
+          }).then(function(r) { return r.json(); }).then(function(res) {
+            if (res.ok) { location.reload(); }
+            else { btn.disabled = false; btn.textContent = 'Log in as'; alert(res.error || 'Failed.'); }
+          }).catch(function() { btn.disabled = false; btn.textContent = 'Log in as'; });
+        });
+      });
+
+      // ── Wire up by-personId buttons ────────────────────────────────────────
+      listEl.querySelectorAll('.sum-login-btn-person').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var row  = btn.closest('tr');
+          var role = row.querySelector('.sum-role-sel') ? row.querySelector('.sum-role-sel').value : 'employee';
+          btn.disabled = true; btn.textContent = '…';
+          fetch('/api/v1/auth/impersonate', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ personId: btn.dataset.pid, role: role }),
+          }).then(function(r) { return r.json(); }).then(function(res) {
+            if (res.ok) { location.reload(); }
+            else { btn.disabled = false; btn.textContent = 'Log in as'; alert(res.error || 'Failed.'); }
+          }).catch(function() { btn.disabled = false; btn.textContent = 'Log in as'; });
+        });
+      });
+
+    }).catch(function() { listEl.innerHTML = '<p class="sum-loading">Failed to load.</p>'; });
   }
 
 })();

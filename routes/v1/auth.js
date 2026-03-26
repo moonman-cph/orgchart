@@ -81,31 +81,64 @@ router.get('/me', requireAuth, async (req, res) => {
 });
 
 // POST /api/v1/auth/impersonate  (super_admin only)
+// Accepts { userId } to impersonate a registered user, or
+// { personId, role } to preview as any person without a user account.
 router.post('/impersonate', requireAuth, async (req, res) => {
   try {
     if (req.user.role !== 'super_admin') return res.status(403).json({ error: 'Forbidden.' });
     if (req.user.impersonating) return res.status(400).json({ error: 'Already impersonating. End current session first.' });
 
-    const { userId } = req.body || {};
-    if (!userId) return res.status(400).json({ error: 'userId is required.' });
+    const { userId, personId, role } = req.body || {};
 
-    const target = await db.getUserById(userId);
-    if (!target) return res.status(404).json({ error: 'User not found.' });
-    if (target.org_id !== req.user.orgId) return res.status(403).json({ error: 'User belongs to a different org.' });
+    // ── Branch 1: impersonate a registered user account ──────────────────────
+    if (userId) {
+      const target = await db.getUserById(userId);
+      if (!target) return res.status(404).json({ error: 'User not found.' });
+      if (target.org_id !== req.user.orgId) return res.status(403).json({ error: 'User belongs to a different org.' });
 
-    const token = signToken({
-      userId:          target.id,
-      orgId:           target.org_id,
-      email:           target.email,
-      role:            target.role,
-      personId:        target.person_id || null,
-      impersonating:   true,
-      originalActorId: req.user.userId,
-      originalEmail:   req.user.email,
-    });
+      const token = signToken({
+        userId:          target.id,
+        orgId:           target.org_id,
+        email:           target.email,
+        role:            target.role,
+        personId:        target.person_id || null,
+        impersonating:   true,
+        originalActorId: req.user.userId,
+        originalEmail:   req.user.email,
+      });
 
-    setCookie(res, token);
-    res.json({ ok: true, user: { email: target.email, role: target.role } });
+      setCookie(res, token);
+      return res.json({ ok: true, user: { email: target.email, role: target.role } });
+    }
+
+    // ── Branch 2: preview as a person (no user account required) ─────────────
+    if (personId) {
+      const VALID_ROLES = ['org_admin', 'hr', 'manager', 'employee'];
+      const effectiveRole = VALID_ROLES.includes(role) ? role : 'employee';
+
+      const data = await db.getData(req.user.orgId);
+      const person = (data.persons || []).find(p => String(p.id) === String(personId));
+      if (!person) return res.status(404).json({ error: 'Person not found.' });
+
+      // Use the person's email if available, otherwise synthesise a display identity
+      const displayEmail = person.email || (person.name.toLowerCase().replace(/\s+/g, '.') + '@preview');
+
+      const token = signToken({
+        userId:          null,
+        orgId:           req.user.orgId,
+        email:           displayEmail,
+        role:            effectiveRole,
+        personId:        String(personId),
+        impersonating:   true,
+        originalActorId: req.user.userId,
+        originalEmail:   req.user.email,
+      });
+
+      setCookie(res, token);
+      return res.json({ ok: true, user: { email: displayEmail, role: effectiveRole } });
+    }
+
+    return res.status(400).json({ error: 'userId or personId is required.' });
   } catch (e) {
     console.error('[auth/impersonate]', e);
     res.status(500).json({ error: e.message });

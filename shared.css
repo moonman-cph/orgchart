@@ -274,7 +274,7 @@ body.has-impersonation-banner #left-nav {
   background: var(--surface);
   border-radius: 14px;
   box-shadow: var(--shadow-md);
-  width: 560px;
+  width: 640px;
   max-width: calc(100vw - 32px);
   max-height: 80vh;
   overflow-y: auto;
@@ -299,14 +299,29 @@ body.has-impersonation-banner #left-nav {
 .sum-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); padding: 0 8px 8px; text-align: left; }
 .sum-table td { padding: 8px; border-top: 1px solid var(--border); vertical-align: middle; }
 .sum-table tr:hover td { background: var(--bg, #f5f4f0); }
-.sum-login-btn {
+.sum-login-btn, .sum-login-btn-person {
   padding: 4px 12px; border-radius: 6px;
   border: 1.5px solid var(--accent-border); background: var(--accent-light);
   color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer;
   font-family: inherit; white-space: nowrap;
 }
-.sum-login-btn:hover { background: var(--accent); color: #fff; }
-.sum-login-btn:disabled { opacity: 0.5; cursor: default; }
+.sum-login-btn:hover, .sum-login-btn-person:hover { background: var(--accent); color: #fff; }
+.sum-login-btn:disabled, .sum-login-btn-person:disabled { opacity: 0.5; cursor: default; }
+.sum-person-cell { display: flex; align-items: center; gap: 9px; }
+.sum-avatar {
+  width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.sum-person-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.sum-person-sub  { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.sum-role-sel {
+  padding: 3px 6px; border: 1px solid var(--border); border-radius: 5px;
+  font-family: inherit; font-size: 12px; background: var(--bg);
+  color: var(--text-secondary); cursor: pointer;
+}
+.sum-role-sel:focus { outline: none; border-color: var(--accent); }
 .sum-section-toggle {
   font-size: 13px; font-weight: 600; color: var(--accent);
   cursor: pointer; padding: 8px 0; border-top: 1px solid var(--border);
