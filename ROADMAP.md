@@ -36,7 +36,7 @@ Introduce a versioned REST API: all routes move to `/api/v1/`. No route may be r
 | Changelog filtering API | ✓ Done | Full query/filter support |
 | Sensitive field detection | ✓ Done | `isSensitive` flag set in audit entries |
 | Normalized schema | ✓ Done | 9-table design deployed; `org_state` blob removed (migration runs on first DB call) |
-| Column-level encryption | ✗ Pending | `pgcrypto` placeholder in `.env.example` only |
+| Column-level encryption | ✓ Done | AES-256-GCM in `lib/encrypt.js`; migration v3 re-encrypts existing data on first boot |
 | Input validation | ✓ Done | `POST /api/data` validates shape, required fields, and types; AI route validates prompt and history |
 
 Security foundations introduced in this milestone:

@@ -49,8 +49,8 @@ CREATE TABLE IF NOT EXISTS persons (
   org_id                     TEXT    NOT NULL DEFAULT 'default',
   name                       TEXT    NOT NULL,
   gender                     TEXT,
-  salary                     NUMERIC,           -- SENSITIVE
-  employee_id                TEXT,              -- SENSITIVE
+  salary                     TEXT,              -- SENSITIVE (AES-256-GCM encrypted, "enc:..." prefix)
+  employee_id                TEXT,              -- SENSITIVE (AES-256-GCM encrypted, "enc:..." prefix)
   email                      TEXT,
   date_of_birth              TEXT,              -- SENSITIVE
   nationality                TEXT,
@@ -79,15 +79,15 @@ CREATE TABLE IF NOT EXISTS role_assignments (
 );
 
 -- ── Salary Bands ──────────────────────────────────────────────────────────────
--- SENSITIVE: min, max, midpoint — encrypt with pgcrypto in M2
+-- SENSITIVE: min, max, midpoint — AES-256-GCM encrypted at application layer
 
 CREATE TABLE IF NOT EXISTS salary_bands (
   level    TEXT    NOT NULL,
   org_id   TEXT    NOT NULL DEFAULT 'default',
   label    TEXT,
-  min      NUMERIC,                             -- SENSITIVE
-  max      NUMERIC,                             -- SENSITIVE
-  midpoint NUMERIC,                             -- SENSITIVE
+  min      TEXT,                                -- SENSITIVE (AES-256-GCM encrypted, "enc:..." prefix)
+  max      TEXT,                                -- SENSITIVE (AES-256-GCM encrypted, "enc:..." prefix)
+  midpoint TEXT,                                -- SENSITIVE (AES-256-GCM encrypted, "enc:..." prefix)
   currency TEXT,
   PRIMARY KEY (level, org_id)
 );

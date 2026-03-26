@@ -2,6 +2,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { encrypt, decrypt, decryptNum } = require('../lib/encrypt');
 
 const DATA_FILE      = path.join(__dirname, '..', 'orgchart-data.json');
 const CHANGELOG_FILE = path.join(__dirname, '..', 'changelog.json');
@@ -38,36 +39,49 @@ async function _initSchema() {
   // 1. Create all normalized tables (idempotent)
   await pg.query(SCHEMA_SQL);
 
-  // 2. Check migration version — re-run migration if needed
+  // 2. Check migration version
   let migrationVersion = 0;
   try {
     const vr = await pg.query(`SELECT value FROM org_config WHERE org_id = 'default' AND key = '_migration_version'`);
     migrationVersion = vr.rows[0] ? Number(vr.rows[0].value) : 0;
   } catch { migrationVersion = 0; }
 
-  if (migrationVersion >= 2) return; // already up to date
+  // ── Migration v2: normalize blob → relational tables ──────────────────────
+  if (migrationVersion < 2) {
+    const tableCheck = await pg.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'org_state'
+      )
+    `);
 
-  const tableCheck = await pg.query(`
-    SELECT EXISTS (
-      SELECT FROM information_schema.tables
-      WHERE table_schema = 'public' AND table_name = 'org_state'
-    )
-  `);
-
-  if (tableCheck.rows[0].exists) {
-    const blobRes = await pg.query(`SELECT data FROM org_state WHERE org_id = 'default'`);
-    const data = blobRes.rows[0]?.data;
-    if (data && Object.keys(data).length > 0) {
-      console.log('[db] Running migration v2 (adds extra fields to persons)...');
-      await _migrateFromBlob(pg, data);
-      console.log('[db] Migration v2 complete.');
+    if (tableCheck.rows[0].exists) {
+      const blobRes = await pg.query(`SELECT data FROM org_state WHERE org_id = 'default'`);
+      const data = blobRes.rows[0]?.data;
+      if (data && Object.keys(data).length > 0) {
+        console.log('[db] Running migration v2 (normalize blob → relational tables)...');
+        await _migrateFromBlob(pg, data);
+        console.log('[db] Migration v2 complete.');
+      }
     }
+
+    await pg.query(`
+      INSERT INTO org_config (org_id, key, value) VALUES ('default', '_migration_version', '2')
+      ON CONFLICT (org_id, key) DO UPDATE SET value = '2'
+    `);
+    migrationVersion = 2;
   }
 
-  await pg.query(`
-    INSERT INTO org_config (org_id, key, value) VALUES ('default', '_migration_version', '2')
-    ON CONFLICT (org_id, key) DO UPDATE SET value = '2'
-  `);
+  // ── Migration v3: column-type changes + AES-256-GCM encryption ────────────
+  if (migrationVersion < 3) {
+    console.log('[db] Running migration v3 (column-level encryption)...');
+    await _migrateToEncryption(pg);
+    await pg.query(`
+      INSERT INTO org_config (org_id, key, value) VALUES ('default', '_migration_version', '3')
+      ON CONFLICT (org_id, key) DO UPDATE SET value = '3'
+    `);
+    console.log('[db] Migration v3 complete.');
+  }
 }
 
 async function _migrateFromBlob(pg, data) {
@@ -174,6 +188,62 @@ async function _migrateFromBlob(pg, data) {
   }
 }
 
+// ── Migration v3: ALTER NUMERIC → TEXT + re-encrypt existing plaintext ────────
+
+async function _migrateToEncryption(pg) {
+  // ALTER salary column in persons if it is still NUMERIC (existing deployments)
+  const personSalaryType = await pg.query(`
+    SELECT data_type FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'persons' AND column_name = 'salary'
+  `);
+  if (personSalaryType.rows[0]?.data_type === 'numeric') {
+    await pg.query(`ALTER TABLE persons ALTER COLUMN salary TYPE TEXT USING salary::text`);
+  }
+
+  // ALTER min / max / midpoint in salary_bands if still NUMERIC
+  for (const col of ['min', 'max', 'midpoint']) {
+    const colType = await pg.query(`
+      SELECT data_type FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'salary_bands' AND column_name = $1
+    `, [col]);
+    if (colType.rows[0]?.data_type === 'numeric') {
+      await pg.query(`ALTER TABLE salary_bands ALTER COLUMN ${col} TYPE TEXT USING ${col}::text`);
+    }
+  }
+
+  // Re-encrypt any existing plaintext sensitive values (only when ENCRYPTION_KEY is set)
+  if (!process.env.ENCRYPTION_KEY) {
+    console.log('[db] ENCRYPTION_KEY not set — skipping re-encryption of existing rows. Set the key and restart to encrypt data at rest.');
+    return;
+  }
+
+  // persons: salary, employee_id, date_of_birth
+  const persons = await pg.query(`SELECT id, org_id, salary, employee_id, date_of_birth FROM persons`);
+  for (const row of persons.rows) {
+    const newSalary = row.salary      != null && !String(row.salary).startsWith('enc:')      ? encrypt(row.salary)      : row.salary;
+    const newEmpId  = row.employee_id != null && !String(row.employee_id).startsWith('enc:') ? encrypt(row.employee_id) : row.employee_id;
+    const newDob    = row.date_of_birth != null && !String(row.date_of_birth).startsWith('enc:') ? encrypt(row.date_of_birth) : row.date_of_birth;
+    await pg.query(
+      `UPDATE persons SET salary = $1, employee_id = $2, date_of_birth = $3 WHERE id = $4 AND org_id = $5`,
+      [newSalary, newEmpId, newDob, row.id, row.org_id]
+    );
+  }
+
+  // salary_bands: min, max, midpoint
+  const bands = await pg.query(`SELECT level, org_id, min, max, midpoint FROM salary_bands`);
+  for (const row of bands.rows) {
+    const newMin = row.min      != null && !String(row.min).startsWith('enc:')      ? encrypt(row.min)      : row.min;
+    const newMax = row.max      != null && !String(row.max).startsWith('enc:')      ? encrypt(row.max)      : row.max;
+    const newMid = row.midpoint != null && !String(row.midpoint).startsWith('enc:') ? encrypt(row.midpoint) : row.midpoint;
+    await pg.query(
+      `UPDATE salary_bands SET min = $1, max = $2, midpoint = $3 WHERE level = $4 AND org_id = $5`,
+      [newMin, newMax, newMid, row.level, row.org_id]
+    );
+  }
+
+  console.log(`[db] Re-encrypted ${persons.rows.length} person(s) and ${bands.rows.length} salary band(s).`);
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 // Coerce string IDs back to numbers where the original data used numeric IDs.
@@ -276,9 +346,9 @@ async function getData(orgId = 'default') {
   for (const r of bands.rows) {
     salaryBands[r.level] = {
       label:    r.label,
-      min:      toNum(r.min),
-      max:      toNum(r.max),
-      midpoint: toNum(r.midpoint),
+      min:      decryptNum(r.min),
+      max:      decryptNum(r.max),
+      midpoint: decryptNum(r.midpoint),
       currency: r.currency,
     };
   }
@@ -327,10 +397,10 @@ async function getData(orgId = 'default') {
       orgId:                   r.org_id,
       name:                    r.name,
       gender:                  r.gender,
-      salary:                  toNum(r.salary),
-      employeeId:              r.employee_id,
+      salary:                  decryptNum(r.salary),
+      employeeId:              decrypt(r.employee_id),
       email:                   r.email,
-      dateOfBirth:             r.date_of_birth,
+      dateOfBirth:             decrypt(r.date_of_birth),
       nationality:             r.nationality,
       address:                 r.address,
       hireDate:                r.hire_date,
@@ -453,8 +523,9 @@ async function setData(data, orgId = 'default') {
           salary_review_needed = EXCLUDED.salary_review_needed,
           performance_review_needed = EXCLUDED.performance_review_needed,
           extra = EXCLUDED.extra
-      `, [String(p.id), orgId, p.name, p.gender ?? null, p.salary ?? null,
-          p.employeeId  ?? null, p.email ?? null, p.dateOfBirth ?? null,
+      `, [String(p.id), orgId, p.name, p.gender ?? null, p.salary != null ? encrypt(p.salary) : null,
+          p.employeeId  != null ? encrypt(p.employeeId)  : null, p.email ?? null,
+          p.dateOfBirth != null ? encrypt(p.dateOfBirth) : null,
           p.nationality ?? null, p.address ?? null, p.hireDate ?? null,
           p.contractType ?? null, p.payFrequency ?? null,
           p.salaryReviewNeeded ?? false, p.performanceReviewNeeded ?? false,
@@ -490,8 +561,11 @@ async function setData(data, orgId = 'default') {
         ON CONFLICT (level, org_id) DO UPDATE SET
           label = EXCLUDED.label, min = EXCLUDED.min, max = EXCLUDED.max,
           midpoint = EXCLUDED.midpoint, currency = EXCLUDED.currency
-      `, [level, orgId, band.label ?? null, band.min ?? null,
-          band.max ?? null, band.midpoint ?? null, band.currency ?? null]);
+      `, [level, orgId, band.label ?? null,
+          band.min      != null ? encrypt(band.min)      : null,
+          band.max      != null ? encrypt(band.max)      : null,
+          band.midpoint != null ? encrypt(band.midpoint) : null,
+          band.currency ?? null]);
     }
     if (bandLevels.length > 0) {
       await client.query(
