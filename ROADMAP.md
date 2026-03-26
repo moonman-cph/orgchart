@@ -49,7 +49,7 @@ Security foundations introduced in this milestone:
 
 ---
 
-## M3 — Authentication & Role-Based Access Control (current — ~70% complete)
+## M3 — Authentication & Role-Based Access Control ✓ Complete
 Login, sessions, and JWT-based auth. Role-based access is enforced **server-side on every API response** — not just hidden in the UI.
 
 Five roles:
@@ -75,15 +75,16 @@ Sensitive fields (salary, band, personal data) are **opt-in from the API** — n
 | All pages redirect to login | ✓ Done | `shared-auth.js` — fetch interceptor + initial check |
 | Nav shows logged-in user + logout | ✓ Done | `shared-nav.js` listens for auth:ready event |
 | `/api/v1/health` status endpoint | ✓ Done | Public — checks DB, encryption key, JWT secret |
-| `changeReason` mandatory for sensitive writes | ✗ Pending | Server enforcement + UI prompt dialogs |
+| `changeReason` mandatory for sensitive writes | ✗ Deferred to M5 | Tied to EU Pay Transparency compliance trail; enforced when M5 ships |
 | Role-based nav visibility + org chart constraints | ✓ Done | `lib/permissions.js` + `shared-nav.js` + `orgchart.html`; rights returned from `/api/v1/auth/me` |
-| Rights enforcement in `directory.html` | ✗ Pending | Hide salary column and edit controls for roles without `view_salaries` / `edit_directory` |
-| Rights enforcement in `paybands.html` | ✗ Pending | Hide page entirely for roles without `view_pay_bands` |
-| Employee self-service field edits | ✗ Pending | M7 territory |
+| Rights enforcement in `directory.html` | ✓ Done | Salary column + edit controls gated on `view_salaries` / `edit_directory`; waits for auth:ready |
+| Rights enforcement in `paybands.html` | ✓ Done | Full page blocked for `!view_pay_bands`; read-only view for `!edit_pay_bands` |
+| AI action cards gated on write rights | ✓ Done | Apply button hidden for roles without write access; server enforces independently |
+| Employee self-service field edits | ✗ Deferred to M7 | Out of scope for M3 |
 
 ---
 
-## M4 — Platform Operator Console & Org-Admin Self-Service
+## M4 — Platform Operator Console & Org-Admin Self-Service (current)
 The operator console is a protected `/admin` section of the app, accessible only to `super_admin` role. It is the internal tool for managing all customer organisations. Org-admin self-service (inviting users, managing their own org) ships in the same milestone.
 
 **Operator console — Organisation Management:**
