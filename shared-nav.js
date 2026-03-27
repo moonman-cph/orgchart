@@ -70,19 +70,19 @@
       hasRight('manage_settings')    ? item(settingsHref,  'Settings',  ico.settings,  settingsId)  : '',
     ].filter(Boolean);
 
-    // orgchart-only destructive items (only if user has manage_settings)
-    const orgchartOnlyItems = (onOrgchart && hasRight('manage_settings')) ? `
-      ${item('#', 'Import CSV',       ico.importcsv, { id: 'import-csv-btn' })}
+    // Destructive items — shown on all pages for manage_settings users
+    const destructiveItems = hasRight('manage_settings') ? `
+      ${onOrgchart ? item('#', 'Import CSV', ico.importcsv, { id: 'import-csv-btn' }) : ''}
       ${item('#', 'Clear Employees',  ico.clearEmp,  { id: 'clear-employees-btn', style: danger })}
       ${item('#', 'Clear Structure',  ico.clearStr,  { id: 'clear-structure-btn', style: danger })}
       ${item('#', 'Clear Data',       ico.clearData, { id: 'clear-data-btn',      style: danger })}
       ${item('#', 'Reset Data',       ico.reset,     { id: 'reset-data-btn',      style: danger })}` : '';
 
-    const adminSection = (adminItems.length || orgchartOnlyItems.trim()) ? `
+    const adminSection = (adminItems.length || destructiveItems.trim()) ? `
     <div class="nav-section">
       <div class="nav-section-label">Admin</div>
       ${adminItems.join('\n      ')}
-      ${orgchartOnlyItems}
+      ${destructiveItems}
     </div>` : '';
 
     return `
@@ -511,6 +511,66 @@
       });
 
     }).catch(function() { listEl.innerHTML = '<p class="sum-loading">Failed to load.</p>'; });
+  }
+
+  // ── Destructive data actions (non-orgchart pages) ─────────────────────────
+  // On orgchart.html these buttons are handled by orgchart.html's own event
+  // listeners (which update in-memory state then save). On every other page
+  // we handle them here via direct API calls.
+
+  if (!onOrgchart) {
+    function _clearOrgKeys(keys, reason) {
+      fetch('/api/v1/data', { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          keys.forEach(function(k) { data[k] = []; });
+          data._initialized = true;
+          return fetch('/api/v1/data', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-Change-Reason': reason, 'X-Source': 'ui' },
+            body: JSON.stringify(data),
+          });
+        })
+        .then(function() { location.reload(); })
+        .catch(function(err) { alert('Failed: ' + err.message); });
+    }
+
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('#clear-employees-btn')) {
+        e.preventDefault();
+        if (confirm('Clear all employees? This will remove all people but keep the org structure. This cannot be undone.')) {
+          _clearOrgKeys(['persons', 'roleAssignments'], 'Clear all employees');
+        }
+        return;
+      }
+      if (e.target.closest('#clear-structure-btn')) {
+        e.preventDefault();
+        if (confirm('Clear all structure? This will remove all departments, roles and teams, but keep all employees. This cannot be undone.')) {
+          _clearOrgKeys(['departments', 'roles', 'roleAssignments', 'teams'], 'Clear all structure');
+        }
+        return;
+      }
+      if (e.target.closest('#clear-data-btn')) {
+        e.preventDefault();
+        if (confirm('Clear all data? This will remove all departments, roles and people. This cannot be undone.')) {
+          _clearOrgKeys(['departments', 'roles', 'persons', 'roleAssignments', 'teams'], 'Clear all data');
+        }
+        return;
+      }
+      if (e.target.closest('#reset-data-btn')) {
+        e.preventDefault();
+        if (confirm('Reset all data to defaults? This cannot be undone.')) {
+          fetch('/api/v1/data', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-Change-Reason': 'Reset data to defaults', 'X-Source': 'ui' },
+            body: '{}',
+          }).then(function() { location.reload(); }).catch(function() { location.reload(); });
+        }
+        return;
+      }
+    });
   }
 
 })();

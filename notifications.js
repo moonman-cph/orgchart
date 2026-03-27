@@ -16,6 +16,13 @@
   //   detail — full description shown in the modal (plain text or simple HTML)
   const RELEASE_NOTES = [
     {
+      id:     'release-0.9.9-global-clear-reset',
+      date:   '27 Mar 2026',
+      title:  'Clear/Reset data available on all pages (0.9.9)',
+      body:   'Clear Employees, Clear Structure, Clear Data, and Reset Data are now accessible from every page, not just the Org Chart.',
+      detail: 'Previously the destructive data actions (Clear Employees, Clear Structure, Clear Data, Reset Data) were only shown in the nav when you were on the Org Chart page — and if the Org Chart itself failed to load, there was no way to recover. These items now appear in the left nav on every page for users with manage_settings permission. Import CSV remains Org Chart only.',
+    },
+    {
       id:     'release-0.9.8-ai-apply-fixes',
       date:   '27 Mar 2026',
       title:  'AI apply: race condition and ID resolution fixed (0.9.8)',
