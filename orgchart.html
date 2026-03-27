@@ -1045,6 +1045,7 @@ function nameToColor(name) {
 }
 
 function levelTierClass(levelId) {
+  if (!levelId) return 'tier-gray';
   const n = parseInt(levelId.slice(1), 10);
   if (n <= 2) return 'tier-gray';
   if (n <= 4) return 'tier-sky';
@@ -1052,7 +1053,7 @@ function levelTierClass(levelId) {
   return 'tier-indigo';
 }
 
-function getLevelNum(levelId) { return parseInt(levelId.slice(1), 10); }
+function getLevelNum(levelId) { return levelId ? parseInt(levelId.slice(1), 10) : 0; }
 
 function formatSalary(n) {
   if (n == null) return '—';
