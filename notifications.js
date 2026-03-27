@@ -16,6 +16,13 @@
   //   detail — full description shown in the modal (plain text or simple HTML)
   const RELEASE_NOTES = [
     {
+      id:     'release-0.9.5-clear-data-fix',
+      date:   '27 Mar 2026',
+      title:  'Clear Data now persists correctly (0.9.5)',
+      body:   'Clear Employees / Structure / Data no longer restores itself after navigating away.',
+      detail: 'Two bugs were causing cleared data to reappear: (1) a 300ms debounce meant the save never fired if you navigated away quickly, and (2) on reload the app was re-migrating stale data from localStorage whenever departments were empty, undoing the clear. Both are now fixed.',
+    },
+    {
       id:     'release-0.9.4-nav-bug-fixes',
       date:   '27 Mar 2026',
       title:  'Settings, Snapshots & Simulate fixed (0.9.4)',

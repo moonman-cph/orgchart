@@ -3874,7 +3874,7 @@ document.addEventListener('click', e => {
   if (confirm('Clear all employees? This will remove all people and unassign all roles, but keep the org structure. This cannot be undone.')) {
     persons.splice(0, persons.length);
     roleAssignments.splice(0, roleAssignments.length);
-    saveToStorage({ reason: 'Clear all employees' });
+    saveToStorage({ reason: 'Clear all employees', flush: true });
     render();
   }
 });
@@ -3887,7 +3887,7 @@ document.addEventListener('click', e => {
     roles.splice(0, roles.length);
     roleAssignments.splice(0, roleAssignments.length);
     teams.splice(0, teams.length);
-    saveToStorage({ reason: 'Clear all structure' });
+    saveToStorage({ reason: 'Clear all structure', flush: true });
     render();
   }
 });
@@ -3901,7 +3901,7 @@ document.addEventListener('click', e => {
     persons.splice(0, persons.length);
     roleAssignments.splice(0, roleAssignments.length);
     teams.splice(0, teams.length);
-    saveToStorage({ reason: 'Clear all data' });
+    saveToStorage({ reason: 'Clear all data', flush: true });
     render();
   }
 });
@@ -3953,7 +3953,7 @@ function saveToStorage(opts = {}) {
   const source = opts.source || 'ui';
   const bulkId = opts.bulkId || null;
   clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(() => {
+  const doSave = () => {
     _pendingChangeReason = null;
     const endpoint = simMode ? '/api/sim-data' : '/api/data';
     const headers = { 'Content-Type': 'application/json' };
@@ -3967,7 +3967,8 @@ function saveToStorage(opts = {}) {
       headers,
       body: JSON.stringify({ departments, roles, persons, roleAssignments, titles: TITLES, teams, settings, salaryBands: SALARY_BANDS, levelOrder: LEVELS.map(l => l.id), locationMultipliers, permissionGroups, assignmentPolicies, personPermissionOverrides, snapshots, _simLabel: simLabel, plannedChange })
     }).catch(e => console.warn('Save failed:', e));
-  }, 300);
+  };
+  if (opts.flush) { doSave(); } else { _saveTimer = setTimeout(doSave, 300); }
 }
 
 async function loadFromStorage() {
@@ -3976,6 +3977,7 @@ async function loadFromStorage() {
     if (!res.ok) throw new Error('Server returned ' + res.status);
     const saved = await res.json();
     if (!saved || !saved.departments) return; // empty — will seed defaults
+    window._serverHasData = true; // server returned a real data object — suppress localStorage re-migration
     if (saved.departments) departments.splice(0, departments.length, ...saved.departments.map(d => ({ ...d, headRoleId: d.headRoleId ?? null })));
     if (saved.roles) roles.splice(0, roles.length, ...saved.roles.map(r => ({ ...r, teamId: r.teamId || null, secondaryManagerRoleIds: r.secondaryManagerRoleIds || [] })));
     if (saved.persons) persons.splice(0, persons.length, ...saved.persons.map(p => ({ ...p })));
@@ -4287,8 +4289,10 @@ async function init() {
     updateSimBanner();           // restore banner label if a sim session was found
     updatePlannedChangeBanner(); // restore planned-change banner if one is persisted
     startPlannedChangeTimer();   // start auto-apply timer if a planned change exists
-    // If server had no data, seed defaults (or migrate from localStorage)
-    if (!departments.length) {
+    // If server had no data at all (fresh install), seed defaults or migrate from localStorage.
+    // Do NOT run this when server returned an explicit empty state (e.g. after "Clear Data") —
+    // that would restore stale localStorage migration data and undo the clear.
+    if (!departments.length && !window._serverHasData) {
       const localRaw = localStorage.getItem('orgchart_data_v4');
       if (localRaw) {
         try {
