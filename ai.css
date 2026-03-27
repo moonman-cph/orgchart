@@ -366,6 +366,46 @@
 
 .ai-action-dismiss-btn:hover { background: var(--bg); color: var(--text-primary); }
 
+/* ── Accept-all / Dismiss-all bar (shown above a batch of cards) ─ */
+.ai-accept-all-bar {
+  max-width: 720px;
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0 4px;
+}
+
+.ai-accept-all-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 16px;
+  background: #1a7a8a;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ai-accept-all-btn:hover:not(:disabled) { background: #156878; }
+.ai-accept-all-btn:disabled { opacity: 0.5; cursor: default; }
+
+.ai-dismiss-all-btn {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.ai-dismiss-all-btn:hover:not(:disabled) { background: var(--bg); color: var(--text-primary); }
+.ai-dismiss-all-btn:disabled { opacity: 0.5; cursor: default; }
+
 .ai-action-applied {
   font-size: 12.5px;
   color: #16a34a;
