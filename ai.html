@@ -442,7 +442,7 @@
         });
         if (action.personRoleId) {
           data.roleAssignments = data.roleAssignments || [];
-          data.roleAssignments.push({ id: nextNumericId(data.roleAssignments), roleId: action.personRoleId, personId: newId });
+          data.roleAssignments.push({ id: nextNumericId(data.roleAssignments), roleId: action.personRoleId, personId: newId, percentage: 100, orgId: 'default' });
         }
         break;
       }

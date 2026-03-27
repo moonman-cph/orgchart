@@ -16,6 +16,13 @@
   //   detail — full description shown in the modal (plain text or simple HTML)
   const RELEASE_NOTES = [
     {
+      id:     'release-0.9.11-reset-data-fix',
+      date:   '27 Mar 2026',
+      title:  'Reset Data now works correctly (0.9.11)',
+      body:   'Reset Data and the AI roleAssignment fix — Reset Data now triggers a full re-seed on the Org Chart instead of leaving it empty.',
+      detail: 'Two bug fixes: (1) Reset Data was broken — after posting empty data, the server kept an internal "_initialized" flag set, so the Org Chart saw an empty-but-initialized state and never re-seeded. Now, posting truly empty data clears that flag so the Org Chart seeds fresh default data on the next load. (2) Persons created by the AI now include the correct percentage (100%) and orgId on their role assignments, matching the expected shape across the app.',
+    },
+    {
       id:     'release-0.9.10-numeric-ids',
       date:   '27 Mar 2026',
       title:  'AI-created entities now use numeric IDs (0.9.10)',

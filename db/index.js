@@ -683,10 +683,20 @@ async function setData(data, orgId = 'default') {
 
     // Mark this org as initialised so getData can distinguish "explicitly cleared"
     // from "never been written to" (the latter triggers client-side seed).
-    await client.query(`
-      INSERT INTO org_config (org_id, key, value) VALUES ($1, '_initialized', 'true')
-      ON CONFLICT (org_id, key) DO NOTHING
-    `, [orgId]);
+    // Exception: if data is completely empty, DELETE _initialized so the client
+    // re-seeds on next load (enables Reset Data to actually work).
+    const isEmpty = (data.departments ?? []).length === 0 && (data.persons ?? []).length === 0;
+    if (isEmpty) {
+      await client.query(
+        `DELETE FROM org_config WHERE org_id = $1 AND key = '_initialized'`,
+        [orgId]
+      );
+    } else {
+      await client.query(`
+        INSERT INTO org_config (org_id, key, value) VALUES ($1, '_initialized', 'true')
+        ON CONFLICT (org_id, key) DO NOTHING
+      `, [orgId]);
+    }
 
     await client.query('COMMIT');
   } catch (err) {
