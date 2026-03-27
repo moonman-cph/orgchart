@@ -288,6 +288,8 @@
 
     const card = document.createElement('div');
     card.className = 'ai-action-card';
+    card._aiAction = action;       // stored for accept-all batch apply
+    card._aiCanApply = canApply;
     card.innerHTML = `
       <div class="ai-action-inner">
         <div class="ai-action-header">Suggested change</div>
@@ -537,11 +539,27 @@
                 this.disabled = true;
                 const dismissBtn = bar.querySelector('.ai-dismiss-all-btn');
                 if (dismissBtn) dismissBtn.disabled = true;
-                applyableCards.forEach(card => {
-                  const btn = card.querySelector('.ai-action-apply-btn:not(:disabled)');
-                  if (btn) btn.click();
-                });
                 bar.remove();
+
+                applyableCards.forEach(card => {
+                  // Mark individual button so user sees progress
+                  const btn = card.querySelector('.ai-action-apply-btn');
+                  if (btn) { btn.disabled = true; btn.textContent = 'Applying…'; }
+
+                  const a = card._aiAction;
+                  const isOrg = a && a._type === 'org_action';
+                  queueApply(async () => {
+                    try {
+                      if (isOrg) { await applyOrgAction(a); } else { await applyAction(a); }
+                      card.querySelector('.ai-action-btns').innerHTML = '<span class="ai-action-applied">✓ Applied</span>';
+                    } catch (e) {
+                      card.querySelector('.ai-action-btns').innerHTML =
+                        '<span class="ai-action-error">Failed: ' + escHtml(e.message) + '</span>' +
+                        '<button class="ai-action-dismiss-btn" style="margin-left:8px">Dismiss</button>';
+                      card.querySelector('.ai-action-dismiss-btn').addEventListener('click', () => card.remove());
+                    }
+                  });
+                });
               });
 
               bar.querySelector('.ai-dismiss-all-btn').addEventListener('click', function () {

@@ -370,10 +370,12 @@
 .ai-accept-all-bar {
   max-width: 720px;
   width: 100%;
+  margin: 8px auto 0;
+  padding-left: 44px; /* align with action cards */
+  box-sizing: border-box;
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 8px 0 4px;
 }
 
 .ai-accept-all-btn {
